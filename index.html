@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Fossil Fuel Market Value Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --coal: #3d3d3d;
+            --coal-light: #6b6b6b;
+            --oil: #c0392b;
+            --oil-light: #e74c3c;
+            --gas: #2980b9;
+            --gas-light: #3498db;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border: #e0e0e0;
+            --accent: #16a085;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Headline cards */
+        .headline-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .headline-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 500px) {
+            .headline-grid { grid-template-columns: 1fr; }
+        }
+
+        .headline-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-top: 4px solid var(--border);
+            transition: transform 0.2s;
+        }
+
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.coal { border-top-color: var(--coal); }
+        .headline-card.oil { border-top-color: var(--oil); }
+        .headline-card.gas { border-top-color: var(--gas); }
+        .headline-card.total { border-top-color: var(--accent); }
+
+        .headline-card .label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .headline-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .headline-card .detail {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+        }
+
+        /* Sections */
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .section h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--bg);
+        }
+
+        .section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* Chart containers */
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 800px) {
+            .chart-row { grid-template-columns: 1fr; }
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-height: 400px;
+        }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 0.6rem 1.2rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Data tables */
+        .data-table-wrapper {
+            overflow-x: auto;
+            margin-top: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        th, td {
+            padding: 0.5rem 0.7rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-secondary);
+        }
+
+        tr:hover { background: #f0f4f8; }
+
+        td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        th.num { text-align: right; }
+
+        .commodity-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .commodity-dot.coal { background: var(--coal); }
+        .commodity-dot.oil { background: var(--oil); }
+        .commodity-dot.gas { background: var(--gas); }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        .methodology {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .methodology ul { padding-left: 1.2rem; margin: 0.3rem 0; }
+
+        .source-tag {
+            display: inline-block;
+            background: var(--bg);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin: 0.1rem;
+        }
+
+        .transport-highlight {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 700px) {
+            .transport-highlight { grid-template-columns: 1fr; }
+        }
+
+        .transport-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .transport-card .pct {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .transport-card .desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Global Fossil Fuel Market Value</h1>
+    <div class="subtitle">Task 1: Coal vs Oil vs Gas — Production, Pricing & Transport Costs (2024 data)</div>
+</div>
+
+<div class="container">
+
+    <!-- Headline cards -->
+    <div class="headline-grid">
+        <div class="headline-card coal">
+            <div class="label">Coal</div>
+            <div class="value" style="color:var(--coal)">~$750B</div>
+            <div class="detail">9,100 Mt production (2024 record)</div>
+        </div>
+        <div class="headline-card oil">
+            <div class="label">Oil (Crude + Condensate)</div>
+            <div class="value" style="color:var(--oil)">$2,270B</div>
+            <div class="detail">81,800 kb/d &middot; Country-specific pricing</div>
+        </div>
+        <div class="headline-card gas">
+            <div class="label">Natural Gas</div>
+            <div class="value" style="color:var(--gas)">~$680B</div>
+            <div class="detail">4,124 bcm &middot; IGU weighted avg $4.88/MMBtu</div>
+        </div>
+        <div class="headline-card total">
+            <div class="label">Total Fossil Fuels</div>
+            <div class="value" style="color:var(--accent)">~$3.7T</div>
+            <div class="detail">Central estimate &middot; $3.4&ndash;4.0T range</div>
+        </div>
+    </div>
+
+    <!-- Charts row 1: Comparison -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Market Value Comparison</h2>
+            <div class="chart-container"><canvas id="chartComparison"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Share of Total Market Value</h2>
+            <div class="chart-container"><canvas id="chartShare"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Charts row 2: Country detail -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Coal: Top Producers by Market Value</h2>
+            <div class="chart-container"><canvas id="chartCoalCountries"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Oil: Top Producers by Market Value</h2>
+            <div class="chart-container"><canvas id="chartOilCountries"></canvas></div>
+        </div>
+    </div>
+
+    <div class="chart-row">
+        <div class="section">
+            <h2>Gas: Top Producers by Market Value</h2>
+            <div class="chart-container"><canvas id="chartGasCountries"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Transport Cost as % of Commodity Value</h2>
+            <div class="chart-container"><canvas id="chartTransport"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Transport highlights -->
+    <div class="section">
+        <h2>Transport Cost Highlights</h2>
+        <div class="transport-highlight">
+            <div class="transport-card">
+                <div class="pct" style="color:var(--oil)">2&ndash;7%</div>
+                <div class="desc">Oil (seaborne)<br>$1.50&ndash;5.00/bbl</div>
+            </div>
+            <div class="transport-card">
+                <div class="pct" style="color:var(--coal)">5&ndash;90%</div>
+                <div class="desc">Coal (seaborne + inland)<br>Extreme: Russia Kuzbass rail ~90%</div>
+            </div>
+            <div class="transport-card">
+                <div class="pct" style="color:var(--gas)">10&ndash;30%</div>
+                <div class="desc">LNG (full chain)<br>$3&ndash;7/MMBtu incl. liquefaction</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed data tables -->
+    <div class="section">
+        <h2>Country-Level Data</h2>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showTab('coal')">Coal</button>
+            <button class="tab-btn" onclick="showTab('oil')">Oil</button>
+            <button class="tab-btn" onclick="showTab('gas')">Gas</button>
+            <button class="tab-btn" onclick="showTab('transport')">Transport</button>
+        </div>
+
+        <!-- Coal table -->
+        <div class="tab-content active" id="tab-coal">
+            <div class="data-table-wrapper">
+                <table id="coalTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th>Coal Type</th>
+                            <th class="num">Production (Mt)</th>
+                            <th class="num">Price ($/t)</th>
+                            <th>Benchmark</th>
+                            <th class="num">Market Value ($M)</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Oil table -->
+        <div class="tab-content" id="tab-oil">
+            <div class="data-table-wrapper">
+                <table id="oilTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Production (kb/d)</th>
+                            <th>Primary Grade</th>
+                            <th>Quality</th>
+                            <th class="num">Price ($/bbl)</th>
+                            <th class="num">Diff to Brent</th>
+                            <th class="num">Market Value ($B)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Gas table -->
+        <div class="tab-content" id="tab-gas">
+            <div class="data-table-wrapper">
+                <table id="gasTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Production (bcm)</th>
+                            <th>Pricing Region</th>
+                            <th class="num">Benchmark ($/MMBtu)</th>
+                            <th class="num">Domestic Price</th>
+                            <th>Price Regime</th>
+                            <th class="num">Market Value ($M)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transport table -->
+        <div class="tab-content" id="tab-transport">
+            <h3>Coal Seaborne Freight</h3>
+            <div class="data-table-wrapper">
+                <table id="transportCoalTable">
+                    <thead>
+                        <tr>
+                            <th>Route</th>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Vessel</th>
+                            <th class="num">Cost ($/t)</th>
+                            <th>Range</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <h3>Oil Tanker Rates</h3>
+            <div class="data-table-wrapper">
+                <table id="transportOilTable">
+                    <thead>
+                        <tr>
+                            <th>Route</th>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Vessel</th>
+                            <th class="num">Cost ($/bbl)</th>
+                            <th>Range</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <h3>LNG Value Chain Costs ($/MMBtu)</h3>
+            <div class="data-table-wrapper">
+                <table id="transportLNGTable">
+                    <thead>
+                        <tr>
+                            <th>Corridor</th>
+                            <th class="num">Wellhead</th>
+                            <th class="num">Liquefaction</th>
+                            <th class="num">Shipping</th>
+                            <th class="num">Regas</th>
+                            <th class="num">Total Landed</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="section">
+        <h2>Methodology & Sources</h2>
+        <div class="methodology">
+            <p><strong>Coal:</strong> Country-level production from IEA Coal 2025, NBS (China), Ministry of Coal (India), ESDM (Indonesia), EIA (USA). Prices use country-specific benchmarks where available (Qinhuangdao, Coal India notified, Newcastle FOB, Richards Bay FOB, HBA, PLV HCC). Domestic prices for ~82% of coal consumed domestically are estimated. Total market value range of $500B&ndash;$900B reflects deep uncertainty in domestic pricing.</p>
+            <p><strong>Oil:</strong> Production from EIA (crude + condensate). Prices mapped to country-specific benchmarks for 80 countries (WTI, Urals, WCS, Maya, Murban, Arab Light OSPs, OPEC basket grades). Country-specific pricing reduces total by ~$190B (7.7%) vs flat Brent, driven by Russia sanctions discount (-$160B), Canada WCS (-$31B), Iran (-$17B).</p>
+            <p><strong>Gas:</strong> Production from Energy Institute Statistical Review 2025. Market value uses IGU Wholesale Gas Price Survey 2025 regional weighted averages. ~31% of gas consumed at &lt;$2/MMBtu (subsidized). If all gas were at market prices, value would be ~$1.2T.</p>
+            <p><strong>Transport:</strong> Coal freight from IEA Coal 2025, S&P Global Platts assessments. Oil tanker rates from EIA, Clarksons Research. LNG chain from Oxford Energy, Timera Energy, CSIS. Pipeline tariffs from FERC, ARTC, Transnet.</p>
+            <div style="margin-top: 1rem;">
+                <span class="source-tag">IEA Coal 2025</span>
+                <span class="source-tag">Energy Institute SR 2025</span>
+                <span class="source-tag">EIA</span>
+                <span class="source-tag">OPEC ASB 2024</span>
+                <span class="source-tag">IGU WGPS 2025</span>
+                <span class="source-tag">IGU LNG Report 2025</span>
+                <span class="source-tag">S&P Global Platts</span>
+                <span class="source-tag">Argus Media</span>
+                <span class="source-tag">Oxford Energy</span>
+                <span class="source-tag">World Bank</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Task 1 of 10 Analysis Verticals</p>
+    <p>Data: 2024 (coal, gas) / 2023 (oil) &middot; Built with <a href="https://claude.ai">Claude</a></p>
+</div>
+
+<script src="data.js"></script>
+<script src="charts.js"></script>
+
+</body>
+</html>
