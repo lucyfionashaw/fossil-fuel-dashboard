@@ -3,26 +3,903 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subsidy Costs — Fossil Fuel Dashboard</title>
+    <title>Fossil Fuel Subsidies — Global Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
+    <style>
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        .chart-container-tall { position: relative; width: 100%; height: 520px; }
+        .chart-container-mid { position: relative; width: 100%; height: 380px; }
+
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
+
+        .headline-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+        }
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.subsidy { border-top-color: #e74c3c; }
+        .headline-card.direct { border-top-color: #e67e22; }
+        .headline-card.external { border-top-color: #8e44ad; }
+        .headline-card.health { border-top-color: var(--coal); }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        .explainer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1rem 0; }
+        @media (max-width: 700px) { .explainer-grid { grid-template-columns: 1fr; } }
+
+        .explainer-card {
+            border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem;
+            background: var(--card-bg);
+        }
+        .explainer-card h4 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .explainer-card p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+        .explainer-card ul { font-size: 0.82rem; color: var(--text-secondary); padding-left: 1.2rem; margin-top: 0.4rem; }
+        .explainer-card ul li { margin-bottom: 0.25rem; }
+
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--gas); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout strong { color: var(--gas); }
+        .info-callout.warn { background: #fff8f0; border-left-color: #e67e22; }
+        .info-callout.warn strong { color: #e67e22; }
+
+        .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 700px) { .stat-row { grid-template-columns: 1fr; } }
+        .stat-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+        .stat-card .pct { font-size: 1.5rem; font-weight: 700; }
+        .stat-card .desc { font-size: 0.78rem; color: var(--text-secondary); }
+
+        .reform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 800px) { .reform-grid { grid-template-columns: 1fr; } }
+
+        .reform-item {
+            display: flex; align-items: flex-start; gap: 0.6rem;
+            padding: 0.6rem 0; border-bottom: 1px solid var(--border);
+            font-size: 0.82rem;
+        }
+        .reform-item:last-child { border-bottom: none; }
+        .reform-badge {
+            flex-shrink: 0; padding: 0.15rem 0.5rem; border-radius: 4px;
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+        }
+        .reform-badge.reformed { background: #d5f5e3; color: #1e8449; }
+        .reform-badge.partial { background: #fef9e7; color: #b7950b; }
+        .reform-badge.stalled { background: #fadbd8; color: #c0392b; }
+        .reform-badge.reversed { background: #f5eef8; color: #7d3c98; }
+
+        .comparison-bar {
+            display: flex; align-items: center; gap: 0.8rem; margin: 0.4rem 0;
+            font-size: 0.82rem;
+        }
+        .comparison-bar .bar-label { width: 140px; text-align: right; flex-shrink: 0; }
+        .comparison-bar .bar-track { flex: 1; height: 22px; background: var(--bg); border-radius: 4px; overflow: hidden; position: relative; }
+        .comparison-bar .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; font-size: 0.72rem; color: white; font-weight: 600; }
+    </style>
 </head>
 <body>
+
 <div class="header">
-    <h1>Subsidy Costs</h1>
-    <div class="subtitle">Implicit subsidy costs per worker in fossil fuel industries by geography</div>
+    <h1>Global Fossil Fuel Subsidies</h1>
+    <div class="subtitle">Task 6: Implicit Subsidy Costs per Worker by Geography &middot; IMF/IEA/OECD data (2022&ndash;2023)</div>
 </div>
+
 <div class="container">
-    <div class="section coming-soon">
-        <h2>Coming Soon</h2>
-        <p>This analysis vertical is under development. Data research has been completed and the interactive visualizations are being built.</p>
+
+    <!-- Headline cards -->
+    <div class="headline-grid">
+        <div class="headline-card subsidy">
+            <div class="label">Total Subsidies (incl. externalities)</div>
+            <div class="value" style="color:#e74c3c">$7.0T</div>
+            <div class="detail">IMF 2023 estimate &middot; 7.1% of global GDP</div>
+        </div>
+        <div class="headline-card direct">
+            <div class="label">Direct (Explicit) Subsidies</div>
+            <div class="value" style="color:#e67e22">$1.3T</div>
+            <div class="detail">IEA/OECD 2022 &middot; consumer + producer subsidies</div>
+        </div>
+        <div class="headline-card external">
+            <div class="label">Unpriced Externalities</div>
+            <div class="value" style="color:#8e44ad">$5.7T</div>
+            <div class="detail">Health, climate, air pollution, congestion costs</div>
+        </div>
+        <div class="headline-card health">
+            <div class="label">Coal Air Pollution Health Costs</div>
+            <div class="value" style="color:var(--coal)">$2.8T</div>
+            <div class="detail">Lancet Commission &middot; outdoor PM2.5 &amp; mortality</div>
+        </div>
+    </div>
+
+    <!-- Direct vs Indirect explainer -->
+    <div class="section">
+        <h2>Direct vs Implicit Subsidies: What Counts?</h2>
+        <p class="section-subtitle">The IMF's $7 trillion figure includes both fiscal support and the cost of unpriced environmental and health damage. These are fundamentally different policy mechanisms.</p>
+        <div class="explainer-grid">
+            <div class="explainer-card" style="border-left: 3px solid #e67e22;">
+                <h4 style="color:#e67e22;">Direct (Explicit) Subsidies &mdash; $1.3T</h4>
+                <p>Government budgetary transfers and tax breaks that directly reduce fossil fuel costs below market price.</p>
+                <ul>
+                    <li><strong>Consumer price subsidies:</strong> regulated fuel prices below international benchmarks (dominant in Middle East, North Africa, South/SE Asia)</li>
+                    <li><strong>Producer subsidies:</strong> capital grants, R&D support, exploration incentives, royalty relief</li>
+                    <li><strong>Tax preferences:</strong> accelerated depreciation, fuel tax exemptions, VAT relief for energy inputs</li>
+                    <li><strong>SOE cross-subsidies:</strong> state-owned companies selling below cost (e.g., Pertamina, NNPC)</li>
+                </ul>
+            </div>
+            <div class="explainer-card" style="border-left: 3px solid #8e44ad;">
+                <h4 style="color:#8e44ad;">Implicit Subsidies (Externalities) &mdash; $5.7T</h4>
+                <p>Costs imposed on society that are not reflected in fossil fuel prices &mdash; the gap between what consumers pay and the true social cost.</p>
+                <ul>
+                    <li><strong>Local air pollution:</strong> PM2.5, SO2, NOx causing premature deaths, respiratory illness (~$2.8T from coal alone)</li>
+                    <li><strong>Climate damage:</strong> CO2 emissions not priced at social cost of carbon (~$1.8T at $60/tCO2)</li>
+                    <li><strong>Vehicle externalities:</strong> congestion, road damage, accidents (~$0.6T)</li>
+                    <li><strong>Foregone consumption tax revenue:</strong> fuel taxed below efficient levels (~$0.5T)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="info-callout">
+            <strong>Why the numbers differ:</strong> The IEA tracks direct fiscal subsidies ($1.3T). The IMF adds the cost of unpriced externalities ($5.7T) to arrive at $7T. Both are valid frameworks &mdash; the IEA figure measures government fiscal cost, the IMF figure measures total societal cost. This dashboard presents both, clearly labelled.
+        </div>
+    </div>
+
+    <!-- Top countries by total subsidy -->
+    <div class="chart-row">
+        <div class="section">
+            <div class="section-header">
+                <h2 id="countryChartTitle">Top Countries: Total Subsidy (IMF, incl. externalities)</h2>
+                <div class="toggle-bar" id="subsidyToggle">
+                    <button class="toggle-btn active" data-mode="total" onclick="toggleSubsidyView('total')">Total ($B)</button>
+                    <button class="toggle-btn" data-mode="direct" onclick="toggleSubsidyView('direct')">Direct Only</button>
+                </div>
+            </div>
+            <div class="chart-container-tall"><canvas id="chartCountrySubsidy"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Subsidy Composition by Type</h2>
+            <p class="section-subtitle">IMF breakdown: how the $7T divides across subsidy categories globally.</p>
+            <div class="chart-container"><canvas id="chartSubsidyType"></canvas></div>
+            <div style="margin-top:1rem;">
+                <div class="comparison-bar">
+                    <div class="bar-label">Local air pollution</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:40%;background:#8e44ad;">$2.8T</div></div>
+                </div>
+                <div class="comparison-bar">
+                    <div class="bar-label">Climate / GHG</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:26%;background:#2980b9;">$1.8T</div></div>
+                </div>
+                <div class="comparison-bar">
+                    <div class="bar-label">Direct subsidies</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:19%;background:#e67e22;">$1.3T</div></div>
+                </div>
+                <div class="comparison-bar">
+                    <div class="bar-label">Congestion / roads</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:8.6%;background:#27ae60;">$0.6T</div></div>
+                </div>
+                <div class="comparison-bar">
+                    <div class="bar-label">Foregone tax revenue</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:7.1%;background:#95a5a6;">$0.5T</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Per capita and per worker -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Subsidy per Capita by Country (Total, IMF)</h2>
+            <p class="section-subtitle">Total implicit + explicit subsidies divided by population. Oil-producing states dominate due to consumer price subsidies.</p>
+            <div class="chart-container-tall"><canvas id="chartPerCapita"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Subsidy per Fossil Fuel Worker by Country</h2>
+            <p class="section-subtitle">Total country subsidy (IMF) divided by estimated fossil fuel employment. Reveals the fiscal cost society bears per job sustained.</p>
+            <div class="chart-container-tall"><canvas id="chartPerWorker"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Per-worker context -->
+    <div class="section">
+        <h2>Subsidy per Worker: What the Numbers Mean</h2>
+        <div class="stat-row">
+            <div class="stat-card">
+                <div class="pct" style="color:#e74c3c;">$1.6M</div>
+                <div class="desc">Saudi Arabia &middot; subsidy per fossil fuel worker<br>(~$88B subsidies / 55k workers)</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:#e67e22;">$630K</div>
+                <div class="desc">United States &middot; subsidy per fossil fuel worker<br>(~$760B subsidies / 1.2M workers)</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:var(--coal);">$47K</div>
+                <div class="desc">India &middot; subsidy per fossil fuel worker<br>(~$350B subsidies / 7.5M workers)</div>
+            </div>
+        </div>
+        <div class="info-callout warn">
+            <strong>Interpretation note:</strong> High subsidy-per-worker ratios do not mean workers receive these sums. The metric shows how much public fiscal + societal cost is associated with each fossil fuel job. It combines consumer price subsidies (which benefit all fuel users, not just workers), producer support, and unpriced externalities. Countries with high consumption, few workers, and large externalities show the highest ratios.
+        </div>
+    </div>
+
+    <!-- Subsidy types breakdown by country -->
+    <div class="section">
+        <h2>Direct Subsidies: Top Recipients by Type</h2>
+        <p class="section-subtitle">IEA/OECD 2022 data. Consumer price subsidies dominate in oil-producing states; tax preferences dominate in OECD countries.</p>
+        <div class="data-table-wrapper">
+            <table id="directSubsidyTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Country</th>
+                        <th class="num">Consumer Price ($B)</th>
+                        <th class="num">Producer Support ($B)</th>
+                        <th class="num">Tax Preferences ($B)</th>
+                        <th class="num">SOE Transfers ($B)</th>
+                        <th class="num">Total Direct ($B)</th>
+                        <th>Primary Mechanism</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Trends over time -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Fossil Fuel Subsidies Over Time</h2>
+            <p class="section-subtitle">IMF total (implicit + explicit) and IEA direct subsidies, 2015&ndash;2023. The 2022 spike reflects energy crisis price support.</p>
+            <div class="chart-container"><canvas id="chartTrend"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Fossil Fuel vs Clean Energy Support</h2>
+            <p class="section-subtitle">Annual fossil fuel subsidies (direct) vs global clean energy investment (IEA/BNEF). Clean energy investment overtook fossil fuel subsidies in 2023.</p>
+            <div class="chart-container"><canvas id="chartComparison"></canvas></div>
+        </div>
+    </div>
+
+    <!-- FF vs Clean comparison context -->
+    <div class="section">
+        <h2>Fossil Fuel Subsidies in Context</h2>
+        <div class="stat-row">
+            <div class="stat-card">
+                <div class="pct" style="color:#e67e22;">$1.3T</div>
+                <div class="desc">Direct fossil fuel subsidies (2022)<br>IEA/OECD estimate</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:#27ae60;">$1.8T</div>
+                <div class="desc">Clean energy investment (2023)<br>IEA World Energy Investment</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:var(--accent);">$0.4T</div>
+                <div class="desc">Clean energy subsidies (2022)<br>Direct government support</div>
+            </div>
+        </div>
+        <div class="info-callout">
+            <strong>The subsidy gap:</strong> Fossil fuels receive roughly 3x more in direct government subsidies than clean energy ($1.3T vs ~$0.4T). When including total clean energy investment (private + public, $1.8T), the comparison shifts, but these are different metrics: subsidies measure government support, investment measures total capital deployed.
+        </div>
+    </div>
+
+    <!-- Reform tracker -->
+    <div class="section">
+        <h2>Subsidy Reform Tracker</h2>
+        <p class="section-subtitle">G20 pledged to phase out "inefficient" fossil fuel subsidies in 2009. Status as of 2024.</p>
+
+        <div class="info-callout warn">
+            <strong>G20 scorecard:</strong> 15 years after the Pittsburgh pledge, G20 fossil fuel subsidies have increased from ~$500B (2009) to ~$1.3T (2022). Only a handful of countries have implemented significant reforms, and several reversed course during the 2021&ndash;2022 energy crisis.
+        </div>
+
+        <div class="reform-grid">
+            <div>
+                <h3>Notable Reforms</h3>
+                <div class="reform-item">
+                    <span class="reform-badge reformed">Reformed</span>
+                    <div><strong>India (2014&ndash;2023):</strong> Eliminated diesel subsidy (2014), deregulated petrol, LPG subsidy targeted via DBT (Ujjwala). Fuel taxes raised significantly. Savings: ~$15B/yr.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge reformed">Reformed</span>
+                    <div><strong>Indonesia (2014&ndash;2015):</strong> President Jokowi eliminated petrol subsidies, capped diesel subsidy. Freed $15.6B for infrastructure and social spending.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge reformed">Reformed</span>
+                    <div><strong>UAE (2015):</strong> Moved to market-linked fuel pricing. Eliminated petrol and diesel subsidies. First Gulf state to fully deregulate.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge reformed">Reformed</span>
+                    <div><strong>Egypt (2014&ndash;2024):</strong> Phased reduction over 10 years. Fuel subsidies fell from $18B (2013) to ~$3B (2024). IMF-supported programme.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge partial">Partial</span>
+                    <div><strong>Saudi Arabia (2016&ndash;2018):</strong> Raised domestic fuel and electricity prices as part of Vision 2030. But prices still well below international levels.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge partial">Partial</span>
+                    <div><strong>China (2013&ndash;):</strong> Coal price deregulation, electricity market reforms. But coal power still receives capacity payments and preferential dispatch.</div>
+                </div>
+            </div>
+            <div>
+                <h3>Stalled or Reversed</h3>
+                <div class="reform-item">
+                    <span class="reform-badge stalled">Stalled</span>
+                    <div><strong>United States:</strong> $20B+/yr in producer tax preferences (IDCs, percentage depletion). IRA added clean energy credits but did not remove fossil fuel provisions.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge stalled">Stalled</span>
+                    <div><strong>Russia:</strong> Domestic price controls keep gas at ~$1.70/MMBtu vs $10+ export price. ~$60B/yr in implicit consumer subsidies. No reform planned.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge reversed">Reversed</span>
+                    <div><strong>EU (2021&ndash;2023):</strong> Energy crisis led to massive new consumer support: fuel tax cuts, price caps, windfall levies. ~$200B in emergency fossil fuel subsidies.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge reversed">Reversed</span>
+                    <div><strong>Nigeria (2023):</strong> President Tinubu ended petrol subsidy (May 2023), then partially reinstated price controls after public protests. Reform incomplete.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge stalled">Stalled</span>
+                    <div><strong>Iran:</strong> Fuel prices set at ~$0.03/litre (among world's lowest). ~$80B/yr in consumer subsidies. Subsidy reform attempts (2019) met with protests.</div>
+                </div>
+                <div class="reform-item">
+                    <span class="reform-badge stalled">Stalled</span>
+                    <div><strong>Argentina:</strong> Energy subsidies ~3% of GDP. Multiple reform attempts reversed by successive governments.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data tables -->
+    <div class="section">
+        <h2>Country-Level Subsidy Data</h2>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showTab('total')">Total (IMF)</button>
+            <button class="tab-btn" onclick="showTab('percapita')">Per Capita</button>
+            <button class="tab-btn" onclick="showTab('perworker')">Per Worker</button>
+        </div>
+        <div class="tab-content active" id="tab-total">
+            <div class="data-table-wrapper">
+                <table id="totalTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Total Subsidy ($B)</th>
+                            <th class="num">Direct ($B)</th>
+                            <th class="num">Externalities ($B)</th>
+                            <th class="num">% of GDP</th>
+                            <th class="num">Population (M)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="tab-percapita">
+            <div class="data-table-wrapper">
+                <table id="perCapitaTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Total Subsidy ($B)</th>
+                            <th class="num">Population (M)</th>
+                            <th class="num">Subsidy/Capita ($)</th>
+                            <th class="num">Direct/Capita ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="tab-perworker">
+            <div class="data-table-wrapper">
+                <table id="perWorkerTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Total Subsidy ($B)</th>
+                            <th class="num">FF Workers (k)</th>
+                            <th class="num">Subsidy/Worker ($k)</th>
+                            <th>Employment Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="section">
+        <h2>Methodology & Sources</h2>
+        <div class="methodology">
+            <p><strong>Total subsidies (IMF):</strong> IMF Working Paper "IMF Fossil Fuel Subsidies Data: 2023 Update" (Parry, Black, Zhunussova, 2023). Total = explicit subsidies + implicit subsidies. Implicit = undercharging for supply costs + environmental/health externalities + foregone consumption tax revenue. Base year: 2022 with projections to 2023. Covers 170 countries, all fossil fuels.</p>
+            <p><strong>Direct subsidies (IEA/OECD):</strong> IEA World Energy Outlook 2023 and OECD Inventory of Support Measures for Fossil Fuels (2023). Consumer price subsidies measured as price gap (domestic price vs. international reference). Producer subsidies include budgetary transfers, tax expenditures, and below-market provision of goods/services.</p>
+            <p><strong>Health costs:</strong> Lancet Commission on Pollution and Health (2022 update). Coal air pollution mortality estimate based on Global Burden of Disease study, IHME. $2.8T figure uses WHO Value of Statistical Life methodology applied to estimated 1.2M premature deaths/yr from coal PM2.5.</p>
+            <p><strong>Employment data:</strong> ILO (formal employment), national statistics, IEA World Energy Employment report (2023), Global Energy Monitor coal mine databases. Fossil fuel employment includes extraction, processing, transport, and power generation. Country-specific notes in table.</p>
+            <p><strong>Per worker calculation:</strong> Total IMF subsidy for country divided by estimated total fossil fuel workforce. This is a ratio metric, not a per-worker benefit. Workers do not receive these amounts; the figure reflects the societal cost associated with maintaining each fossil fuel job.</p>
+            <p><strong>Clean energy investment:</strong> IEA World Energy Investment 2024, BNEF Global Energy Transition Investment Trends 2024. Includes renewables, EVs, batteries, nuclear, hydrogen, CCS, grids, and efficiency.</p>
+            <p><strong>Reform tracker:</strong> IMF Subsidy Reform Database, IISD Global Subsidies Initiative, World Bank ESMAP. Status as of late 2024.</p>
+            <div style="margin-top: 1rem;">
+                <span class="source-tag">IMF WP/23/169</span>
+                <span class="source-tag">IEA WEO 2023</span>
+                <span class="source-tag">OECD Fossil Fuel Inventory</span>
+                <span class="source-tag">Lancet Pollution Commission</span>
+                <span class="source-tag">IEA WEE 2023</span>
+                <span class="source-tag">BNEF GETI 2024</span>
+                <span class="source-tag">IEA WEI 2024</span>
+                <span class="source-tag">IISD-GSI</span>
+            </div>
+        </div>
     </div>
 </div>
+
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard</p>
-    <p>Built with <a href="https://claude.ai">Claude</a></p>
+    <p>Global Fossil Fuel Subsidies Dashboard &middot; Task 6 of 10 Analysis Verticals</p>
+    <p>Data: 2022&ndash;2023 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
+
+<script>
+// ===== DATA =====
+
+// Top countries by total subsidy (IMF 2023 estimate, $B, includes externalities)
+const countryData = [
+    { country: 'China',          total: 2206, direct: 56,  extern: 2150, pctGdp: 12.7, pop: 1412, workers: 5600, workerNotes: 'Coal mining ~4M, oil/gas ~0.6M, coal power ~1M' },
+    { country: 'United States',  total: 757,  direct: 22,  extern: 735,  pctGdp: 2.9,  pop: 335,  workers: 1200, workerNotes: 'Oil/gas ~600k, coal ~40k, power/refining ~560k' },
+    { country: 'Russia',         total: 447,  direct: 64,  extern: 383,  pctGdp: 24.4, pop: 144,  workers: 1100, workerNotes: 'Oil/gas ~700k, coal ~150k, power ~250k' },
+    { country: 'India',          total: 350,  direct: 34,  extern: 316,  pctGdp: 10.3, pop: 1408, workers: 7500, workerNotes: 'Coal mining ~5M (incl. informal), oil/gas ~0.3M, power ~2.2M' },
+    { country: 'EU-27',          total: 310,  direct: 42,  extern: 268,  pctGdp: 1.8,  pop: 449,  workers: 800,  workerNotes: 'Oil/gas ~200k, coal ~180k, power/refining ~420k' },
+    { country: 'Japan',          total: 231,  direct: 15,  extern: 216,  pctGdp: 5.5,  pop: 125,  workers: 250,  workerNotes: 'Refining ~100k, power ~100k, oil/gas ~50k' },
+    { country: 'Iran',           total: 227,  direct: 82,  extern: 145,  pctGdp: 50.8, pop: 88,   workers: 350,  workerNotes: 'Oil/gas ~200k, petrochemicals ~100k, power ~50k' },
+    { country: 'Saudi Arabia',   total: 88,   direct: 48,  extern: 40,   pctGdp: 8.1,  pop: 37,   workers: 55,   workerNotes: 'Saudi Aramco ~70k but ~55k in FF extraction/processing' },
+    { country: 'Indonesia',      total: 136,  direct: 28,  extern: 108,  pctGdp: 10.1, pop: 277,  workers: 1500, workerNotes: 'Coal mining ~250k, palm-oil energy ~200k, power ~1M' },
+    { country: 'South Korea',    total: 96,   direct: 4,   extern: 92,   pctGdp: 5.7,  pop: 52,   workers: 170,  workerNotes: 'Power ~80k, refining ~50k, petrochemicals ~40k' },
+    { country: 'Germany',        total: 83,   direct: 7,   extern: 76,   pctGdp: 1.9,  pop: 84,   workers: 180,  workerNotes: 'Coal/lignite ~20k, power ~80k, refining/gas ~80k' },
+    { country: 'Egypt',          total: 71,   direct: 19,  extern: 52,   pctGdp: 18.4, pop: 104,  workers: 250,  workerNotes: 'Oil/gas ~120k, power ~80k, refining ~50k' },
+    { country: 'Brazil',         total: 65,   direct: 9,   extern: 56,   pctGdp: 3.3,  pop: 215,  workers: 600,  workerNotes: 'Oil/gas (Petrobras) ~350k, ethanol ~200k, power ~50k' },
+    { country: 'Australia',      total: 55,   direct: 7,   extern: 48,   pctGdp: 3.4,  pop: 26,   workers: 110,  workerNotes: 'Coal ~50k, oil/gas ~30k, LNG ~30k' },
+    { country: 'South Africa',   total: 53,   direct: 3,   extern: 50,   pctGdp: 13.6, pop: 60,   workers: 180,  workerNotes: 'Coal mining ~90k, Eskom power ~45k, liquid fuels ~45k' },
+    { country: 'United Kingdom', total: 50,   direct: 5,   extern: 45,   pctGdp: 1.6,  pop: 67,   workers: 180,  workerNotes: 'North Sea oil/gas ~30k, power ~80k, refining ~70k' },
+    { country: 'Mexico',         total: 55,   direct: 17,  extern: 38,   pctGdp: 3.8,  pop: 128,  workers: 400,  workerNotes: 'Pemex ~120k, power ~100k, coal ~15k, downstream ~165k' },
+    { country: 'Turkey',         total: 42,   direct: 5,   extern: 37,   pctGdp: 3.9,  pop: 85,   workers: 250,  workerNotes: 'Coal/lignite ~40k, power ~100k, refining/gas ~110k' },
+    { country: 'Canada',         total: 40,   direct: 7,   extern: 33,   pctGdp: 1.9,  pop: 40,   workers: 200,  workerNotes: 'Oil sands ~40k, conventional oil/gas ~100k, power ~60k' },
+    { country: 'Pakistan',       total: 32,   direct: 11,  extern: 21,   pctGdp: 9.4,  pop: 230,  workers: 400,  workerNotes: 'Coal ~30k, gas ~50k, power ~200k, downstream ~120k' },
+];
+
+// Direct subsidies detailed breakdown (IEA/OECD, top countries)
+const directSubsidyData = [
+    { rank: 1,  country: 'Iran',          consumer: 72, producer: 2,  tax: 1,  soe: 7,  total: 82, mechanism: 'Consumer price controls (fuel, gas, electricity)' },
+    { rank: 2,  country: 'Russia',        consumer: 45, producer: 8,  tax: 5,  soe: 6,  total: 64, mechanism: 'Regulated domestic gas price + fuel duty exemptions' },
+    { rank: 3,  country: 'China',         consumer: 18, producer: 12, tax: 14, soe: 12, total: 56, mechanism: 'SOE transfers, coal power capacity payments' },
+    { rank: 4,  country: 'Saudi Arabia',  consumer: 38, producer: 5,  tax: 2,  soe: 3,  total: 48, mechanism: 'Consumer fuel/electricity pricing' },
+    { rank: 5,  country: 'EU-27',         consumer: 15, producer: 8,  tax: 16, soe: 3,  total: 42, mechanism: 'Emergency price caps (2022), tax preferences' },
+    { rank: 6,  country: 'India',         consumer: 12, producer: 5,  tax: 8,  soe: 9,  total: 34, mechanism: 'LPG/kerosene subsidy, coal SOE pricing' },
+    { rank: 7,  country: 'Indonesia',     consumer: 18, producer: 3,  tax: 2,  soe: 5,  total: 28, mechanism: 'Diesel price cap, Pertamina losses' },
+    { rank: 8,  country: 'United States', consumer: 0,  producer: 5,  tax: 15, soe: 2,  total: 22, mechanism: 'IDCs, percentage depletion, Master LP exemption' },
+    { rank: 9,  country: 'Egypt',         consumer: 14, producer: 1,  tax: 1,  soe: 3,  total: 19, mechanism: 'Consumer fuel/electricity pricing' },
+    { rank: 10, country: 'Mexico',        consumer: 10, producer: 2,  tax: 2,  soe: 3,  total: 17, mechanism: 'IEPS fuel tax waiver, Pemex support' },
+    { rank: 11, country: 'Japan',         consumer: 8,  producer: 2,  tax: 3,  soe: 2,  total: 15, mechanism: 'Fuel subsidy programme (2022&ndash;), coal power support' },
+    { rank: 12, country: 'Pakistan',      consumer: 8,  producer: 1,  tax: 1,  soe: 1,  total: 11, mechanism: 'Cross-subsidy in electricity tariffs' },
+    { rank: 13, country: 'Brazil',        consumer: 3,  producer: 2,  tax: 2,  soe: 2,  total: 9,  mechanism: 'Fuel tax exemptions, Petrobras pricing' },
+];
+
+// Per capita data (sorted by subsidy per capita, top 15)
+const perCapitaData = [
+    { country: 'Iran',          total: 227,  pop: 88,   perCapita: 2580, directPerCapita: 932 },
+    { country: 'Saudi Arabia',  total: 88,   pop: 37,   perCapita: 2378, directPerCapita: 1297 },
+    { country: 'Russia',        total: 447,  pop: 144,  perCapita: 3104, directPerCapita: 444 },
+    { country: 'Australia',     total: 55,   pop: 26,   perCapita: 2115, directPerCapita: 269 },
+    { country: 'United States', total: 757,  pop: 335,  perCapita: 2260, directPerCapita: 66 },
+    { country: 'South Korea',   total: 96,   pop: 52,   perCapita: 1846, directPerCapita: 77 },
+    { country: 'Japan',         total: 231,  pop: 125,  perCapita: 1848, directPerCapita: 120 },
+    { country: 'China',         total: 2206, pop: 1412, perCapita: 1562, directPerCapita: 40 },
+    { country: 'Canada',        total: 40,   pop: 40,   perCapita: 1000, directPerCapita: 175 },
+    { country: 'Germany',       total: 83,   pop: 84,   perCapita: 988,  directPerCapita: 83 },
+    { country: 'South Africa',  total: 53,   pop: 60,   perCapita: 883,  directPerCapita: 50 },
+    { country: 'United Kingdom',total: 50,   pop: 67,   perCapita: 746,  directPerCapita: 75 },
+    { country: 'EU-27',         total: 310,  pop: 449,  perCapita: 690,  directPerCapita: 94 },
+    { country: 'Egypt',         total: 71,   pop: 104,  perCapita: 683,  directPerCapita: 183 },
+    { country: 'Indonesia',     total: 136,  pop: 277,  perCapita: 491,  directPerCapita: 101 },
+    { country: 'Turkey',        total: 42,   pop: 85,   perCapita: 494,  directPerCapita: 59 },
+    { country: 'Mexico',        total: 55,   pop: 128,  perCapita: 430,  directPerCapita: 133 },
+    { country: 'Brazil',        total: 65,   pop: 215,  perCapita: 302,  directPerCapita: 42 },
+    { country: 'India',         total: 350,  pop: 1408, perCapita: 249,  directPerCapita: 24 },
+    { country: 'Pakistan',      total: 32,   pop: 230,  perCapita: 139,  directPerCapita: 48 },
+];
+
+// Trend data: fossil fuel subsidies over time
+const trendYears = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023];
+const imfTotal =   [4700, 4900, 5200, 5200, 5900, 5400, 5900, 7000, 7000]; // IMF total ($B)
+const ieaDirect =  [ 320,  260,  300,  340,  320,  180,  440, 1300,  620]; // IEA direct ($B)
+
+// FF subsidies vs clean energy investment
+const compYears =   [2017, 2018, 2019, 2020, 2021, 2022, 2023];
+const ffDirect =    [ 300,  340,  320,  180,  440, 1300,  620]; // IEA direct FF subsidies ($B)
+const cleanInvest = [ 550,  580,  600,  570,  850, 1100, 1800]; // BNEF/IEA clean energy investment ($B)
+const cleanSubsidy =[ 130,  140,  145,  155,  200,  310,  400]; // Direct clean energy subsidies ($B)
+
+
+// ===== CHARTS =====
+
+const chartDefaults = {
+    font: { family: "'Inter', sans-serif" },
+    color: '#7f8c8d',
+};
+Chart.defaults.font.family = chartDefaults.font.family;
+Chart.defaults.color = chartDefaults.color;
+
+// -- Country subsidy bar chart (toggleable) --
+const countryLabels = countryData.map(d => d.country);
+const countryTotals = countryData.map(d => d.total);
+const countryDirects = countryData.map(d => d.direct);
+const countryExterns = countryData.map(d => d.extern);
+
+let chartCountrySubsidy;
+function createCountryChart(mode) {
+    const ctx = document.getElementById('chartCountrySubsidy').getContext('2d');
+    if (chartCountrySubsidy) chartCountrySubsidy.destroy();
+
+    let datasets, titleText;
+    if (mode === 'total') {
+        datasets = [
+            {
+                label: 'Direct Subsidies',
+                data: countryDirects,
+                backgroundColor: '#e67e22',
+            },
+            {
+                label: 'Externalities',
+                data: countryExterns,
+                backgroundColor: '#8e44ad88',
+            }
+        ];
+        titleText = 'Top Countries: Total Subsidy (IMF, incl. externalities)';
+    } else {
+        datasets = [{
+            label: 'Direct Subsidies ($B)',
+            data: countryDirects,
+            backgroundColor: '#e67e22',
+        }];
+        titleText = 'Top Countries: Direct Subsidies Only (IEA/OECD)';
+    }
+
+    document.getElementById('countryChartTitle').textContent = titleText;
+
+    chartCountrySubsidy = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: countryLabels, datasets: datasets },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(items) {
+                            const idx = items[0].dataIndex;
+                            const d = countryData[idx];
+                            return 'GDP share: ' + d.pctGdp + '%\nPop: ' + d.pop + 'M';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: mode === 'total',
+                    title: { display: true, text: 'Subsidies ($B)', font: { size: 11 } },
+                    grid: { color: '#f0f0f0' }
+                },
+                y: {
+                    stacked: mode === 'total',
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+function toggleSubsidyView(mode) {
+    document.querySelectorAll('#subsidyToggle .toggle-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    createCountryChart(mode);
+}
+
+createCountryChart('total');
+
+// -- Subsidy type doughnut --
+new Chart(document.getElementById('chartSubsidyType').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Local Air Pollution ($2.8T)', 'Climate / GHG ($1.8T)', 'Direct Subsidies ($1.3T)', 'Congestion & Roads ($0.6T)', 'Foregone Tax Revenue ($0.5T)'],
+        datasets: [{
+            data: [2800, 1800, 1300, 600, 500],
+            backgroundColor: ['#8e44ad', '#2980b9', '#e67e22', '#27ae60', '#95a5a6'],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 }, padding: 10 } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const pct = (ctx.raw / 7000 * 100).toFixed(1);
+                        return ctx.label + ' (' + pct + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// -- Per capita chart --
+const pcSorted = [...perCapitaData].sort((a, b) => b.perCapita - a.perCapita);
+new Chart(document.getElementById('chartPerCapita').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: pcSorted.map(d => d.country),
+        datasets: [{
+            label: 'Subsidy per Capita ($/person)',
+            data: pcSorted.map(d => d.perCapita),
+            backgroundColor: pcSorted.map(d => d.directPerCapita > 400 ? '#e67e22' : '#8e44ad88'),
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    afterBody: function(items) {
+                        const idx = items[0].dataIndex;
+                        const d = pcSorted[idx];
+                        return 'Direct per capita: $' + d.directPerCapita + '\nTotal: $' + d.total + 'B / ' + d.pop + 'M people';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { title: { display: true, text: '$/person (IMF total)', font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+            y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+    }
+});
+
+// -- Per worker chart --
+const pwData = countryData.map(d => ({
+    country: d.country,
+    total: d.total,
+    workers: d.workers,
+    perWorker: Math.round(d.total * 1000 / d.workers) // $k per worker
+})).sort((a, b) => b.perWorker - a.perWorker).slice(0, 15);
+
+new Chart(document.getElementById('chartPerWorker').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: pwData.map(d => d.country),
+        datasets: [{
+            label: 'Subsidy per FF Worker ($k)',
+            data: pwData.map(d => d.perWorker),
+            backgroundColor: pwData.map(d => {
+                if (d.perWorker > 1000) return '#c0392b';
+                if (d.perWorker > 500) return '#e67e22';
+                return '#2980b9';
+            }),
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        return '$' + ctx.raw.toLocaleString() + 'k per worker';
+                    },
+                    afterBody: function(items) {
+                        const idx = items[0].dataIndex;
+                        const d = pwData[idx];
+                        return 'Total subsidy: $' + d.total + 'B\nWorkers: ' + d.workers + 'k';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { title: { display: true, text: '$k per fossil fuel worker (IMF total / FF employment)', font: { size: 10 } }, grid: { color: '#f0f0f0' } },
+            y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+    }
+});
+
+// -- Trend chart --
+new Chart(document.getElementById('chartTrend').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: trendYears,
+        datasets: [
+            {
+                label: 'IMF Total (incl. externalities)',
+                data: imfTotal,
+                borderColor: '#8e44ad',
+                backgroundColor: '#8e44ad22',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                borderWidth: 2,
+            },
+            {
+                label: 'IEA Direct Subsidies',
+                data: ieaDirect,
+                borderColor: '#e67e22',
+                backgroundColor: '#e67e2222',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                borderWidth: 2,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.dataset.label + ': $' + ctx.raw.toLocaleString() + 'B'; }
+                }
+            }
+        },
+        scales: {
+            y: { title: { display: true, text: '$B', font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+            x: { grid: { color: '#f0f0f0' } }
+        }
+    }
+});
+
+// -- FF vs Clean comparison chart --
+new Chart(document.getElementById('chartComparison').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: compYears,
+        datasets: [
+            {
+                label: 'FF Direct Subsidies',
+                data: ffDirect,
+                backgroundColor: '#e67e2299',
+                borderColor: '#e67e22',
+                borderWidth: 1,
+                order: 2,
+            },
+            {
+                label: 'Clean Energy Subsidies',
+                data: cleanSubsidy,
+                backgroundColor: '#27ae6099',
+                borderColor: '#27ae60',
+                borderWidth: 1,
+                order: 3,
+            },
+            {
+                label: 'Clean Energy Investment (total)',
+                data: cleanInvest,
+                type: 'line',
+                borderColor: '#27ae60',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 4,
+                tension: 0.3,
+                order: 1,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.dataset.label + ': $' + ctx.raw + 'B'; }
+                }
+            }
+        },
+        scales: {
+            y: { title: { display: true, text: '$B', font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+            x: { grid: { color: '#f0f0f0' } }
+        }
+    }
+});
+
+
+// ===== TABLES =====
+
+// Direct subsidy table
+(function() {
+    const tbody = document.querySelector('#directSubsidyTable tbody');
+    directSubsidyData.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + d.rank + '</td><td>' + d.country + '</td>'
+            + '<td class="num">' + d.consumer + '</td><td class="num">' + d.producer + '</td>'
+            + '<td class="num">' + d.tax + '</td><td class="num">' + d.soe + '</td>'
+            + '<td class="num"><strong>' + d.total + '</strong></td><td>' + d.mechanism + '</td>';
+        tbody.appendChild(tr);
+    });
+})();
+
+// Total subsidy table
+(function() {
+    const tbody = document.querySelector('#totalTable tbody');
+    const sorted = [...countryData].sort((a, b) => b.total - a.total);
+    sorted.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + (i+1) + '</td><td>' + d.country + '</td>'
+            + '<td class="num"><strong>' + d.total.toLocaleString() + '</strong></td>'
+            + '<td class="num">' + d.direct + '</td><td class="num">' + d.extern.toLocaleString() + '</td>'
+            + '<td class="num">' + d.pctGdp + '%</td><td class="num">' + d.pop.toLocaleString() + '</td>';
+        tbody.appendChild(tr);
+    });
+})();
+
+// Per capita table
+(function() {
+    const tbody = document.querySelector('#perCapitaTable tbody');
+    const sorted = [...perCapitaData].sort((a, b) => b.perCapita - a.perCapita);
+    sorted.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + (i+1) + '</td><td>' + d.country + '</td>'
+            + '<td class="num">' + d.total.toLocaleString() + '</td>'
+            + '<td class="num">' + d.pop.toLocaleString() + '</td>'
+            + '<td class="num"><strong>$' + d.perCapita.toLocaleString() + '</strong></td>'
+            + '<td class="num">$' + d.directPerCapita.toLocaleString() + '</td>';
+        tbody.appendChild(tr);
+    });
+})();
+
+// Per worker table
+(function() {
+    const tbody = document.querySelector('#perWorkerTable tbody');
+    const workerData = countryData.map(d => ({
+        country: d.country,
+        total: d.total,
+        workers: d.workers,
+        perWorker: Math.round(d.total * 1000 / d.workers),
+        notes: d.workerNotes
+    })).sort((a, b) => b.perWorker - a.perWorker);
+
+    workerData.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + (i+1) + '</td><td>' + d.country + '</td>'
+            + '<td class="num">' + d.total.toLocaleString() + '</td>'
+            + '<td class="num">' + d.workers.toLocaleString() + '</td>'
+            + '<td class="num"><strong>$' + d.perWorker.toLocaleString() + 'k</strong></td>'
+            + '<td style="font-size:0.75rem;color:var(--text-secondary)">' + d.notes + '</td>';
+        tbody.appendChild(tr);
+    });
+})();
+
+
+// ===== TAB SWITCHING =====
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+}
+
+</script>
 <script src="nav.js"></script>
 </body>
 </html>

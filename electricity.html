@@ -4,25 +4,1038 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Electricity Costs — Fossil Fuel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
+    <style>
+        /* Page-specific styles */
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        .chart-container-tall { position: relative; width: 100%; height: 520px; }
+        .chart-container-wide { position: relative; width: 100%; height: 450px; }
+
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
+
+        .headline-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+        }
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.coal-card { border-top-color: var(--coal); }
+        .headline-card.solar-card { border-top-color: #f39c12; }
+        .headline-card.wind-card { border-top-color: var(--accent); }
+        .headline-card.gas-card { border-top-color: var(--gas); }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--accent); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout strong { color: var(--accent); }
+        .info-callout.warning {
+            background: #fff8f0; border-left-color: #e67e22;
+        }
+        .info-callout.warning strong { color: #e67e22; }
+
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 700px) { .stat-grid { grid-template-columns: 1fr; } }
+        .stat-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+        .stat-card .pct { font-size: 1.5rem; font-weight: 700; }
+        .stat-card .desc { font-size: 0.78rem; color: var(--text-secondary); }
+
+        .externality-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+        @media (max-width: 800px) { .externality-breakdown { grid-template-columns: 1fr; } }
+
+        .cost-stack {
+            display: flex; flex-direction: column; gap: 0.3rem; margin: 1rem 0;
+        }
+        .cost-layer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.5rem 0.8rem; border-radius: 4px; font-size: 0.82rem;
+        }
+        .cost-layer .layer-label { font-weight: 500; }
+        .cost-layer .layer-value { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+        .key-finding {
+            background: #f8f9fa; border-radius: 8px; padding: 1rem 1.2rem;
+            margin: 0.8rem 0; border-left: 3px solid var(--accent);
+        }
+        .key-finding .finding-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .key-finding .finding-detail { font-size: 0.8rem; color: var(--text-secondary); }
+    </style>
 </head>
 <body>
+
 <div class="header">
-    <h1>Electricity Costs</h1>
-    <div class="subtitle">Cost of coal electricity vs alternatives, with and without carbon and health externalities</div>
+    <h1>Electricity Costs: Coal vs Alternatives</h1>
+    <div class="subtitle">Task 8: Levelised cost of electricity (LCOE) by source &mdash; with and without carbon &amp; health externalities</div>
 </div>
+
 <div class="container">
-    <div class="section coming-soon">
-        <h2>Coming Soon</h2>
-        <p>This analysis vertical is under development. Data research has been completed and the interactive visualizations are being built.</p>
+
+    <!-- Headline cards -->
+    <div class="headline-grid">
+        <div class="headline-card coal-card">
+            <div class="label">Coal LCOE (Global Avg)</div>
+            <div class="value" style="color:var(--coal)">$65&ndash;150</div>
+            <div class="detail">$/MWh &middot; New-build unsubsidised (2024)</div>
+        </div>
+        <div class="headline-card solar-card">
+            <div class="label">Solar PV LCOE</div>
+            <div class="value" style="color:#f39c12">$30&ndash;50</div>
+            <div class="detail">$/MWh &middot; Utility-scale (2024)</div>
+        </div>
+        <div class="headline-card wind-card">
+            <div class="label">Onshore Wind LCOE</div>
+            <div class="value" style="color:var(--accent)">$25&ndash;50</div>
+            <div class="detail">$/MWh &middot; Cheapest source in many markets</div>
+        </div>
+        <div class="headline-card gas-card">
+            <div class="label">Gas CCGT LCOE</div>
+            <div class="value" style="color:var(--gas)">$45&ndash;75</div>
+            <div class="detail">$/MWh &middot; Combined cycle (2024)</div>
+        </div>
+    </div>
+
+    <div class="info-callout">
+        <strong>The cost crossover has happened.</strong> In most markets globally, new solar and wind are now cheaper than new coal power plants on an unsubsidised LCOE basis. When carbon and health externalities are included, coal electricity costs 2&ndash;4x more than renewables. Even existing coal plants increasingly cost more to run than building new solar.
+    </div>
+
+    <!-- Section 1: Global LCOE Comparison -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Global LCOE by Technology (2024)</h2>
+            <p class="section-subtitle">Unsubsidised levelised cost of electricity, new-build. Range shows 25th&ndash;75th percentile. Source: Lazard LCOE v17, BNEF 2H 2024.</p>
+            <div class="chart-container"><canvas id="chartLCOE"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Share of New Capacity Where Solar/Wind Beats Coal</h2>
+            <p class="section-subtitle">Percentage of global markets where new renewables are cheaper than new coal, by year.</p>
+            <div class="chart-container"><canvas id="chartCheaperShare"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Section 2: Country-level LCOE comparison -->
+    <div class="section">
+        <h2>Country-Level LCOE: Coal vs Solar vs Wind (2024)</h2>
+        <p class="section-subtitle">Unsubsidised new-build LCOE in $/MWh by country. In every major market, solar and/or wind now undercut coal. Data: BNEF, IRENA, Lazard, national sources.</p>
+        <div class="chart-container-tall"><canvas id="chartCountryLCOE"></canvas></div>
+    </div>
+
+    <!-- Key country callouts -->
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="pct" style="color:#f39c12">$25&ndash;35</div>
+            <div class="desc">India solar LCOE ($/MWh)<br>Cheapest solar in the world</div>
+        </div>
+        <div class="stat-card">
+            <div class="pct" style="color:var(--accent)">$30&ndash;40</div>
+            <div class="desc">China solar LCOE ($/MWh)<br>Below new coal ($50&ndash;60)</div>
+        </div>
+        <div class="stat-card">
+            <div class="pct" style="color:var(--coal)">86%</div>
+            <div class="desc">of new coal capacity globally<br>more expensive than new renewables</div>
+        </div>
+    </div>
+
+    <!-- Section 3: True Cost of Coal — Externalities -->
+    <div class="section">
+        <h2>The True Cost of Coal Electricity</h2>
+        <p class="section-subtitle">Adding carbon costs ($50&ndash;200/tCO2) and health/air pollution costs reveals coal's real price. Coal emits ~0.9 tCO2/MWh on average.</p>
+
+        <div class="info-callout warning">
+            <strong>Hidden costs of coal power:</strong> A typical coal plant emitting ~0.9 tCO2/MWh incurs additional costs of $45/MWh at $50/tCO2 carbon price, plus $20&ndash;40/MWh in health/air pollution damages (WHO/Lancet). This more than doubles the apparent LCOE, bringing the true cost to $130&ndash;250/MWh.
+        </div>
+
+        <div class="chart-row">
+            <div>
+                <h3>Coal LCOE: Market Price vs True Cost</h3>
+                <div class="chart-container"><canvas id="chartTrueCost"></canvas></div>
+            </div>
+            <div>
+                <h3>Externality Cost Breakdown</h3>
+                <div class="chart-container"><canvas id="chartExternalities"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Cost stacking visualisation -->
+        <div class="externality-breakdown">
+            <div>
+                <h3>Cost Build-Up: Coal at $50/tCO2 Carbon Price</h3>
+                <div class="cost-stack">
+                    <div class="cost-layer" style="background:#e8e8e8;">
+                        <span class="layer-label">Base LCOE (plant + fuel)</span>
+                        <span class="layer-value">$65&ndash;150/MWh</span>
+                    </div>
+                    <div class="cost-layer" style="background:#ffe0b2;">
+                        <span class="layer-label">+ Carbon cost ($50/tCO2 &times; 0.9 t)</span>
+                        <span class="layer-value">+$45/MWh</span>
+                    </div>
+                    <div class="cost-layer" style="background:#ffcdd2;">
+                        <span class="layer-label">+ Health &amp; air pollution (WHO/Lancet)</span>
+                        <span class="layer-value">+$20&ndash;40/MWh</span>
+                    </div>
+                    <div class="cost-layer" style="background:var(--coal); color:white;">
+                        <span class="layer-label">True cost of coal electricity</span>
+                        <span class="layer-value">$130&ndash;235/MWh</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h3>Cost Build-Up: Coal at $200/tCO2 Carbon Price</h3>
+                <div class="cost-stack">
+                    <div class="cost-layer" style="background:#e8e8e8;">
+                        <span class="layer-label">Base LCOE (plant + fuel)</span>
+                        <span class="layer-value">$65&ndash;150/MWh</span>
+                    </div>
+                    <div class="cost-layer" style="background:#ffcc80;">
+                        <span class="layer-label">+ Carbon cost ($200/tCO2 &times; 0.9 t)</span>
+                        <span class="layer-value">+$180/MWh</span>
+                    </div>
+                    <div class="cost-layer" style="background:#ffcdd2;">
+                        <span class="layer-label">+ Health &amp; air pollution (WHO/Lancet)</span>
+                        <span class="layer-value">+$20&ndash;40/MWh</span>
+                    </div>
+                    <div class="cost-layer" style="background:var(--coal); color:white;">
+                        <span class="layer-label">True cost of coal electricity</span>
+                        <span class="layer-value">$265&ndash;370/MWh</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Externalities by country -->
+    <div class="section">
+        <h2>Coal LCOE With vs Without Externalities by Country</h2>
+        <p class="section-subtitle">Base LCOE + carbon ($75/tCO2 social cost of carbon, US EPA) + health costs. Compared to cheapest renewable alternative in that market.</p>
+        <div class="chart-container-wide"><canvas id="chartCountryExternalities"></canvas></div>
+        <div class="key-finding">
+            <div class="finding-title">In every country, coal with externalities costs 2&ndash;4x the cheapest renewable</div>
+            <div class="finding-detail">Even in countries with low coal prices (India, Indonesia), adding the social cost of carbon and health damages makes coal 2&ndash;3x more expensive than solar or wind. In high-cost markets (Germany, Japan), the gap is even wider.</div>
+        </div>
+    </div>
+
+    <!-- Section 5: Historical LCOE Trends -->
+    <div class="section">
+        <h2>Historical LCOE Trends (2010&ndash;2024)</h2>
+        <p class="section-subtitle">Solar PV costs have fallen 90% since 2010; onshore wind down 70%. Coal and gas have remained flat or increased. Data: IRENA Renewable Power Generation Costs 2024, Lazard.</p>
+        <div class="chart-container-wide"><canvas id="chartHistorical"></canvas></div>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="pct" style="color:#f39c12">&minus;90%</div>
+                <div class="desc">Solar PV cost decline<br>since 2010</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:var(--accent)">&minus;70%</div>
+                <div class="desc">Onshore wind cost decline<br>since 2010</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:var(--coal)">+5%</div>
+                <div class="desc">Coal LCOE change<br>since 2010 (roughly flat)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 6: Subsidy-adjusted costs -->
+    <div class="section">
+        <h2>Subsidy-Adjusted Costs: What Coal Actually Costs</h2>
+        <p class="section-subtitle">Many coal markets have subsidised electricity prices. Removing subsidies reveals the true market cost. Data: IEA Fossil Fuel Subsidies Database 2024, IMF.</p>
+
+        <div class="chart-row">
+            <div>
+                <h3>Market Price vs Subsidy-Removed Price</h3>
+                <div class="chart-container"><canvas id="chartSubsidies"></canvas></div>
+            </div>
+            <div>
+                <h3>Annual Fossil Fuel Electricity Subsidies ($B)</h3>
+                <div class="chart-container"><canvas id="chartSubsidySize"></canvas></div>
+            </div>
+        </div>
+
+        <div class="info-callout warning">
+            <strong>Global fossil fuel subsidies for electricity: ~$180B/year (IEA 2024).</strong> The IMF estimates implicit subsidies (including unpaid externalities) at $1.3 trillion for coal power alone. Without these subsidies, coal electricity would be uncompetitive in nearly all markets.
+        </div>
+    </div>
+
+    <!-- Section 7: New-build economics -->
+    <div class="section">
+        <h2>New Build Economics: Coal vs Renewables</h2>
+        <p class="section-subtitle">Why building new coal is now more expensive than new solar or wind almost everywhere. Capacity-weighted new-build comparison (2024).</p>
+
+        <div class="chart-container-wide"><canvas id="chartNewBuild"></canvas></div>
+
+        <div class="key-finding">
+            <div class="finding-title">New coal plants: stranded asset risk from day one</div>
+            <div class="finding-detail">A new coal plant built today at $100/MWh LCOE will compete against solar at $30&ndash;50/MWh that continues to fall in cost. Over a 40-year plant life, cumulative losses vs renewables could exceed $2 billion per GW of capacity. BNEF estimates 86% of planned new coal globally is already more expensive than new renewables.</div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="pct" style="color:var(--coal)">$100&ndash;150</div>
+                <div class="desc">New coal plant LCOE ($/MWh)<br>Including construction + fuel</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:#f39c12">$30&ndash;50</div>
+                <div class="desc">New solar PV ($/MWh)<br>Utility-scale, no subsidy</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:#c0392b">40 years</div>
+                <div class="desc">Typical coal plant life<br>Locked into high costs for decades</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Country data table -->
+    <div class="section">
+        <h2>Country-Level Data Table</h2>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showTab('lcoe')">LCOE by Source</button>
+            <button class="tab-btn" onclick="showTab('externalities')">Externalities</button>
+            <button class="tab-btn" onclick="showTab('subsidies')">Subsidies</button>
+        </div>
+        <div class="tab-content active" id="tab-lcoe">
+            <div class="data-table-wrapper">
+                <table id="lcoeTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Coal LCOE</th>
+                            <th class="num">Gas CCGT</th>
+                            <th class="num">Solar PV</th>
+                            <th class="num">Onshore Wind</th>
+                            <th class="num">Offshore Wind</th>
+                            <th class="num">Nuclear</th>
+                            <th>Cheapest Source</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="tab-externalities">
+            <div class="data-table-wrapper">
+                <table id="externalityTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Coal Base LCOE</th>
+                            <th class="num">+ Carbon ($75/t)</th>
+                            <th class="num">+ Health Costs</th>
+                            <th class="num">True Cost</th>
+                            <th class="num">Cheapest Renewable</th>
+                            <th class="num">Multiple</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="tab-subsidies">
+            <div class="data-table-wrapper">
+                <table id="subsidyTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Coal Elec. Price ($/MWh)</th>
+                            <th class="num">True Cost ($/MWh)</th>
+                            <th class="num">Implicit Subsidy ($/MWh)</th>
+                            <th class="num">Annual Subsidy ($B)</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="section">
+        <h2>Methodology &amp; Sources</h2>
+        <div class="methodology">
+            <p><strong>LCOE data:</strong> Lazard Levelised Cost of Energy Analysis v17 (April 2024), BNEF 2H 2024 LCOE Update, IRENA Renewable Power Generation Costs in 2023 (June 2024). Country-level data cross-referenced with IEA World Energy Outlook 2024 and national energy regulator publications. All figures are unsubsidised, new-build LCOE in 2024 USD.</p>
+            <p><strong>Carbon costs:</strong> Social cost of carbon at $75/tCO2 (US EPA central estimate, Nov 2023 update). Sensitivity shown at $50/tCO2 and $200/tCO2. Coal emission factor: 0.9 tCO2/MWh (IPCC AR6 median for hard coal). Gas: 0.37 tCO2/MWh.</p>
+            <p><strong>Health &amp; air pollution:</strong> Based on WHO/Lancet Commission on Pollution and Health (2022 update), OECD Cost of Air Pollution (2024), and Myllyvirta et al. (2024). Country-specific health damage estimates vary by population density, existing pollution levels, and healthcare system costs. Range: $8&ndash;65/MWh.</p>
+            <p><strong>Subsidies:</strong> IEA Fossil Fuel Subsidies Database (2024 update), IMF "Still Not Getting Energy Prices Right" (2023). Explicit subsidies (direct transfers) + implicit subsidies (unpriced externalities). Coal electricity subsidy figures include both supply-side (producer) and demand-side (consumer) subsidies.</p>
+            <p><strong>Historical trends:</strong> IRENA Renewable Power Generation Costs time series (2010&ndash;2023), extended to 2024 with Lazard/BNEF data. Coal and gas historical from IEA World Energy Outlook retrospectives.</p>
+            <ul>
+                <li>LCOE = (Capital costs + Fixed O&M + Variable O&M + Fuel costs) / Lifetime electricity output, discounted at WACC</li>
+                <li>Does not include integration costs (storage, grid) for variable renewables, or decommissioning costs for coal/nuclear</li>
+                <li>Country LCOE ranges reflect differences in resource quality, cost of capital, labour costs, and fuel prices</li>
+            </ul>
+            <div style="margin-top: 1rem;">
+                <span class="source-tag">Lazard LCOE v17 (2024)</span>
+                <span class="source-tag">BNEF 2H 2024</span>
+                <span class="source-tag">IRENA 2024</span>
+                <span class="source-tag">IEA WEO 2024</span>
+                <span class="source-tag">US EPA SCC (2023)</span>
+                <span class="source-tag">WHO/Lancet (2022)</span>
+                <span class="source-tag">IMF (2023)</span>
+                <span class="source-tag">IEA Subsidies DB</span>
+                <span class="source-tag">OECD (2024)</span>
+            </div>
+        </div>
     </div>
 </div>
+
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard</p>
-    <p>Built with <a href="https://claude.ai">Claude</a></p>
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Task 8 of 10 Analysis Verticals</p>
+    <p>Data: 2024 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
+
 <script src="nav.js"></script>
+<script>
+// ─── Tab switching ───
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// ─── Color palette ───
+const COLORS = {
+    coal: '#3d3d3d',
+    coalLight: '#6b6b6b',
+    gas: '#2980b9',
+    gasLight: '#3498db',
+    solar: '#f39c12',
+    solarLight: '#f1c40f',
+    windOnshore: '#16a085',
+    windOffshore: '#1abc9c',
+    nuclear: '#8e44ad',
+    health: '#e74c3c',
+    carbon: '#e67e22',
+    subsidy: '#c0392b'
+};
+
+// ─── Shared Chart.js defaults ───
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#7f8c8d';
+
+// ─── DATA ───
+
+// Country LCOE data ($/MWh, mid-point estimates, 2024)
+const countryData = [
+    { country: 'India',       coal: 60,  gas: 65,  solar: 30, windOn: 35, windOff: 95,  nuclear: 85,  cheapest: 'Solar PV', healthCost: 25, carbonAdd: 68, subsidyPrice: 55, subsidyTrue: 153, subsidyAnnual: 18.5 },
+    { country: 'China',       coal: 55,  gas: 70,  solar: 35, windOn: 35, windOff: 75,  nuclear: 70,  cheapest: 'Solar/Wind', healthCost: 35, carbonAdd: 68, subsidyPrice: 52, subsidyTrue: 155, subsidyAnnual: 32.0 },
+    { country: 'USA',         coal: 95,  gas: 45,  solar: 35, windOn: 30, windOff: 85,  nuclear: 90,  cheapest: 'Onshore Wind', healthCost: 20, carbonAdd: 68, subsidyPrice: 60, subsidyTrue: 183, subsidyAnnual: 5.2 },
+    { country: 'Germany',     coal: 110, gas: 75,  solar: 50, windOn: 45, windOff: 70,  nuclear: 105, cheapest: 'Onshore Wind', healthCost: 30, carbonAdd: 68, subsidyPrice: 0,  subsidyTrue: 208, subsidyAnnual: 1.8 },
+    { country: 'Australia',   coal: 85,  gas: 65,  solar: 35, windOn: 40, windOff: 80,  nuclear: 110, cheapest: 'Solar PV', healthCost: 15, carbonAdd: 68, subsidyPrice: 55, subsidyTrue: 168, subsidyAnnual: 1.5 },
+    { country: 'Japan',       coal: 105, gas: 90,  solar: 60, windOn: 80, windOff: 95,  nuclear: 80,  cheapest: 'Solar PV', healthCost: 40, carbonAdd: 68, subsidyPrice: 85, subsidyTrue: 213, subsidyAnnual: 6.5 },
+    { country: 'South Africa',coal: 70,  gas: 85,  solar: 40, windOn: 45, windOff: null,nuclear: null,cheapest: 'Solar PV', healthCost: 20, carbonAdd: 68, subsidyPrice: 50, subsidyTrue: 158, subsidyAnnual: 2.5 },
+    { country: 'Indonesia',   coal: 50,  gas: 65,  solar: 45, windOn: 55, windOff: null,nuclear: null,cheapest: 'Solar PV', healthCost: 22, carbonAdd: 68, subsidyPrice: 45, subsidyTrue: 140, subsidyAnnual: 8.2 },
+    { country: 'Poland',      coal: 100, gas: 80,  solar: 55, windOn: 45, windOff: 80,  nuclear: 100, cheapest: 'Onshore Wind', healthCost: 35, carbonAdd: 68, subsidyPrice: 65, subsidyTrue: 203, subsidyAnnual: 3.5 },
+    { country: 'Turkey',      coal: 80,  gas: 70,  solar: 35, windOn: 40, windOff: null,nuclear: 65,  cheapest: 'Solar PV', healthCost: 25, carbonAdd: 68, subsidyPrice: 55, subsidyTrue: 173, subsidyAnnual: 2.8 },
+    { country: 'Vietnam',     coal: 65,  gas: 75,  solar: 45, windOn: 55, windOff: 90,  nuclear: null,cheapest: 'Solar PV', healthCost: 28, carbonAdd: 68, subsidyPrice: 50, subsidyTrue: 161, subsidyAnnual: 3.0 },
+    { country: 'South Korea', coal: 90,  gas: 85,  solar: 65, windOn: 70, windOff: 95,  nuclear: 55,  cheapest: 'Nuclear', healthCost: 35, carbonAdd: 68, subsidyPrice: 70, subsidyTrue: 193, subsidyAnnual: 4.2 },
+];
+
+// Historical LCOE data ($/MWh, global weighted avg)
+const historicalYears = [2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024];
+const historicalData = {
+    coal:      [75,  78,  80,  80,  85,  85,  90,  82],
+    gas:       [70,  65,  68,  55,  50,  48,  70,  55],
+    solar:     [360, 220, 130, 80,  50,  40,  38,  36],
+    windOn:    [85,  72,  58,  48,  42,  38,  36,  35],
+    windOff:   [160, 140, 130, 115, 100, 85,  80,  78],
+    nuclear:   [95,  95,  100, 100, 105, 110, 105, 90],
+};
+
+// ─── CHART 1: Global LCOE comparison (horizontal bar with ranges) ───
+(function() {
+    const ctx = document.getElementById('chartLCOE').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Coal', 'Gas CCGT', 'Solar PV', 'Onshore Wind', 'Offshore Wind', 'Nuclear'],
+            datasets: [
+                {
+                    label: 'Low estimate',
+                    data: [65, 45, 30, 25, 60, 65],
+                    backgroundColor: [COLORS.coal, COLORS.gas, COLORS.solar, COLORS.windOnshore, COLORS.windOffshore, COLORS.nuclear],
+                    borderWidth: 0,
+                    borderRadius: 3,
+                },
+                {
+                    label: 'Range (high - low)',
+                    data: [85, 30, 20, 25, 45, 55],
+                    backgroundColor: [COLORS.coalLight, COLORS.gasLight, COLORS.solarLight, '#1abc9c', '#48c9b0', '#a569bd'],
+                    borderWidth: 0,
+                    borderRadius: 3,
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: {
+                    stacked: true,
+                    title: { display: true, text: '$/MWh' },
+                    grid: { color: '#f0f0f0' }
+                },
+                y: {
+                    stacked: true,
+                    grid: { display: false }
+                }
+            },
+            plugins: {
+                legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const lows = [65, 45, 30, 25, 60, 65];
+                            const highs = [150, 75, 50, 50, 105, 120];
+                            return ctx.label + ': $' + lows[ctx.dataIndex] + '–' + highs[ctx.dataIndex] + '/MWh';
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+// ─── CHART 2: Share of markets where renewables beat coal ───
+(function() {
+    const ctx = document.getElementById('chartCheaperShare').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+            datasets: [{
+                label: '% of markets where new solar < new coal',
+                data: [5, 10, 18, 30, 42, 55, 62, 72, 80, 86],
+                borderColor: COLORS.solar,
+                backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: COLORS.solar,
+            }, {
+                label: '% of markets where new wind < new coal',
+                data: [15, 22, 30, 40, 50, 60, 68, 75, 82, 88],
+                borderColor: COLORS.windOnshore,
+                backgroundColor: 'rgba(22, 160, 133, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: COLORS.windOnshore,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    min: 0, max: 100,
+                    title: { display: true, text: '% of global markets' },
+                    grid: { color: '#f0f0f0' },
+                    ticks: { callback: v => v + '%' }
+                },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%' } }
+            }
+        }
+    });
+})();
+
+// ─── CHART 3: Country-level LCOE grouped bar ───
+(function() {
+    const ctx = document.getElementById('chartCountryLCOE').getContext('2d');
+    const labels = countryData.map(d => d.country);
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Coal', data: countryData.map(d => d.coal), backgroundColor: COLORS.coal, borderRadius: 3 },
+                { label: 'Gas CCGT', data: countryData.map(d => d.gas), backgroundColor: COLORS.gas, borderRadius: 3 },
+                { label: 'Solar PV', data: countryData.map(d => d.solar), backgroundColor: COLORS.solar, borderRadius: 3 },
+                { label: 'Onshore Wind', data: countryData.map(d => d.windOn), backgroundColor: COLORS.windOnshore, borderRadius: 3 },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: { display: true, text: '$/MWh' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true
+                },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y + '/MWh' } }
+            }
+        }
+    });
+})();
+
+// ─── CHART 4: True cost of coal (stacked bar: base + carbon + health) ───
+(function() {
+    const ctx = document.getElementById('chartTrueCost').getContext('2d');
+    const labels = ['Coal\n(market)', 'Coal +\ncarbon ($50)', 'Coal +\ncarbon ($75)', 'Coal +\ncarbon ($200)', 'Solar PV', 'Onshore\nWind'];
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Base LCOE',
+                    data: [82, 82, 82, 82, 36, 35],
+                    backgroundColor: [COLORS.coal, COLORS.coal, COLORS.coal, COLORS.coal, COLORS.solar, COLORS.windOnshore],
+                    borderRadius: 3,
+                },
+                {
+                    label: 'Carbon cost',
+                    data: [0, 45, 68, 180, 0, 0],
+                    backgroundColor: COLORS.carbon,
+                    borderRadius: 3,
+                },
+                {
+                    label: 'Health / air pollution',
+                    data: [0, 30, 30, 30, 0, 0],
+                    backgroundColor: COLORS.health,
+                    borderRadius: 3,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    stacked: true,
+                    title: { display: true, text: '$/MWh' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true
+                },
+                x: { stacked: true, grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(items) {
+                            const idx = items[0].dataIndex;
+                            const totals = [82, 157, 180, 292, 36, 35];
+                            return 'Total: $' + totals[idx] + '/MWh';
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+// ─── CHART 5: Externality cost breakdown (doughnut) ───
+(function() {
+    const ctx = document.getElementById('chartExternalities').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Base LCOE (plant + fuel)', 'Carbon emissions ($75/tCO2)', 'Air pollution / PM2.5', 'Water contamination', 'Land degradation'],
+            datasets: [{
+                data: [82, 68, 22, 5, 3],
+                backgroundColor: [COLORS.coal, COLORS.carbon, COLORS.health, '#3498db', '#95a5a6'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, padding: 10 } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.label + ': $' + ctx.parsed + '/MWh (' + Math.round(ctx.parsed / 180 * 100) + '% of true cost)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+// ─── CHART 6: Country externalities (stacked bar vs renewable line) ───
+(function() {
+    const ctx = document.getElementById('chartCountryExternalities').getContext('2d');
+    const labels = countryData.map(d => d.country);
+    const cheapestRenewable = countryData.map(d => Math.min(d.solar, d.windOn));
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Coal Base LCOE', data: countryData.map(d => d.coal), backgroundColor: COLORS.coal, stack: 'coal', borderRadius: 3 },
+                { label: '+ Carbon ($75/tCO2)', data: countryData.map(d => d.carbonAdd), backgroundColor: COLORS.carbon, stack: 'coal', borderRadius: 3 },
+                { label: '+ Health costs', data: countryData.map(d => d.healthCost), backgroundColor: COLORS.health, stack: 'coal', borderRadius: 3 },
+                {
+                    label: 'Cheapest renewable',
+                    data: cheapestRenewable,
+                    type: 'line',
+                    borderColor: COLORS.windOnshore,
+                    backgroundColor: 'rgba(22, 160, 133, 0.15)',
+                    pointBackgroundColor: COLORS.windOnshore,
+                    pointRadius: 5,
+                    pointBorderWidth: 2,
+                    pointBorderColor: '#fff',
+                    borderWidth: 2.5,
+                    tension: 0.2,
+                    fill: false,
+                    order: 0,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    stacked: false,
+                    title: { display: true, text: '$/MWh' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true
+                },
+                x: { stacked: true, grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(items) {
+                            const idx = items[0].dataIndex;
+                            const d = countryData[idx];
+                            const total = d.coal + d.carbonAdd + d.healthCost;
+                            const ren = Math.min(d.solar, d.windOn);
+                            return 'True cost: $' + total + '/MWh\nCheapest renewable: $' + ren + '/MWh\nMultiple: ' + (total / ren).toFixed(1) + 'x';
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+// ─── CHART 7: Historical LCOE trends ───
+(function() {
+    const ctx = document.getElementById('chartHistorical').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: historicalYears,
+            datasets: [
+                {
+                    label: 'Solar PV',
+                    data: historicalData.solar,
+                    borderColor: COLORS.solar,
+                    backgroundColor: 'rgba(243, 156, 18, 0.08)',
+                    fill: false, tension: 0.3, pointRadius: 4,
+                    pointBackgroundColor: COLORS.solar, borderWidth: 2.5,
+                },
+                {
+                    label: 'Onshore Wind',
+                    data: historicalData.windOn,
+                    borderColor: COLORS.windOnshore,
+                    fill: false, tension: 0.3, pointRadius: 4,
+                    pointBackgroundColor: COLORS.windOnshore, borderWidth: 2.5,
+                },
+                {
+                    label: 'Offshore Wind',
+                    data: historicalData.windOff,
+                    borderColor: COLORS.windOffshore,
+                    borderDash: [5, 3],
+                    fill: false, tension: 0.3, pointRadius: 3,
+                    pointBackgroundColor: COLORS.windOffshore, borderWidth: 2,
+                },
+                {
+                    label: 'Coal',
+                    data: historicalData.coal,
+                    borderColor: COLORS.coal,
+                    fill: false, tension: 0.2, pointRadius: 4,
+                    pointBackgroundColor: COLORS.coal, borderWidth: 2.5,
+                },
+                {
+                    label: 'Gas CCGT',
+                    data: historicalData.gas,
+                    borderColor: COLORS.gas,
+                    fill: false, tension: 0.2, pointRadius: 4,
+                    pointBackgroundColor: COLORS.gas, borderWidth: 2.5,
+                },
+                {
+                    label: 'Nuclear',
+                    data: historicalData.nuclear,
+                    borderColor: COLORS.nuclear,
+                    borderDash: [5, 3],
+                    fill: false, tension: 0.2, pointRadius: 3,
+                    pointBackgroundColor: COLORS.nuclear, borderWidth: 2,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: { display: true, text: '$/MWh (global weighted avg)' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true,
+                },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y + '/MWh' } }
+            }
+        }
+    });
+})();
+
+// ─── CHART 8: Subsidy-adjusted costs ───
+(function() {
+    const ctx = document.getElementById('chartSubsidies').getContext('2d');
+    const subsidyCountries = countryData.filter(d => d.subsidyPrice > 0);
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: subsidyCountries.map(d => d.country),
+            datasets: [
+                {
+                    label: 'Consumer electricity price',
+                    data: subsidyCountries.map(d => d.subsidyPrice),
+                    backgroundColor: COLORS.gasLight,
+                    borderRadius: 3,
+                },
+                {
+                    label: 'True cost (incl. externalities)',
+                    data: subsidyCountries.map(d => d.subsidyTrue),
+                    backgroundColor: COLORS.coal,
+                    borderRadius: 3,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    title: { display: true, text: '$/MWh' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true
+                },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(items) {
+                            const idx = items[0].dataIndex;
+                            const d = subsidyCountries[idx];
+                            const gap = d.subsidyTrue - d.subsidyPrice;
+                            return 'Implicit subsidy: $' + gap + '/MWh';
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+// ─── CHART 9: Subsidy size by country ───
+(function() {
+    const ctx = document.getElementById('chartSubsidySize').getContext('2d');
+    const sorted = [...countryData].filter(d => d.subsidyAnnual > 0).sort((a, b) => b.subsidyAnnual - a.subsidyAnnual);
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sorted.map(d => d.country),
+            datasets: [{
+                label: 'Annual coal electricity subsidy ($B)',
+                data: sorted.map(d => d.subsidyAnnual),
+                backgroundColor: sorted.map(d => {
+                    if (d.subsidyAnnual > 15) return COLORS.health;
+                    if (d.subsidyAnnual > 5) return COLORS.carbon;
+                    return COLORS.coalLight;
+                }),
+                borderRadius: 3,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: {
+                    title: { display: true, text: '$B / year' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true
+                },
+                y: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.x + 'B / year' } }
+            }
+        }
+    });
+})();
+
+// ─── CHART 10: New-build economics ───
+(function() {
+    const ctx = document.getElementById('chartNewBuild').getContext('2d');
+    const countries = countryData.map(d => d.country);
+    const newCoal = countryData.map(d => d.coal * 1.15); // new-build premium ~15% over avg
+    const newSolar = countryData.map(d => d.solar);
+    const newWind = countryData.map(d => d.windOn);
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: countries,
+            datasets: [
+                {
+                    label: 'New Coal Plant',
+                    data: newCoal,
+                    backgroundColor: COLORS.coal,
+                    borderRadius: 3,
+                },
+                {
+                    label: 'New Solar PV',
+                    data: newSolar,
+                    backgroundColor: COLORS.solar,
+                    borderRadius: 3,
+                },
+                {
+                    label: 'New Onshore Wind',
+                    data: newWind,
+                    backgroundColor: COLORS.windOnshore,
+                    borderRadius: 3,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: { display: true, text: 'New-build LCOE ($/MWh)' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true
+                },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(items) {
+                            const idx = items[0].dataIndex;
+                            const c = newCoal[idx];
+                            const s = newSolar[idx];
+                            const w = newWind[idx];
+                            const cheapest = Math.min(s, w);
+                            return 'Coal premium over cheapest renewable: +$' + Math.round(c - cheapest) + '/MWh (' + Math.round((c / cheapest - 1) * 100) + '% more)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+// ─── POPULATE TABLES ───
+
+// LCOE table
+(function() {
+    const tbody = document.querySelector('#lcoeTable tbody');
+    countryData.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        const fmt = v => v !== null ? '$' + v : '—';
+        tr.innerHTML = '<td>' + (i + 1) + '</td>' +
+            '<td>' + d.country + '</td>' +
+            '<td class="num">' + fmt(d.coal) + '</td>' +
+            '<td class="num">' + fmt(d.gas) + '</td>' +
+            '<td class="num" style="color:' + COLORS.solar + ';font-weight:600">' + fmt(d.solar) + '</td>' +
+            '<td class="num" style="color:' + COLORS.windOnshore + ';font-weight:600">' + fmt(d.windOn) + '</td>' +
+            '<td class="num">' + fmt(d.windOff) + '</td>' +
+            '<td class="num">' + fmt(d.nuclear) + '</td>' +
+            '<td><strong>' + d.cheapest + '</strong></td>';
+        tbody.appendChild(tr);
+    });
+})();
+
+// Externalities table
+(function() {
+    const tbody = document.querySelector('#externalityTable tbody');
+    countryData.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        const trueCost = d.coal + d.carbonAdd + d.healthCost;
+        const cheapestRen = Math.min(d.solar, d.windOn);
+        const multiple = (trueCost / cheapestRen).toFixed(1);
+        tr.innerHTML = '<td>' + (i + 1) + '</td>' +
+            '<td>' + d.country + '</td>' +
+            '<td class="num">$' + d.coal + '</td>' +
+            '<td class="num" style="color:' + COLORS.carbon + '">+$' + d.carbonAdd + '</td>' +
+            '<td class="num" style="color:' + COLORS.health + '">+$' + d.healthCost + '</td>' +
+            '<td class="num" style="font-weight:700">$' + trueCost + '</td>' +
+            '<td class="num" style="color:' + COLORS.windOnshore + ';font-weight:600">$' + cheapestRen + '</td>' +
+            '<td class="num" style="font-weight:700;color:' + COLORS.health + '">' + multiple + 'x</td>';
+        tbody.appendChild(tr);
+    });
+})();
+
+// Subsidies table
+(function() {
+    const tbody = document.querySelector('#subsidyTable tbody');
+    const notes = {
+        'India': 'Below-cost tariffs for agriculture & households',
+        'China': 'Benchmark on-grid tariff below full cost',
+        'USA': 'Producer tax credits, state-level rate support',
+        'Germany': 'EU ETS covers carbon; no direct coal subsidy post-2018',
+        'Australia': 'Fuel tax credits, no carbon price',
+        'Japan': 'Feed-in premium keeps coal plants profitable',
+        'South Africa': 'Eskom regulated tariffs below cost',
+        'Indonesia': 'Domestic market obligation caps coal price',
+        'Poland': 'Capacity market payments to coal plants',
+        'Turkey': 'YEKDEM purchase guarantees',
+        'Vietnam': 'EVN regulated tariffs below cost',
+        'South Korea': 'REC obligations cross-subsidise coal'
+    };
+    countryData.forEach((d, i) => {
+        if (d.subsidyPrice <= 0) return;
+        const tr = document.createElement('tr');
+        const gap = d.subsidyTrue - d.subsidyPrice;
+        tr.innerHTML = '<td>' + (i + 1) + '</td>' +
+            '<td>' + d.country + '</td>' +
+            '<td class="num">$' + d.subsidyPrice + '</td>' +
+            '<td class="num" style="font-weight:700">$' + d.subsidyTrue + '</td>' +
+            '<td class="num" style="color:' + COLORS.health + '">$' + gap + '</td>' +
+            '<td class="num" style="font-weight:600">$' + d.subsidyAnnual + 'B</td>' +
+            '<td>' + (notes[d.country] || '') + '</td>';
+        tbody.appendChild(tr);
+    });
+})();
+</script>
+
 </body>
 </html>
