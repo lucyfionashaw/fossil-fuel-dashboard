@@ -130,27 +130,41 @@ const TRANSPORT_LNG = [
 
 // =====================================================================
 // INDIA COAL SALES CHANNEL MIX (FY2024-25)
-// Source: CIL Annual Report FY25, Ministry of Coal Annual Report 2024-25
+// Sources: CIL Annual Report FY25, Ministry of Coal Annual Report 2024-25,
+//   PIB (pib.gov.in/PressReleasePage.aspx?PRID=2169438) — 39.81% uniform tax incidence
+//   CIL Q3 FY25 results (Axis Securities): FSA Rs1,547/t, E-auction Rs2,615/t
+//   Ministry of Coal Year End Review 2025 (pib.gov.in/PressReleasePage.aspx?PRID=2213723)
 // =====================================================================
 const INDIA_COAL_MIX = {
     cil_offtake_mt: 763,
+    cil_revenue_cr: 143369,  // FY25 revenue Rs crore
+    cil_avg_realization_rs: 1879,  // Derived: revenue / offtake
     channels: [
-        { channel: "FSA (regulated)", pct: 82, volume_mt: 626, base_price_rs: 1514, allin_price_rs: 2270, allin_usd: 27, notes: "Base Rs1,514 + royalty 14% + DMF 4.2% + NMET 0.28% + GST 5% + cess Rs400" },
-        { channel: "E-Auction (spot)", pct: 15, volume_mt: 114, base_price_rs: 2541, allin_price_rs: 3490, allin_usd: 42, notes: "55-70% premium over FSA; market-driven" },
-        { channel: "Washed Coal", pct: 2.1, volume_mt: 16, base_price_rs: 3741, allin_price_rs: 4500, allin_usd: 54, notes: "For steel/specialized use" },
-        { channel: "Other", pct: 0.9, volume_mt: 7, base_price_rs: 2000, allin_price_rs: 2500, allin_usd: 30, notes: "Spot, special allocations" },
+        { channel: "FSA (regulated)", pct: 85, volume_mt: 648, base_price_rs: 1547, allin_price_rs: 2163, allin_usd: 26, notes: "Q3 FY25 realization Rs1,547/t (Axis Securities)" },
+        { channel: "E-Auction (spot)", pct: 14, volume_mt: 107, base_price_rs: 2615, allin_price_rs: 3656, allin_usd: 44, notes: "Q3 FY25 realization Rs2,615/t; 55-70% premium over FSA" },
+        { channel: "Washed Coal", pct: 0.3, volume_mt: 2.4, base_price_rs: 3402, allin_price_rs: 4756, allin_usd: 57, notes: "2.42 Mt clean output from 13 washeries (39 MTPA capacity)" },
+        { channel: "Other/Spot", pct: 0.7, volume_mt: 5.6, base_price_rs: 2000, allin_price_rs: 2796, allin_usd: 33, notes: "Special allocations, spot sales" },
     ],
     non_cil: [
-        { producer: "SCCL (Singareni)", volume_mt: 70, price_usd: 30, notes: "Telangana state company" },
+        { producer: "SCCL (Singareni)", volume_mt: 69, price_usd: 30, notes: "Telangana state company; ~69 Mt FY25" },
         { producer: "Captive/Private mines", volume_mt: 198, price_usd: 38, notes: "19% of India total FY25; auction premiums" },
     ],
+    // Post-Sep 2025 reform: GST Compensation Cess (Rs 400/t flat) ABOLISHED,
+    // GST raised from 5% to 18%. Government uniform tax incidence: 39.81% of base.
+    // As % of all-in price: 39.81/139.81 = 28.5%
+    // Source: PIB pib.gov.in/PressReleasePage.aspx?PRID=2169438
+    levy_regime: "post-Sep 2025 (GST 18%, no cess)",
+    levy_pct_on_base: "39.81%",
+    levy_pct_of_total: "~28.5%",
     levies: [
-        { levy: "Royalty", rate: "14% ad-valorem", amount_rs: 212 },
-        { levy: "DMF", rate: "30% of royalty", amount_rs: 64 },
+        { levy: "Royalty", rate: "14% ad-valorem", amount_rs: 217 },
+        { levy: "DMF", rate: "30% of royalty", amount_rs: 65 },
         { levy: "NMET", rate: "2% of royalty", amount_rs: 4 },
-        { levy: "GST", rate: "5%", amount_rs: 76 },
-        { levy: "GST Compensation Cess", rate: "Flat", amount_rs: 400 },
-    ]
+        { levy: "GST", rate: "18% (post Sep 2025)", amount_rs: 330 },
+    ],
+    // Old regime (FY25, pre-Sep 2025) for reference:
+    // GST 5% + Rs 400 flat cess = Rs 770 levies (~51% on base, ~34% of total)
+    // The Rs 400 cess was highly regressive — on low-grade G-11 coal it was 65.85% of base
 };
 
 // =====================================================================
@@ -177,3 +191,19 @@ const COMMODITY_COMPARISON = [
     { commodity: "Rare Earths (REO)", category: "Critical Minerals", value_b: 12, volume: "350 kt REO", unit_price: "~$35,000/t avg mix", source: "USGS/Adamas", color: "#9b59b6" },
     { commodity: "Uranium", category: "Energy", value_b: 10, volume: "59 kt U", unit_price: "$59/lb U3O8 avg", source: "WNA/UxC", color: "#f39c12" },
 ];
+
+// =====================================================================
+// OIL: TOTAL LIQUIDS BREAKDOWN
+// The 81,800 kb/d figure is crude oil + condensate only.
+// Total petroleum & other liquids: ~102 mb/d (EIA, IEA).
+// =====================================================================
+const OIL_TOTAL_LIQUIDS = {
+    crude_condensate: { volume_kbd: 81800, value_b: 2270, price_note: "Country-specific benchmarks" },
+    ngpl: { volume_kbd: 14500, value_b: 159, price_note: "~$30/bbl composite (38% of crude)" },
+    biofuels: { volume_kbd: 2200, value_b: 88, price_note: "~$100-120/bbl (mandate-supported)" },
+    processing_gains: { volume_kbd: 2200, value_b: 0, price_note: "Volumetric artifact, not revenue" },
+    other_liquids: { volume_kbd: 1100, value_b: 30, price_note: "CTL, GTL, synthetic crude" },
+    total: { volume_kbd: 101800, value_b: 2547 },
+    year: 2023,
+    sources: ["EIA International Energy Statistics", "EIA FAQ #709", "IEA Oil Market Report 2024"],
+};

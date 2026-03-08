@@ -7,381 +7,47 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
     <style>
-        :root {
-            --coal: #3d3d3d;
-            --coal-light: #6b6b6b;
-            --oil: #c0392b;
-            --oil-light: #e74c3c;
-            --gas: #2980b9;
-            --gas-light: #3498db;
-            --bg: #f8f9fa;
-            --card-bg: #ffffff;
-            --text: #2c3e50;
-            --text-secondary: #7f8c8d;
-            --border: #e0e0e0;
-            --accent: #16a085;
-        }
+        /* Page-specific styles */
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        .chart-container-tall { position: relative; width: 100%; height: 520px; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: white;
-            padding: 2.5rem 2rem;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .header .subtitle {
-            font-size: 0.95rem;
-            opacity: 0.8;
-            font-weight: 300;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-
-        /* Headline cards */
-        .headline-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 900px) {
-            .headline-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 500px) {
-            .headline-grid { grid-template-columns: 1fr; }
-        }
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
 
         .headline-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border-top: 4px solid var(--border);
-            transition: transform 0.2s;
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
         }
-
         .headline-card:hover { transform: translateY(-2px); }
         .headline-card.coal { border-top-color: var(--coal); }
         .headline-card.oil { border-top-color: var(--oil); }
         .headline-card.gas { border-top-color: var(--gas); }
         .headline-card.total { border-top-color: var(--accent); }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
 
-        .headline-card .label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-            margin-bottom: 0.3rem;
+        .transport-highlight { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 700px) { .transport-highlight { grid-template-columns: 1fr; } }
+        .transport-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+        .transport-card .pct { font-size: 1.5rem; font-weight: 700; }
+        .transport-card .desc { font-size: 0.78rem; color: var(--text-secondary); }
+
+        .category-legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+        .category-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-secondary); }
+        .category-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+        .india-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+        @media (max-width: 800px) { .india-detail-grid { grid-template-columns: 1fr; } }
+
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--gas); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
         }
-
-        .headline-card .value {
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        .headline-card .detail {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 0.3rem;
-        }
-
-        /* Sections */
-        .section {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .section h2 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--bg);
-        }
-
-        .section h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 1rem 0 0.5rem;
-            color: var(--text-secondary);
-        }
-
-        .section-subtitle {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            margin: -0.5rem 0 1rem;
-        }
-
-        /* Section header with toggle */
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--bg);
-        }
-
-        .section-header h2 {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        /* Toggle buttons */
-        .toggle-bar {
-            display: flex;
-            gap: 0.3rem;
-        }
-
-        .toggle-btn {
-            padding: 0.25rem 0.7rem;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            transition: all 0.15s;
-        }
-
-        .toggle-btn.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-
-        .toggle-btn:hover:not(.active) {
-            background: #e0e0e0;
-        }
-
-        /* Chart containers */
-        .chart-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        @media (max-width: 800px) {
-            .chart-row { grid-template-columns: 1fr; }
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-height: 400px;
-        }
-
-        .chart-container-tall {
-            position: relative;
-            width: 100%;
-            height: 520px;
-        }
-
-        /* Tabs */
-        .tab-bar {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid var(--bg);
-            padding-bottom: 0;
-        }
-
-        .tab-btn {
-            padding: 0.6rem 1.2rem;
-            background: none;
-            border: none;
-            border-bottom: 3px solid transparent;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            transition: all 0.2s;
-            margin-bottom: -2px;
-        }
-
-        .tab-btn:hover { color: var(--text); }
-        .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        /* Data tables */
-        .data-table-wrapper {
-            overflow-x: auto;
-            margin-top: 0.5rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.82rem;
-        }
-
-        th, td {
-            padding: 0.5rem 0.7rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background: var(--bg);
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            color: var(--text-secondary);
-        }
-
-        tr:hover { background: #f0f4f8; }
-
-        td.num { text-align: right; font-variant-numeric: tabular-nums; }
-        th.num { text-align: right; }
-
-        .commodity-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 6px;
-        }
-
-        .commodity-dot.coal { background: var(--coal); }
-        .commodity-dot.oil { background: var(--oil); }
-        .commodity-dot.gas { background: var(--gas); }
-
-        /* India coal grid */
-        .india-detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-top: 1rem;
-        }
-
-        @media (max-width: 800px) {
-            .india-detail-grid { grid-template-columns: 1fr; }
-        }
-
-        .levy-table {
-            font-size: 0.8rem;
-        }
-
-        .levy-table th {
-            font-size: 0.7rem;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
-
-        .footer a { color: var(--accent); text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
-
-        .methodology {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        .methodology ul { padding-left: 1.2rem; margin: 0.3rem 0; }
-
-        .source-tag {
-            display: inline-block;
-            background: var(--bg);
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            margin: 0.1rem;
-        }
-
-        .transport-highlight {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin: 1rem 0;
-        }
-
-        @media (max-width: 700px) {
-            .transport-highlight { grid-template-columns: 1fr; }
-        }
-
-        .transport-card {
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-
-        .transport-card .pct {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .transport-card .desc {
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-        }
-
-        /* Category legend for commodity chart */
-        .category-legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .category-legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .category-legend-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 2px;
-        }
+        .info-callout strong { color: var(--gas); }
     </style>
 </head>
 <body>
@@ -403,7 +69,7 @@
         <div class="headline-card oil">
             <div class="label">Oil (Crude + Condensate)</div>
             <div class="value" style="color:var(--oil)">$2,270B</div>
-            <div class="detail">81,800 kb/d &middot; Country-specific pricing</div>
+            <div class="detail">81,800 kb/d crude &middot; Total all liquids: ~102 mb/d</div>
         </div>
         <div class="headline-card gas">
             <div class="label">Natural Gas</div>
@@ -415,6 +81,12 @@
             <div class="value" style="color:var(--accent)">~$3.7T</div>
             <div class="detail">Central estimate &middot; $3.4&ndash;4.0T range</div>
         </div>
+    </div>
+
+    <!-- Oil clarification -->
+    <div class="info-callout">
+        <strong>Why 81,800 kb/d and not 100M+ b/d?</strong> Our oil figure covers <em>crude oil + condensate</em> only, which can be accurately priced by grade. Total petroleum and other liquids is ~102 mb/d (EIA 2023), but the additional ~20 mb/d includes NGLs (~14.5M b/d at ~38% of crude price = ~$159B), biofuels (~2.2M b/d), processing gains (~2.2M b/d, no revenue), and other liquids (~1.1M b/d). Including all liquids: <strong>~$2.55T total oil market value</strong>.
+        <a href="https://www.eia.gov/tools/faqs/faq.php?id=709&t=6" target="_blank" style="color:var(--accent)">EIA FAQ #709</a>
     </div>
 
     <!-- Charts row 1: Comparison -->
@@ -432,28 +104,22 @@
     <!-- Commodity Comparison -->
     <div class="section">
         <h2>How Fossil Fuels Compare to Other Global Commodities</h2>
-        <p class="section-subtitle">Annual market value of fossil fuels vs major mined commodities, critical minerals, and clean energy investment. Hover for volume and unit price details.</p>
+        <p class="section-subtitle">Annual market value of fossil fuels vs major mined commodities, critical minerals, and clean energy investment. Hover for details.</p>
         <div class="chart-container-tall"><canvas id="chartCommodity"></canvas></div>
         <div class="category-legend">
-            <div class="category-legend-item">
-                <div class="category-legend-dot" style="background:#c0392b"></div> Fossil Fuels
-            </div>
-            <div class="category-legend-item">
-                <div class="category-legend-dot" style="background:#27ae60"></div> Energy Investment (annual spend)
-            </div>
-            <div class="category-legend-item">
-                <div class="category-legend-dot" style="background:#e67e22"></div> Metals &amp; Mining
-            </div>
-            <div class="category-legend-item">
-                <div class="category-legend-dot" style="background:#8e44ad"></div> Critical Minerals
-            </div>
-            <div class="category-legend-item">
-                <div class="category-legend-dot" style="background:#f39c12"></div> Other Energy
-            </div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#c0392b"></div> Fossil Fuels</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#27ae60"></div> Energy Investment (annual)</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#e67e22"></div> Metals &amp; Mining</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#8e44ad"></div> Critical Minerals</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#f39c12"></div> Other Energy</div>
         </div>
     </div>
 
-    <!-- Charts row 2: Country detail with toggles -->
+    <!-- Country charts with toggles — click any bar for detail -->
+    <div class="section" style="background:none;box-shadow:none;padding:0;">
+        <p class="section-subtitle" style="text-align:center;margin-bottom:1rem;">Click any bar to see the underlying country data. Toggle between $ Value and Volume to see how rankings shift.</p>
+    </div>
+
     <div class="chart-row">
         <div class="section">
             <div class="section-header">
@@ -494,10 +160,14 @@
         </div>
     </div>
 
-    <!-- India Coal Mix Deep Dive -->
+    <!-- India Coal Mix -->
     <div class="section">
         <h2>India Coal: Sales Channel &amp; Pricing Breakdown (FY2024-25)</h2>
-        <p class="section-subtitle">Coal India Limited (CIL) sells 763 Mt/year through regulated FSA, competitive e-auctions, and washed coal channels. Statutory levies add ~50% to the base FSA price.</p>
+        <p class="section-subtitle">Coal India (CIL) offtake: 763 Mt. Washed coal output: just 2.4 Mt (0.3%) despite 39 MTPA washery capacity. Statutory levies add ~28.5% to the all-in buyer price (post-Sep 2025 GST reform; was ~34% under old Rs 400/t cess regime).</p>
+        <div class="info-callout" style="border-left-color:var(--coal);">
+            <strong style="color:var(--coal)">Sept 2025 GST reform:</strong> The Rs 400/t flat GST Compensation Cess was abolished and replaced with 18% GST (up from 5%). The government's stated uniform tax incidence is now <strong style="color:var(--coal)">39.81% of base price = ~28.5% of all-in price</strong>.
+            <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2169438" target="_blank" style="color:var(--accent)">Source: PIB</a>
+        </div>
 
         <div class="chart-row">
             <div>
@@ -512,33 +182,24 @@
 
         <div class="india-detail-grid">
             <div>
-                <h3>Statutory Levies on FSA Coal (per tonne)</h3>
+                <h3>Statutory Levies (post-Sep 2025, on FSA base Rs 1,547/t)</h3>
                 <div class="data-table-wrapper">
                     <table class="levy-table" id="indiaLevyTable">
-                        <thead>
-                            <tr>
-                                <th>Levy</th>
-                                <th>Rate</th>
-                                <th class="num">Amount (Rs)</th>
-                                <th class="num">Amount ($)</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Levy</th><th>Rate</th><th class="num">Amount (Rs)</th><th class="num">Amount ($)</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
+                <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">
+                    Sources: <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2169438" target="_blank" style="color:var(--accent)">PIB GST Reform</a> &middot;
+                    <a href="https://coal.gov.in/sites/default/files/2025-02/chap10AnnualReport2025en2.pdf" target="_blank" style="color:var(--accent)">MoC Ch.10 (PDF)</a> &middot;
+                    <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2213723" target="_blank" style="color:var(--accent)">MoC Year End Review</a>
+                </p>
             </div>
             <div>
                 <h3>Non-CIL Coal Producers</h3>
                 <div class="data-table-wrapper">
                     <table class="levy-table" id="nonCILTable">
-                        <thead>
-                            <tr>
-                                <th>Producer</th>
-                                <th class="num">Volume (Mt)</th>
-                                <th class="num">Price ($/t)</th>
-                                <th>Notes</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Producer</th><th class="num">Volume (Mt)</th><th class="num">Price ($/t)</th><th>Notes</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -565,130 +226,31 @@
         </div>
     </div>
 
-    <!-- Detailed data tables -->
+    <!-- Data tables -->
     <div class="section">
         <h2>Country-Level Data</h2>
-
         <div class="tab-bar">
             <button class="tab-btn active" onclick="showTab('coal')">Coal</button>
             <button class="tab-btn" onclick="showTab('oil')">Oil</button>
             <button class="tab-btn" onclick="showTab('gas')">Gas</button>
             <button class="tab-btn" onclick="showTab('transport')">Transport</button>
         </div>
-
-        <!-- Coal table -->
         <div class="tab-content active" id="tab-coal">
-            <div class="data-table-wrapper">
-                <table id="coalTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Country</th>
-                            <th>Coal Type</th>
-                            <th class="num">Production (Mt)</th>
-                            <th class="num">Price ($/t)</th>
-                            <th>Benchmark</th>
-                            <th class="num">Market Value ($M)</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="data-table-wrapper"><table id="coalTable"><thead><tr><th>#</th><th>Country</th><th>Coal Type</th><th class="num">Production (Mt)</th><th class="num">Price ($/t)</th><th>Benchmark</th><th class="num">Market Value ($M)</th><th>Notes</th></tr></thead><tbody></tbody></table></div>
         </div>
-
-        <!-- Oil table -->
         <div class="tab-content" id="tab-oil">
-            <div class="data-table-wrapper">
-                <table id="oilTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Country</th>
-                            <th class="num">Production (kb/d)</th>
-                            <th>Primary Grade</th>
-                            <th>Quality</th>
-                            <th class="num">Price ($/bbl)</th>
-                            <th class="num">Diff to Brent</th>
-                            <th class="num">Market Value ($B)</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="data-table-wrapper"><table id="oilTable"><thead><tr><th>#</th><th>Country</th><th class="num">Production (kb/d)</th><th>Primary Grade</th><th>Quality</th><th class="num">Price ($/bbl)</th><th class="num">Diff to Brent</th><th class="num">Market Value ($B)</th></tr></thead><tbody></tbody></table></div>
         </div>
-
-        <!-- Gas table -->
         <div class="tab-content" id="tab-gas">
-            <div class="data-table-wrapper">
-                <table id="gasTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Country</th>
-                            <th class="num">Production (bcm)</th>
-                            <th>Pricing Region</th>
-                            <th class="num">Benchmark ($/MMBtu)</th>
-                            <th class="num">Domestic Price</th>
-                            <th>Price Regime</th>
-                            <th class="num">Market Value ($M)</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="data-table-wrapper"><table id="gasTable"><thead><tr><th>#</th><th>Country</th><th class="num">Production (bcm)</th><th>Pricing Region</th><th class="num">Benchmark ($/MMBtu)</th><th class="num">Domestic Price</th><th>Price Regime</th><th class="num">Market Value ($M)</th></tr></thead><tbody></tbody></table></div>
         </div>
-
-        <!-- Transport table -->
         <div class="tab-content" id="tab-transport">
             <h3>Coal Seaborne Freight</h3>
-            <div class="data-table-wrapper">
-                <table id="transportCoalTable">
-                    <thead>
-                        <tr>
-                            <th>Route</th>
-                            <th>Origin</th>
-                            <th>Destination</th>
-                            <th>Vessel</th>
-                            <th class="num">Cost ($/t)</th>
-                            <th>Range</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="data-table-wrapper"><table id="transportCoalTable"><thead><tr><th>Route</th><th>Origin</th><th>Destination</th><th>Vessel</th><th class="num">Cost ($/t)</th><th>Range</th></tr></thead><tbody></tbody></table></div>
             <h3>Oil Tanker Rates</h3>
-            <div class="data-table-wrapper">
-                <table id="transportOilTable">
-                    <thead>
-                        <tr>
-                            <th>Route</th>
-                            <th>Origin</th>
-                            <th>Destination</th>
-                            <th>Vessel</th>
-                            <th class="num">Cost ($/bbl)</th>
-                            <th>Range</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="data-table-wrapper"><table id="transportOilTable"><thead><tr><th>Route</th><th>Origin</th><th>Destination</th><th>Vessel</th><th class="num">Cost ($/bbl)</th><th>Range</th></tr></thead><tbody></tbody></table></div>
             <h3>LNG Value Chain Costs ($/MMBtu)</h3>
-            <div class="data-table-wrapper">
-                <table id="transportLNGTable">
-                    <thead>
-                        <tr>
-                            <th>Corridor</th>
-                            <th class="num">Wellhead</th>
-                            <th class="num">Liquefaction</th>
-                            <th class="num">Shipping</th>
-                            <th class="num">Regas</th>
-                            <th class="num">Total Landed</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div class="data-table-wrapper"><table id="transportLNGTable"><thead><tr><th>Corridor</th><th class="num">Wellhead</th><th class="num">Liquefaction</th><th class="num">Shipping</th><th class="num">Regas</th><th class="num">Total Landed</th></tr></thead><tbody></tbody></table></div>
         </div>
     </div>
 
@@ -696,25 +258,20 @@
     <div class="section">
         <h2>Methodology & Sources</h2>
         <div class="methodology">
-            <p><strong>Coal:</strong> Country-level production from IEA Coal 2025, NBS (China), Ministry of Coal (India), ESDM (Indonesia), EIA (USA). Prices use country-specific benchmarks where available (Qinhuangdao, Coal India notified + all statutory levies, Newcastle FOB, Richards Bay FOB, HBA, PLV HCC). Domestic prices for ~82% of coal consumed domestically are estimated. Total market value range of $500B&ndash;$900B reflects deep uncertainty in domestic pricing. India: CIL blended all-in price ~$30/t includes royalty 14%, DMF 4.2%, NMET 0.28%, GST 5%, and GST Compensation Cess Rs400/t.</p>
-            <p><strong>Oil:</strong> Production from EIA (crude + condensate). Prices mapped to country-specific benchmarks for 80 countries (WTI, Urals, WCS, Maya, Murban, Arab Light OSPs, OPEC basket grades). Country-specific pricing reduces total by ~$190B (7.7%) vs flat Brent, driven by Russia sanctions discount (-$160B), Canada WCS (-$31B), Iran (-$17B).</p>
-            <p><strong>Gas:</strong> Production from Energy Institute Statistical Review 2025. Market value uses IGU Wholesale Gas Price Survey 2025 regional weighted averages. ~31% of gas consumed at &lt;$2/MMBtu (subsidized). If all gas were at market prices, value would be ~$1.2T.</p>
-            <p><strong>Commodity Comparison:</strong> Values from EIA/IEA (fossil fuels), BNEF/IEA World Energy Investment 2024 (clean energy), World Steel Association/Platts (iron ore), ICSG (copper), World Gold Council (gold), IAI/LME (aluminum), USGS/Adamas (rare earths), WNA/UxC (uranium). All 2023&ndash;2024 data.</p>
-            <p><strong>Transport:</strong> Coal freight from IEA Coal 2025, S&P Global Platts assessments. Oil tanker rates from EIA, Clarksons Research. LNG chain from Oxford Energy, Timera Energy, CSIS. Pipeline tariffs from FERC, ARTC, Transnet.</p>
+            <p><strong>Coal:</strong> Country-level production from IEA Coal 2025, NBS (China), Ministry of Coal India, ESDM (Indonesia), EIA (USA). Prices use country-specific benchmarks. India: CIL blended all-in price ~$31/t; post-Sep 2025 levy burden = 39.81% on base = ~28.5% of total (PIB). Washed coal just 0.3% of CIL output (2.4 Mt) despite 39 MTPA washery capacity.</p>
+            <p><strong>Oil:</strong> Crude + condensate from EIA: 81,800 kb/d. Total petroleum incl. NGLs, biofuels, other liquids: ~102 mb/d. Crude priced by country-specific benchmarks (WTI, Urals, WCS, Maya, Murban, etc). Country-specific pricing reduces total by ~$190B vs flat Brent. Including all liquids: ~$2.55T.</p>
+            <p><strong>Gas:</strong> 4,124 bcm marketed production (Energy Institute SR 2025, 74th ed). Market value uses IGU WGPS 2025 regional averages. ~31% consumed at &lt;$2/MMBtu (subsidized).</p>
+            <p><strong>Commodity Comparison:</strong> EIA/IEA (fossil fuels), BNEF/IEA WEI 2024 (clean energy), World Steel/Platts (iron ore), ICSG (copper), World Gold Council, USGS/Adamas (rare earths).</p>
             <div style="margin-top: 1rem;">
                 <span class="source-tag">IEA Coal 2025</span>
                 <span class="source-tag">Energy Institute SR 2025</span>
                 <span class="source-tag">EIA</span>
                 <span class="source-tag">OPEC ASB 2024</span>
                 <span class="source-tag">IGU WGPS 2025</span>
-                <span class="source-tag">IGU LNG Report 2025</span>
                 <span class="source-tag">S&P Global Platts</span>
-                <span class="source-tag">Argus Media</span>
-                <span class="source-tag">Oxford Energy</span>
-                <span class="source-tag">World Bank</span>
                 <span class="source-tag">BNEF</span>
-                <span class="source-tag">IEA WEI 2024</span>
                 <span class="source-tag">CIL Annual Report FY25</span>
+                <span class="source-tag">PIB (Gov. India)</span>
             </div>
         </div>
     </div>
@@ -727,6 +284,7 @@
 
 <script src="data.js"></script>
 <script src="charts.js"></script>
+<script src="nav.js"></script>
 
 </body>
 </html>
