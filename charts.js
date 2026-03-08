@@ -1,5 +1,5 @@
 // =====================================================================
-// CHARTS.JS — Chart rendering and table population
+// CHARTS.JS — Chart rendering, toggles, and table population
 // =====================================================================
 
 // Utility: format numbers with commas
@@ -16,7 +16,7 @@ function aggregateByCountry(data, valueKey) {
         map[d.country].value += (d[valueKey] || 0);
         map[d.country].production += (d.production || 0);
     });
-    return Object.values(map).sort((a, b) => b.value - a.value);
+    return Object.values(map);
 }
 
 // Colors
@@ -111,19 +111,85 @@ new Chart(document.getElementById('chartShare'), {
 });
 
 // =====================================================================
-// CHART 3: Coal by country (horizontal bar)
+// COMMODITY COMPARISON (horizontal bar)
 // =====================================================================
-const coalAgg = aggregateByCountry(COAL_DATA.filter(d => d.country !== 'Rest of World'), 'value');
-const coalTop12 = coalAgg.slice(0, 12);
+const commoditySorted = [...COMMODITY_COMPARISON].sort((a, b) => b.value_b - a.value_b);
 
-new Chart(document.getElementById('chartCoalCountries'), {
+new Chart(document.getElementById('chartCommodity'), {
     type: 'bar',
     data: {
-        labels: coalTop12.map(d => d.country),
+        labels: commoditySorted.map(d => d.commodity),
+        datasets: [{
+            label: 'Market Value / Investment ($B)',
+            data: commoditySorted.map(d => d.value_b),
+            backgroundColor: commoditySorted.map(d => d.color),
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => {
+                        const d = commoditySorted[ctx.dataIndex];
+                        return [
+                            `$${fmt(d.value_b)}B`,
+                            `Category: ${d.category}`,
+                            `Volume: ${d.volume}`,
+                            `Unit price: ${d.unit_price}`,
+                            `Source: ${d.source}`
+                        ];
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: { callback: v => `$${fmt(v)}B` },
+                title: { display: true, text: 'Annual Market Value / Investment ($ Billion)' }
+            },
+            y: {
+                ticks: { font: { size: 11 } }
+            }
+        }
+    }
+});
+
+// =====================================================================
+// TOGGLEABLE COUNTRY CHARTS — Coal / Oil / Gas
+// Each supports value ($) and volume toggle
+// =====================================================================
+
+// --- COAL ---
+const coalAll = aggregateByCountry(COAL_DATA.filter(d => d.country !== 'Rest of World'), 'value');
+let coalMode = 'value';
+
+function getCoalChartData(mode) {
+    const sorted = [...coalAll].sort((a, b) =>
+        mode === 'value' ? b.value - a.value : b.production - a.production
+    );
+    const top12 = sorted.slice(0, 12);
+    return {
+        labels: top12.map(d => d.country),
+        data: mode === 'value' ? top12.map(d => d.value) : top12.map(d => d.production),
+        colors: top12.map((_, i) => PALETTE[i % PALETTE.length])
+    };
+}
+
+const coalInitData = getCoalChartData('value');
+const coalChart = new Chart(document.getElementById('chartCoalCountries'), {
+    type: 'bar',
+    data: {
+        labels: coalInitData.labels,
         datasets: [{
             label: 'Market Value ($M)',
-            data: coalTop12.map(d => d.value),
-            backgroundColor: coalTop12.map((_, i) => PALETTE[i % PALETTE.length]),
+            data: coalInitData.data,
+            backgroundColor: coalInitData.colors,
             borderRadius: 4,
         }]
     },
@@ -135,32 +201,68 @@ new Chart(document.getElementById('chartCoalCountries'), {
             legend: { display: false },
             tooltip: {
                 callbacks: {
-                    label: ctx => `$${fmt(ctx.parsed.x)}M ($${(ctx.parsed.x / 1000).toFixed(1)}B)`
+                    label: function(ctx) {
+                        return coalMode === 'value'
+                            ? `$${fmt(ctx.parsed.x)}M ($${(ctx.parsed.x / 1000).toFixed(1)}B)`
+                            : `${fmt(ctx.parsed.x)} Mt`;
+                    }
                 }
             }
         },
         scales: {
             x: {
                 beginAtZero: true,
-                ticks: { callback: v => `$${(v / 1000).toFixed(0)}B` }
+                ticks: {
+                    callback: function(v) {
+                        return coalMode === 'value'
+                            ? `$${(v / 1000).toFixed(0)}B`
+                            : `${fmt(v)} Mt`;
+                    }
+                }
             }
         }
     }
 });
 
-// =====================================================================
-// CHART 4: Oil by country
-// =====================================================================
-const oilTop12 = OIL_DATA.slice(0, 12);
+function toggleCoal(mode) {
+    coalMode = mode;
+    const d = getCoalChartData(mode);
+    coalChart.data.labels = d.labels;
+    coalChart.data.datasets[0].data = d.data;
+    coalChart.data.datasets[0].backgroundColor = d.colors;
+    coalChart.data.datasets[0].label = mode === 'value' ? 'Market Value ($M)' : 'Production (Mt)';
+    coalChart.update();
+    document.querySelectorAll('#coalToggle .toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    document.getElementById('coalChartTitle').textContent =
+        mode === 'value' ? 'Coal: Top Producers by Market Value' : 'Coal: Top Producers by Volume';
+}
 
-new Chart(document.getElementById('chartOilCountries'), {
+// --- OIL (sorted by value descending) ---
+let oilMode = 'value';
+
+function getOilChartData(mode) {
+    const sorted = [...OIL_DATA].sort((a, b) =>
+        mode === 'value' ? b.value - a.value : b.production - a.production
+    );
+    const top12 = sorted.slice(0, 12);
+    return {
+        labels: top12.map(d => d.country),
+        data: mode === 'value' ? top12.map(d => d.value) : top12.map(d => d.production),
+        colors: top12.map((_, i) => PALETTE[i % PALETTE.length])
+    };
+}
+
+const oilInitData = getOilChartData('value');
+const oilChart = new Chart(document.getElementById('chartOilCountries'), {
     type: 'bar',
     data: {
-        labels: oilTop12.map(d => d.country),
+        labels: oilInitData.labels,
         datasets: [{
             label: 'Market Value ($B)',
-            data: oilTop12.map(d => d.value),
-            backgroundColor: oilTop12.map((_, i) => PALETTE[i % PALETTE.length]),
+            data: oilInitData.data,
+            backgroundColor: oilInitData.colors,
             borderRadius: 4,
         }]
     },
@@ -172,32 +274,68 @@ new Chart(document.getElementById('chartOilCountries'), {
             legend: { display: false },
             tooltip: {
                 callbacks: {
-                    label: ctx => `$${fmt(ctx.parsed.x, 1)}B`
+                    label: function(ctx) {
+                        return oilMode === 'value'
+                            ? `$${fmt(ctx.parsed.x, 1)}B`
+                            : `${fmt(ctx.parsed.x)} kb/d`;
+                    }
                 }
             }
         },
         scales: {
             x: {
                 beginAtZero: true,
-                ticks: { callback: v => `$${v}B` }
+                ticks: {
+                    callback: function(v) {
+                        return oilMode === 'value'
+                            ? `$${fmt(v)}B`
+                            : `${fmt(v)}`;
+                    }
+                }
             }
         }
     }
 });
 
-// =====================================================================
-// CHART 5: Gas by country
-// =====================================================================
-const gasTop12 = GAS_DATA.slice(0, 12);
+function toggleOil(mode) {
+    oilMode = mode;
+    const d = getOilChartData(mode);
+    oilChart.data.labels = d.labels;
+    oilChart.data.datasets[0].data = d.data;
+    oilChart.data.datasets[0].backgroundColor = d.colors;
+    oilChart.data.datasets[0].label = mode === 'value' ? 'Market Value ($B)' : 'Production (kb/d)';
+    oilChart.update();
+    document.querySelectorAll('#oilToggle .toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    document.getElementById('oilChartTitle').textContent =
+        mode === 'value' ? 'Oil: Top Producers by Market Value' : 'Oil: Top Producers by Volume';
+}
 
-new Chart(document.getElementById('chartGasCountries'), {
+// --- GAS (sorted by value descending) ---
+let gasMode = 'value';
+
+function getGasChartData(mode) {
+    const sorted = [...GAS_DATA].sort((a, b) =>
+        mode === 'value' ? b.value - a.value : b.production - a.production
+    );
+    const top12 = sorted.slice(0, 12);
+    return {
+        labels: top12.map(d => d.country),
+        data: mode === 'value' ? top12.map(d => d.value) : top12.map(d => d.production),
+        colors: top12.map((_, i) => PALETTE[i % PALETTE.length])
+    };
+}
+
+const gasInitData = getGasChartData('value');
+const gasChart = new Chart(document.getElementById('chartGasCountries'), {
     type: 'bar',
     data: {
-        labels: gasTop12.map(d => d.country),
+        labels: gasInitData.labels,
         datasets: [{
             label: 'Market Value ($M)',
-            data: gasTop12.map(d => d.value),
-            backgroundColor: gasTop12.map((_, i) => PALETTE[i % PALETTE.length]),
+            data: gasInitData.data,
+            backgroundColor: gasInitData.colors,
             borderRadius: 4,
         }]
     },
@@ -209,21 +347,176 @@ new Chart(document.getElementById('chartGasCountries'), {
             legend: { display: false },
             tooltip: {
                 callbacks: {
-                    label: ctx => `$${fmt(ctx.parsed.x)}M ($${(ctx.parsed.x / 1000).toFixed(1)}B)`
+                    label: function(ctx) {
+                        return gasMode === 'value'
+                            ? `$${fmt(ctx.parsed.x)}M ($${(ctx.parsed.x / 1000).toFixed(1)}B)`
+                            : `${fmt(ctx.parsed.x)} bcm`;
+                    }
                 }
             }
         },
         scales: {
             x: {
                 beginAtZero: true,
-                ticks: { callback: v => `$${(v / 1000).toFixed(0)}B` }
+                ticks: {
+                    callback: function(v) {
+                        return gasMode === 'value'
+                            ? `$${(v / 1000).toFixed(0)}B`
+                            : `${fmt(v)}`;
+                    }
+                }
             }
         }
     }
 });
 
+function toggleGas(mode) {
+    gasMode = mode;
+    const d = getGasChartData(mode);
+    gasChart.data.labels = d.labels;
+    gasChart.data.datasets[0].data = d.data;
+    gasChart.data.datasets[0].backgroundColor = d.colors;
+    gasChart.data.datasets[0].label = mode === 'value' ? 'Market Value ($M)' : 'Production (bcm)';
+    gasChart.update();
+    document.querySelectorAll('#gasToggle .toggle-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    document.getElementById('gasChartTitle').textContent =
+        mode === 'value' ? 'Gas: Top Producers by Market Value' : 'Gas: Top Producers by Volume';
+}
+
 // =====================================================================
-// CHART 6: Transport cost as % of value
+// INDIA COAL MIX CHARTS
+// =====================================================================
+
+// Doughnut: CIL sales by channel
+new Chart(document.getElementById('chartIndiaMixVolume'), {
+    type: 'doughnut',
+    data: {
+        labels: INDIA_COAL_MIX.channels.map(d => `${d.channel} (${d.pct}%)`),
+        datasets: [{
+            data: INDIA_COAL_MIX.channels.map(d => d.volume_mt),
+            backgroundColor: ['#2c3e50', '#e74c3c', '#f39c12', '#95a5a6'],
+            borderWidth: 2,
+            borderColor: '#fff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '50%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { padding: 10, usePointStyle: true, font: { size: 11 } }
+            },
+            tooltip: {
+                callbacks: {
+                    label: ctx => {
+                        const ch = INDIA_COAL_MIX.channels[ctx.dataIndex];
+                        return [
+                            `${ch.volume_mt} Mt (${ch.pct}% of CIL)`,
+                            `All-in price: $${ch.allin_usd}/t (Rs ${fmt(ch.allin_price_rs)})`,
+                        ];
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Bar: base vs all-in price per channel
+new Chart(document.getElementById('chartIndiaMixPrice'), {
+    type: 'bar',
+    data: {
+        labels: INDIA_COAL_MIX.channels.map(d => d.channel.split(' (')[0]),
+        datasets: [
+            {
+                label: 'Base Notified Price',
+                data: INDIA_COAL_MIX.channels.map(d => d.base_price_rs),
+                backgroundColor: 'rgba(44, 62, 80, 0.55)',
+                borderRadius: 4,
+            },
+            {
+                label: 'All-in (incl. levies)',
+                data: INDIA_COAL_MIX.channels.map(d => d.allin_price_rs),
+                backgroundColor: 'rgba(231, 76, 60, 0.55)',
+                borderRadius: 4,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { position: 'top', labels: { font: { size: 11 } } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => {
+                        const ch = INDIA_COAL_MIX.channels[ctx.dataIndex];
+                        const usd = ctx.datasetIndex === 0
+                            ? Math.round(ch.base_price_rs / 84)
+                            : ch.allin_usd;
+                        return `${ctx.dataset.label}: Rs ${fmt(ctx.parsed.y)} (~$${usd}/t)`;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { callback: v => `Rs ${fmt(v)}` },
+                title: { display: true, text: 'Price (Rs per tonne)' }
+            }
+        }
+    }
+});
+
+// Populate India levy table
+function populateIndiaLevyTable() {
+    const tbody = document.querySelector('#indiaLevyTable tbody');
+    if (!tbody) return;
+    INDIA_COAL_MIX.levies.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${d.levy}</td>
+            <td>${d.rate}</td>
+            <td class="num">Rs ${fmt(d.amount_rs)}</td>
+            <td class="num">$${(d.amount_rs / 84).toFixed(1)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    // Total row
+    const total_rs = INDIA_COAL_MIX.levies.reduce((s, d) => s + d.amount_rs, 0);
+    const tr = document.createElement('tr');
+    tr.style.fontWeight = '600';
+    tr.innerHTML = `
+        <td>Total Levies</td>
+        <td></td>
+        <td class="num">Rs ${fmt(total_rs)}</td>
+        <td class="num">$${(total_rs / 84).toFixed(1)}</td>
+    `;
+    tbody.appendChild(tr);
+}
+
+// Populate non-CIL producers table
+function populateNonCILTable() {
+    const tbody = document.querySelector('#nonCILTable tbody');
+    if (!tbody) return;
+    INDIA_COAL_MIX.non_cil.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${d.producer}</td>
+            <td class="num">${fmt(d.volume_mt)}</td>
+            <td class="num">$${d.price_usd}</td>
+            <td>${d.notes}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// =====================================================================
+// CHART: Transport cost as % of value
 // =====================================================================
 new Chart(document.getElementById('chartTransport'), {
     type: 'bar',
@@ -326,7 +619,6 @@ function populateGasTable() {
 }
 
 function populateTransportTables() {
-    // Coal seaborne
     const tbody1 = document.querySelector('#transportCoalTable tbody');
     TRANSPORT_COAL_SEABORNE.forEach(d => {
         const tr = document.createElement('tr');
@@ -341,7 +633,6 @@ function populateTransportTables() {
         tbody1.appendChild(tr);
     });
 
-    // Oil tanker
     const tbody2 = document.querySelector('#transportOilTable tbody');
     TRANSPORT_OIL.forEach(d => {
         const tr = document.createElement('tr');
@@ -356,7 +647,6 @@ function populateTransportTables() {
         tbody2.appendChild(tr);
     });
 
-    // LNG chain
     const tbody3 = document.querySelector('#transportLNGTable tbody');
     TRANSPORT_LNG.forEach(d => {
         const tr = document.createElement('tr');
@@ -381,7 +671,6 @@ function showTab(name) {
     document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
 
     document.querySelector(`#tab-${name}`).classList.add('active');
-    // Find the button that matches
     document.querySelectorAll('.tab-btn').forEach(btn => {
         if (btn.textContent.toLowerCase() === name || btn.textContent.toLowerCase().startsWith(name)) {
             btn.classList.add('active');
@@ -396,3 +685,5 @@ populateCoalTable();
 populateOilTable();
 populateGasTable();
 populateTransportTables();
+populateIndiaLevyTable();
+populateNonCILTable();

@@ -127,3 +127,53 @@ const TRANSPORT_LNG = [
     { corridor: "Qatar \u2192 Asia", wellhead: 1.25, liquefaction: 1.75, shipping: 0.70, regas: 0.40, total: 4.10 },
     { corridor: "Australia \u2192 Asia", wellhead: 3.50, liquefaction: 2.50, shipping: 0.45, regas: 0.40, total: 6.85 },
 ];
+
+// =====================================================================
+// INDIA COAL SALES CHANNEL MIX (FY2024-25)
+// Source: CIL Annual Report FY25, Ministry of Coal Annual Report 2024-25
+// =====================================================================
+const INDIA_COAL_MIX = {
+    cil_offtake_mt: 763,
+    channels: [
+        { channel: "FSA (regulated)", pct: 82, volume_mt: 626, base_price_rs: 1514, allin_price_rs: 2270, allin_usd: 27, notes: "Base Rs1,514 + royalty 14% + DMF 4.2% + NMET 0.28% + GST 5% + cess Rs400" },
+        { channel: "E-Auction (spot)", pct: 15, volume_mt: 114, base_price_rs: 2541, allin_price_rs: 3490, allin_usd: 42, notes: "55-70% premium over FSA; market-driven" },
+        { channel: "Washed Coal", pct: 2.1, volume_mt: 16, base_price_rs: 3741, allin_price_rs: 4500, allin_usd: 54, notes: "For steel/specialized use" },
+        { channel: "Other", pct: 0.9, volume_mt: 7, base_price_rs: 2000, allin_price_rs: 2500, allin_usd: 30, notes: "Spot, special allocations" },
+    ],
+    non_cil: [
+        { producer: "SCCL (Singareni)", volume_mt: 70, price_usd: 30, notes: "Telangana state company" },
+        { producer: "Captive/Private mines", volume_mt: 198, price_usd: 38, notes: "19% of India total FY25; auction premiums" },
+    ],
+    levies: [
+        { levy: "Royalty", rate: "14% ad-valorem", amount_rs: 212 },
+        { levy: "DMF", rate: "30% of royalty", amount_rs: 64 },
+        { levy: "NMET", rate: "2% of royalty", amount_rs: 4 },
+        { levy: "GST", rate: "5%", amount_rs: 76 },
+        { levy: "GST Compensation Cess", rate: "Flat", amount_rs: 400 },
+    ]
+};
+
+// =====================================================================
+// COMMODITY COMPARISON DATA (2023-2024)
+// For context: how fossil fuels compare to other global commodities
+// =====================================================================
+const COMMODITY_COMPARISON = [
+    // Fossil fuels
+    { commodity: "Crude Oil", category: "Fossil Fuel", value_b: 2270, volume: "81,800 kb/d", unit_price: "$80.56/bbl", source: "EIA/IEA 2023", color: "#c0392b" },
+    { commodity: "Coal", category: "Fossil Fuel", value_b: 750, volume: "9,100 Mt", unit_price: "$30-134/t", source: "IEA Coal 2025", color: "#3d3d3d" },
+    { commodity: "Natural Gas", category: "Fossil Fuel", value_b: 680, volume: "4,124 bcm", unit_price: "$4.88/MMBtu avg", source: "IGU WGPS 2025", color: "#2980b9" },
+    // Renewables investment
+    { commodity: "Global Renewable Energy Investment", category: "Energy Investment", value_b: 623, volume: "~560 GW added", unit_price: "N/A", source: "BNEF/IEA 2024", color: "#27ae60" },
+    { commodity: "Global Clean Energy Investment (total)", category: "Energy Investment", value_b: 2000, volume: "Includes grid, storage, EVs", unit_price: "N/A", source: "IEA WEI 2024", color: "#2ecc71" },
+    // Major mined commodities
+    { commodity: "Iron Ore", category: "Metals & Mining", value_b: 280, volume: "2,500 Mt", unit_price: "$110/t avg", source: "World Steel/Platts", color: "#e67e22" },
+    { commodity: "Copper", category: "Metals & Mining", value_b: 195, volume: "22 Mt", unit_price: "$8,800/t avg", source: "ICSG 2024", color: "#d35400" },
+    { commodity: "Gold", category: "Metals & Mining", value_b: 280, volume: "3,600 t mined", unit_price: "$1,940/oz avg 2023", source: "World Gold Council", color: "#f1c40f" },
+    { commodity: "Aluminum", category: "Metals & Mining", value_b: 160, volume: "70 Mt", unit_price: "$2,300/t avg", source: "IAI/LME", color: "#95a5a6" },
+    { commodity: "Nickel", category: "Metals & Mining", value_b: 55, volume: "3.4 Mt", unit_price: "$16,000/t avg", source: "INSG", color: "#1abc9c" },
+    { commodity: "Zinc", category: "Metals & Mining", value_b: 35, volume: "13.5 Mt", unit_price: "$2,600/t avg", source: "ILZSG", color: "#7f8c8d" },
+    { commodity: "Lithium", category: "Critical Minerals", value_b: 25, volume: "180 kt LCE", unit_price: "$14,000/t avg (down 75% from 2022)", source: "Benchmark/S&P", color: "#8e44ad" },
+    { commodity: "Cobalt", category: "Critical Minerals", value_b: 5, volume: "210 kt", unit_price: "$24,000/t avg", source: "Cobalt Institute", color: "#2c3e50" },
+    { commodity: "Rare Earths (REO)", category: "Critical Minerals", value_b: 12, volume: "350 kt REO", unit_price: "~$35,000/t avg mix", source: "USGS/Adamas", color: "#9b59b6" },
+    { commodity: "Uranium", category: "Energy", value_b: 10, volume: "59 kt U", unit_price: "$59/lb U3O8 avg", source: "WNA/UxC", color: "#f39c12" },
+];
