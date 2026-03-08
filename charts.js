@@ -90,10 +90,10 @@ const COLORS = {
 new Chart(document.getElementById('chartComparison'), {
     type: 'bar',
     data: {
-        labels: ['Coal', 'Oil (crude)', 'Natural Gas'],
+        labels: ['Coal', 'Oil (all liquids)', 'Natural Gas'],
         datasets: [{
             label: 'Market Value ($B)',
-            data: [750, 2270, 680],
+            data: [750, 2670, 680],
             backgroundColor: [COLORS.coal, COLORS.oil, COLORS.gas],
             borderRadius: 6, barPercentage: 0.6,
         }]
@@ -111,8 +111,8 @@ new Chart(document.getElementById('chartComparison'), {
 new Chart(document.getElementById('chartShare'), {
     type: 'doughnut',
     data: {
-        labels: ['Coal (~$750B)', 'Oil (~$2,270B)', 'Gas (~$680B)'],
-        datasets: [{ data: [750, 2270, 680], backgroundColor: [COLORS.coal, COLORS.oil, COLORS.gas], borderWidth: 2, borderColor: '#fff' }]
+        labels: ['Coal (~$750B)', 'Oil (~$2,670B)', 'Gas (~$680B)'],
+        datasets: [{ data: [750, 2670, 680], backgroundColor: [COLORS.coal, COLORS.oil, COLORS.gas], borderWidth: 2, borderColor: '#fff' }]
     },
     options: {
         responsive: true, maintainAspectRatio: true, cutout: '55%',

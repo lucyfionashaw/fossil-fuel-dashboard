@@ -4,25 +4,864 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy Context — Fossil Fuel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
+    <style>
+        /* Page-specific styles */
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        .chart-container-tall { position: relative; width: 100%; height: 500px; }
+
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
+
+        .headline-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+        }
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.coal { border-top-color: var(--coal); }
+        .headline-card.oil { border-top-color: var(--oil); }
+        .headline-card.gas { border-top-color: var(--gas); }
+        .headline-card.total { border-top-color: var(--accent); }
+        .headline-card.emissions { border-top-color: #e67e22; }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--coal); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout strong { color: var(--coal); }
+
+        .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.8rem; margin: 1rem 0; }
+        @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 500px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+        .stat-item {
+            border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem; text-align: center;
+        }
+        .stat-item .pct { font-size: 1.4rem; font-weight: 700; }
+        .stat-item .desc { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+        .country-bar-section { margin-top: 1rem; }
+    </style>
 </head>
 <body>
+
 <div class="header">
     <h1>Energy Context</h1>
     <div class="subtitle">How much of the world's energy, emissions, and electricity comes from coal vs other sources</div>
 </div>
+
 <div class="container">
-    <div class="section coming-soon">
-        <h2>Coming Soon</h2>
-        <p>This analysis vertical is under development. Data research has been completed and the interactive visualizations are being built.</p>
+
+    <!-- Headline cards -->
+    <div class="headline-grid">
+        <div class="headline-card coal">
+            <div class="label">Coal's Share of Primary Energy</div>
+            <div class="value" style="color:var(--coal)">26%</div>
+            <div class="detail">~160 EJ of ~620 EJ total (2024)</div>
+        </div>
+        <div class="headline-card coal">
+            <div class="label">Coal's Share of Electricity</div>
+            <div class="value" style="color:var(--coal)">35%</div>
+            <div class="detail">10,400 TWh of ~30,000 TWh (2024)</div>
+        </div>
+        <div class="headline-card emissions">
+            <div class="label">Coal's Share of CO2</div>
+            <div class="value" style="color:#e67e22">41%</div>
+            <div class="detail">15.5 Gt of 37.6 Gt energy CO2 (2024)</div>
+        </div>
+        <div class="headline-card total">
+            <div class="label">Countries >60% Coal Power</div>
+            <div class="value" style="color:var(--accent)">12</div>
+            <div class="detail">Incl. South Africa, India, Poland, Mongolia</div>
+        </div>
+    </div>
+
+    <div class="info-callout">
+        <strong>Coal's paradox:</strong> Coal provides ~26% of primary energy but produces ~41% of energy-related CO2 emissions. This is because coal emits roughly twice as much CO2 per unit of energy as natural gas, and significantly more than oil. Understanding coal's outsized emissions footprint is essential context for any analysis of fossil fuel economics.
+    </div>
+
+    <!-- Section 1: Primary Energy Mix -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Global Primary Energy Mix (2024)</h2>
+            <p class="section-subtitle">Total: ~620 EJ. Fossil fuels still provide ~81% of the world's primary energy.</p>
+            <div class="chart-container"><canvas id="chartPrimaryEnergy"></canvas></div>
+            <div style="margin-top:0.5rem;">
+                <span class="source-tag">Energy Institute Statistical Review 2025</span>
+                <span class="source-tag">IEA World Energy Outlook 2024</span>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Global Electricity Generation Mix (2024)</h2>
+            <p class="section-subtitle">Total: ~30,000 TWh. Coal remains the single largest source of electricity worldwide.</p>
+            <div class="chart-container"><canvas id="chartElecMix"></canvas></div>
+            <div style="margin-top:0.5rem;">
+                <span class="source-tag">Ember Global Electricity Review 2025</span>
+                <span class="source-tag">IEA Electricity Market Report 2025</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: CO2 Emissions -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>CO2 Emissions by Fuel Type (2024)</h2>
+            <p class="section-subtitle">Total energy-related CO2: 37.6 Gt. Coal is the single largest source despite being the smallest fossil fuel by energy share.</p>
+            <div class="chart-container"><canvas id="chartEmissions"></canvas></div>
+            <div style="margin-top:0.5rem;">
+                <span class="source-tag">IEA CO2 Emissions 2024</span>
+                <span class="source-tag">Global Carbon Budget 2024</span>
+            </div>
+        </div>
+        <div class="section">
+            <h2>CO2 Intensity by Fuel</h2>
+            <p class="section-subtitle">Kilograms of CO2 per gigajoule of energy produced. Coal emits ~2x more CO2 per unit of energy than gas.</p>
+            <div class="chart-container"><canvas id="chartCO2Intensity"></canvas></div>
+            <div style="margin-top:0.5rem;">
+                <span class="source-tag">IPCC AR6 Emission Factors</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disproportion callout -->
+    <div class="section">
+        <h2>Coal's Disproportionate Impact</h2>
+        <p class="section-subtitle">Comparing coal's share of energy supply vs its share of emissions and other impacts.</p>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <div class="pct" style="color:var(--coal)">26%</div>
+                <div class="desc">Share of primary energy</div>
+            </div>
+            <div class="stat-item">
+                <div class="pct" style="color:var(--coal)">35%</div>
+                <div class="desc">Share of electricity</div>
+            </div>
+            <div class="stat-item">
+                <div class="pct" style="color:#e67e22">41%</div>
+                <div class="desc">Share of energy CO2</div>
+            </div>
+            <div class="stat-item">
+                <div class="pct" style="color:#c0392b">72%</div>
+                <div class="desc">Share of power sector CO2</div>
+            </div>
+            <div class="stat-item">
+                <div class="pct" style="color:#8e44ad">~80%</div>
+                <div class="desc">Share of air pollution deaths from fossil fuels</div>
+            </div>
+        </div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">IEA</span>
+            <span class="source-tag">Ember</span>
+            <span class="source-tag">Lancet Countdown 2024</span>
+        </div>
+    </div>
+
+    <!-- Section 3: Trends over time -->
+    <div class="section">
+        <h2>Global Primary Energy by Source (2015&ndash;2024)</h2>
+        <p class="section-subtitle">Despite rapid renewables growth, fossil fuel consumption has not declined in absolute terms. Coal hit a record ~160 EJ in 2024.</p>
+        <div class="chart-container-tall"><canvas id="chartEnergyTrend"></canvas></div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Energy Institute Statistical Review 2025</span>
+            <span class="source-tag">Our World in Data</span>
+        </div>
+    </div>
+
+    <div class="chart-row">
+        <div class="section">
+            <h2>Coal's Share of Electricity (2015&ndash;2024)</h2>
+            <p class="section-subtitle">Coal's share has fallen from 39% to 35%, but absolute generation hit a record 10,400 TWh in 2024 as total demand surged.</p>
+            <div class="chart-container"><canvas id="chartCoalElecTrend"></canvas></div>
+            <div style="margin-top:0.5rem;">
+                <span class="source-tag">Ember Global Electricity Review 2025</span>
+            </div>
+        </div>
+        <div class="section">
+            <h2>CO2 Emissions Trend (2015&ndash;2024)</h2>
+            <p class="section-subtitle">Global energy CO2 emissions continue to rise, driven primarily by coal and gas.</p>
+            <div class="chart-container"><canvas id="chartCO2Trend"></canvas></div>
+            <div style="margin-top:0.5rem;">
+                <span class="source-tag">Global Carbon Budget 2024</span>
+                <span class="source-tag">IEA</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Renewables vs Coal -->
+    <div class="section">
+        <h2>Renewables Growth vs Coal (Electricity, 2015&ndash;2024)</h2>
+        <p class="section-subtitle">Wind + solar generation has tripled since 2015, but coal generation has also grown. The rise in renewables has mainly served to meet new demand rather than displace coal.</p>
+        <div class="chart-container-tall"><canvas id="chartRenewablesVsCoal"></canvas></div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Ember Global Electricity Review 2025</span>
+            <span class="source-tag">IEA</span>
+        </div>
+    </div>
+
+    <!-- Section 5: Top coal-dependent countries -->
+    <div class="section">
+        <h2>Top 20 Countries by Coal Share of Electricity (2024)</h2>
+        <p class="section-subtitle">Many of the world's most populous developing nations remain heavily dependent on coal for electricity.</p>
+        <div class="chart-container-tall"><canvas id="chartCoalDependence"></canvas></div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Ember Country Data 2025</span>
+            <span class="source-tag">IEA World Energy Balances 2024</span>
+        </div>
+    </div>
+
+    <!-- Section 6: Coal generation by country -->
+    <div class="section">
+        <h2>Largest Coal Power Generators (TWh, 2024)</h2>
+        <p class="section-subtitle">China alone generates more coal electricity than the rest of the world combined. The top 5 countries account for ~83% of global coal power.</p>
+        <div class="chart-container-tall"><canvas id="chartCoalGeneration"></canvas></div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Ember Global Electricity Review 2025</span>
+            <span class="source-tag">Energy Institute SR 2025</span>
+        </div>
+    </div>
+
+    <!-- Country detail table -->
+    <div class="section">
+        <h2>Coal in Electricity: Country Detail</h2>
+        <div class="data-table-wrapper">
+            <table id="coalCountryTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Country</th>
+                        <th class="num">Coal Generation (TWh)</th>
+                        <th class="num">Total Generation (TWh)</th>
+                        <th class="num">Coal Share (%)</th>
+                        <th class="num">Change vs 2019 (pp)</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Ember 2025</span>
+            <span class="source-tag">IEA 2024</span>
+        </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="section">
+        <h2>Methodology &amp; Sources</h2>
+        <div class="methodology">
+            <p><strong>Primary energy:</strong> Based on the substitution method used by the Energy Institute Statistical Review (formerly BP), where nuclear and renewables are converted to primary energy equivalents at ~38% thermal efficiency. Total global primary energy consumption in 2024 was approximately 620 EJ. Shares: oil ~31%, coal ~26%, gas ~24%, hydro ~7%, renewables (wind/solar/bio) ~8%, nuclear ~4%.</p>
+            <p><strong>Electricity:</strong> Global electricity generation in 2024 was approximately 30,000 TWh (Ember Global Electricity Review 2025). Coal: ~35%, gas: ~22%, hydro: ~15%, nuclear: ~9%, wind: ~8%, solar: ~6%, other renewables: ~3%, oil: ~2%.</p>
+            <p><strong>CO2 emissions:</strong> Energy-related CO2 emissions from fossil fuel combustion and industrial processes. 2024 estimate: 37.6 Gt CO2 (IEA). Coal: ~15.5 Gt (41%), oil: ~11.1 Gt (30%), gas: ~7.9 Gt (21%), industrial processes: ~3.1 Gt (8%).</p>
+            <p><strong>CO2 intensity factors:</strong> IPCC AR6 default emission factors. Coal (anthracite/bituminous): ~95 kg CO2/GJ; oil: ~73 kg CO2/GJ; natural gas: ~56 kg CO2/GJ.</p>
+            <p><strong>Country coal shares:</strong> Ember country-level electricity data (2024). Change vs 2019 calculated from same source. Some small countries with very high coal shares (e.g., Kosovo, North Macedonia) omitted from top-20 chart due to small absolute generation.</p>
+            <div style="margin-top: 1rem;">
+                <span class="source-tag">Energy Institute Statistical Review 2025</span>
+                <span class="source-tag">IEA World Energy Outlook 2024</span>
+                <span class="source-tag">IEA CO2 Emissions 2024</span>
+                <span class="source-tag">Ember Global Electricity Review 2025</span>
+                <span class="source-tag">Global Carbon Budget 2024</span>
+                <span class="source-tag">Our World in Data</span>
+                <span class="source-tag">IPCC AR6</span>
+                <span class="source-tag">Lancet Countdown 2024</span>
+            </div>
+        </div>
     </div>
 </div>
+
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard</p>
-    <p>Built with <a href="https://claude.ai">Claude</a></p>
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Energy Context</p>
+    <p>Data: 2024 estimates &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+// Color palette
+const COLORS = {
+    coal: '#3d3d3d',
+    oil: '#c0392b',
+    gas: '#2980b9',
+    nuclear: '#8e44ad',
+    hydro: '#2ecc71',
+    wind: '#1abc9c',
+    solar: '#f1c40f',
+    bioOther: '#e67e22',
+    otherRenew: '#27ae60',
+    accent: '#16a085',
+    industry: '#95a5a6',
+};
+
+// --- Primary energy mix 2024 (EJ, substitution method) ---
+const primaryEnergyData = {
+    labels: ['Oil', 'Coal', 'Natural Gas', 'Hydro', 'Renewables', 'Nuclear'],
+    values: [192, 164, 150, 41, 47, 26],
+    colors: [COLORS.oil, COLORS.coal, COLORS.gas, COLORS.hydro, COLORS.solar, COLORS.nuclear],
+};
+
+// --- Electricity generation mix 2024 (TWh) ---
+const elecMixData = {
+    labels: ['Coal', 'Gas', 'Hydro', 'Nuclear', 'Wind', 'Solar', 'Oil', 'Other Renew.'],
+    values: [10400, 6600, 4400, 2700, 2500, 1900, 600, 900],
+    colors: [COLORS.coal, COLORS.gas, COLORS.hydro, COLORS.nuclear, COLORS.wind, COLORS.solar, COLORS.oil, COLORS.bioOther],
+};
+
+// --- CO2 emissions by fuel 2024 (Gt CO2) ---
+const emissionsData = {
+    labels: ['Coal', 'Oil', 'Natural Gas', 'Industry/Other'],
+    values: [15.5, 11.1, 7.9, 3.1],
+    colors: [COLORS.coal, COLORS.oil, COLORS.gas, COLORS.industry],
+};
+
+// --- CO2 intensity (kg CO2/GJ) ---
+const co2IntensityData = {
+    labels: ['Coal\n(anthracite)', 'Coal\n(sub-bit/lignite)', 'Oil', 'Natural Gas'],
+    values: [95, 100, 73, 56],
+    colors: [COLORS.coal, '#5a5a5a', COLORS.oil, COLORS.gas],
+};
+
+// --- Primary energy trend 2015-2024 (EJ) ---
+const years = ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'];
+const energyTrendData = {
+    coal:       [153, 150, 152, 155, 154, 146, 156, 158, 160, 164],
+    oil:        [181, 184, 187, 190, 190, 170, 180, 186, 189, 192],
+    gas:        [124, 127, 130, 135, 138, 133, 140, 140, 142, 150],
+    nuclear:    [22,  22,  23,  23,  24,  23,  24,  24,  25,  26],
+    hydro:      [33,  34,  35,  36,  36,  37,  38,  37,  39,  41],
+    renewables: [17,  19,  22,  25,  28,  31,  35,  38,  42,  47],
+};
+
+// --- Coal electricity share trend (%, TWh) ---
+const coalElecTrend = {
+    share: [39, 38, 38, 38, 37, 35, 36, 36, 36, 35],
+    twh:   [9200, 9100, 9400, 9700, 9500, 8700, 9800, 10100, 10200, 10400],
+};
+
+// --- CO2 trend (Gt) ---
+const co2Trend = {
+    coal: [14.5, 14.2, 14.5, 14.9, 14.7, 13.6, 14.9, 15.0, 15.2, 15.5],
+    oil:  [11.0, 11.1, 11.2, 11.3, 11.2, 9.6, 10.5, 10.8, 11.0, 11.1],
+    gas:  [6.5, 6.7, 6.8, 7.1, 7.2, 7.0, 7.4, 7.5, 7.6, 7.9],
+};
+
+// --- Renewables vs Coal (electricity, TWh) ---
+const renewVsCoal = {
+    windSolar: [1050, 1250, 1500, 1800, 2150, 2550, 3000, 3500, 4000, 4400],
+    coal:      [9200, 9100, 9400, 9700, 9500, 8700, 9800, 10100, 10200, 10400],
+};
+
+// --- Top 20 coal-dependent countries (% of electricity from coal, 2024) ---
+const coalDependence = [
+    { country: 'South Africa', share: 82, twh: 200 },
+    { country: 'Mongolia', share: 81, twh: 9 },
+    { country: 'Poland', share: 62, twh: 95 },
+    { country: 'India', share: 75, twh: 1390 },
+    { country: 'China', share: 60, twh: 5600 },
+    { country: 'Indonesia', share: 62, twh: 220 },
+    { country: 'Kazakhstan', share: 66, twh: 70 },
+    { country: 'Serbia', share: 65, twh: 25 },
+    { country: 'Bosnia & Herz.', share: 63, twh: 10 },
+    { country: 'Czech Republic', share: 40, twh: 33 },
+    { country: 'Australia', share: 44, twh: 120 },
+    { country: 'Vietnam', share: 50, twh: 140 },
+    { country: 'Philippines', share: 48, twh: 55 },
+    { country: 'Taiwan', share: 42, twh: 120 },
+    { country: 'Malaysia', share: 38, twh: 65 },
+    { country: 'Japan', share: 30, twh: 290 },
+    { country: 'South Korea', share: 32, twh: 190 },
+    { country: 'Germany', share: 25, twh: 105 },
+    { country: 'USA', share: 16, twh: 670 },
+    { country: 'Turkey', share: 33, twh: 110 },
+].sort((a, b) => b.share - a.share);
+
+// --- Top coal generators by absolute TWh ---
+const coalGenerators = [
+    { country: 'China', twh: 5600 },
+    { country: 'India', twh: 1390 },
+    { country: 'USA', twh: 670 },
+    { country: 'Japan', twh: 290 },
+    { country: 'Indonesia', twh: 220 },
+    { country: 'South Africa', twh: 200 },
+    { country: 'South Korea', twh: 190 },
+    { country: 'Vietnam', twh: 140 },
+    { country: 'Australia', twh: 120 },
+    { country: 'Taiwan', twh: 120 },
+    { country: 'Turkey', twh: 110 },
+    { country: 'Germany', twh: 105 },
+    { country: 'Poland', twh: 95 },
+    { country: 'Kazakhstan', twh: 70 },
+    { country: 'Malaysia', twh: 65 },
+    { country: 'Philippines', twh: 55 },
+];
+
+// --- Country table data ---
+const countryTableData = [
+    { country: 'China', coalTwh: 5600, totalTwh: 9350, change: -2 },
+    { country: 'India', coalTwh: 1390, totalTwh: 1850, change: -1 },
+    { country: 'USA', coalTwh: 670, totalTwh: 4250, change: -8 },
+    { country: 'Japan', coalTwh: 290, totalTwh: 960, change: -2 },
+    { country: 'Indonesia', coalTwh: 220, totalTwh: 355, change: +2 },
+    { country: 'South Africa', coalTwh: 200, totalTwh: 245, change: -5 },
+    { country: 'South Korea', coalTwh: 190, totalTwh: 595, change: -8 },
+    { country: 'Vietnam', coalTwh: 140, totalTwh: 280, change: +3 },
+    { country: 'Australia', coalTwh: 120, totalTwh: 275, change: -16 },
+    { country: 'Taiwan', coalTwh: 120, totalTwh: 285, change: -5 },
+    { country: 'Turkey', coalTwh: 110, totalTwh: 330, change: +2 },
+    { country: 'Germany', coalTwh: 105, totalTwh: 510, change: -10 },
+    { country: 'Poland', coalTwh: 95, totalTwh: 170, change: -14 },
+    { country: 'Kazakhstan', coalTwh: 70, totalTwh: 115, change: -4 },
+    { country: 'Malaysia', coalTwh: 65, totalTwh: 175, change: -4 },
+    { country: 'Philippines', coalTwh: 55, totalTwh: 115, change: -5 },
+    { country: 'Mongolia', coalTwh: 9, totalTwh: 11, change: -3 },
+    { country: 'Serbia', coalTwh: 25, totalTwh: 38, change: -5 },
+    { country: 'Czech Republic', coalTwh: 33, totalTwh: 82, change: -9 },
+    { country: 'Bosnia & Herz.', coalTwh: 10, totalTwh: 16, change: -4 },
+];
+
+
+// ============================================================
+// CHART DEFAULTS
+// ============================================================
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#7f8c8d';
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyleWidth = 10;
+
+
+// ============================================================
+// HELPER: format number with commas
+// ============================================================
+function fmt(n) { return n.toLocaleString(); }
+
+
+// ============================================================
+// CHART 1: Primary Energy Mix (doughnut)
+// ============================================================
+new Chart(document.getElementById('chartPrimaryEnergy'), {
+    type: 'doughnut',
+    data: {
+        labels: primaryEnergyData.labels,
+        datasets: [{
+            data: primaryEnergyData.values,
+            backgroundColor: primaryEnergyData.colors,
+            borderWidth: 2,
+            borderColor: '#fff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '45%',
+        plugins: {
+            legend: { position: 'right', labels: { padding: 12, font: { size: 11 } } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = ((ctx.raw / total) * 100).toFixed(1);
+                        return ctx.label + ': ' + ctx.raw + ' EJ (' + pct + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 2: Electricity Generation Mix (doughnut)
+// ============================================================
+new Chart(document.getElementById('chartElecMix'), {
+    type: 'doughnut',
+    data: {
+        labels: elecMixData.labels,
+        datasets: [{
+            data: elecMixData.values,
+            backgroundColor: elecMixData.colors,
+            borderWidth: 2,
+            borderColor: '#fff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '45%',
+        plugins: {
+            legend: { position: 'right', labels: { padding: 12, font: { size: 11 } } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = ((ctx.raw / total) * 100).toFixed(1);
+                        return ctx.label + ': ' + fmt(ctx.raw) + ' TWh (' + pct + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 3: CO2 Emissions by fuel (horizontal bar)
+// ============================================================
+new Chart(document.getElementById('chartEmissions'), {
+    type: 'bar',
+    data: {
+        labels: emissionsData.labels,
+        datasets: [{
+            data: emissionsData.values,
+            backgroundColor: emissionsData.colors,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = ((ctx.raw / total) * 100).toFixed(1);
+                        return ctx.raw + ' Gt CO2 (' + pct + '%)';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { title: { display: true, text: 'Gt CO2' }, beginAtZero: true },
+            y: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 4: CO2 Intensity (bar)
+// ============================================================
+new Chart(document.getElementById('chartCO2Intensity'), {
+    type: 'bar',
+    data: {
+        labels: ['Coal (bituminous)', 'Coal (lignite)', 'Oil', 'Natural Gas'],
+        datasets: [{
+            data: co2IntensityData.values,
+            backgroundColor: co2IntensityData.colors,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.raw + ' kg CO2/GJ'; }
+                }
+            }
+        },
+        scales: {
+            y: { title: { display: true, text: 'kg CO2 / GJ' }, beginAtZero: true },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 5: Primary Energy Trend (stacked area)
+// ============================================================
+new Chart(document.getElementById('chartEnergyTrend'), {
+    type: 'line',
+    data: {
+        labels: years,
+        datasets: [
+            { label: 'Oil', data: energyTrendData.oil, backgroundColor: 'rgba(192,57,43,0.3)', borderColor: COLORS.oil, fill: true, tension: 0.3, pointRadius: 2 },
+            { label: 'Coal', data: energyTrendData.coal, backgroundColor: 'rgba(61,61,61,0.3)', borderColor: COLORS.coal, fill: true, tension: 0.3, pointRadius: 2 },
+            { label: 'Natural Gas', data: energyTrendData.gas, backgroundColor: 'rgba(41,128,185,0.3)', borderColor: COLORS.gas, fill: true, tension: 0.3, pointRadius: 2 },
+            { label: 'Renewables', data: energyTrendData.renewables, backgroundColor: 'rgba(241,196,15,0.3)', borderColor: COLORS.solar, fill: true, tension: 0.3, pointRadius: 2 },
+            { label: 'Hydro', data: energyTrendData.hydro, backgroundColor: 'rgba(46,204,113,0.3)', borderColor: COLORS.hydro, fill: true, tension: 0.3, pointRadius: 2 },
+            { label: 'Nuclear', data: energyTrendData.nuclear, backgroundColor: 'rgba(142,68,173,0.3)', borderColor: COLORS.nuclear, fill: true, tension: 0.3, pointRadius: 2 },
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top', labels: { padding: 15, font: { size: 11 } } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw + ' EJ'; }
+                }
+            }
+        },
+        scales: {
+            y: { title: { display: true, text: 'Exajoules (EJ)' }, beginAtZero: true, stacked: false },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 6: Coal Electricity Share Trend (dual axis)
+// ============================================================
+new Chart(document.getElementById('chartCoalElecTrend'), {
+    type: 'bar',
+    data: {
+        labels: years,
+        datasets: [
+            {
+                label: 'Coal Generation (TWh)',
+                data: coalElecTrend.twh,
+                backgroundColor: 'rgba(61,61,61,0.6)',
+                borderRadius: 3,
+                yAxisID: 'y',
+                order: 2,
+            },
+            {
+                label: 'Coal Share (%)',
+                data: coalElecTrend.share,
+                type: 'line',
+                borderColor: COLORS.oil,
+                backgroundColor: COLORS.oil,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: COLORS.oil,
+                yAxisID: 'y1',
+                order: 1,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top', labels: { font: { size: 11 } } },
+        },
+        scales: {
+            y: { title: { display: true, text: 'TWh' }, beginAtZero: true, position: 'left' },
+            y1: { title: { display: true, text: 'Share (%)' }, beginAtZero: true, max: 50, position: 'right', grid: { drawOnChartArea: false } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 7: CO2 Emissions Trend (stacked bar)
+// ============================================================
+new Chart(document.getElementById('chartCO2Trend'), {
+    type: 'bar',
+    data: {
+        labels: years,
+        datasets: [
+            { label: 'Coal', data: co2Trend.coal, backgroundColor: COLORS.coal, borderRadius: 2 },
+            { label: 'Oil', data: co2Trend.oil, backgroundColor: COLORS.oil, borderRadius: 2 },
+            { label: 'Gas', data: co2Trend.gas, backgroundColor: COLORS.gas, borderRadius: 2 },
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top', labels: { font: { size: 11 } } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw + ' Gt CO2'; },
+                    afterBody: function(items) {
+                        const total = items.reduce((s, i) => s + i.raw, 0);
+                        return 'Total fossil: ' + total.toFixed(1) + ' Gt CO2';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: { title: { display: true, text: 'Gt CO2' }, stacked: true, beginAtZero: true },
+            x: { stacked: true, grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 8: Renewables vs Coal (TWh, line)
+// ============================================================
+new Chart(document.getElementById('chartRenewablesVsCoal'), {
+    type: 'line',
+    data: {
+        labels: years,
+        datasets: [
+            {
+                label: 'Coal Generation',
+                data: renewVsCoal.coal,
+                borderColor: COLORS.coal,
+                backgroundColor: 'rgba(61,61,61,0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: COLORS.coal,
+                borderWidth: 3,
+            },
+            {
+                label: 'Wind + Solar Generation',
+                data: renewVsCoal.windSolar,
+                borderColor: COLORS.solar,
+                backgroundColor: 'rgba(241,196,15,0.15)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: COLORS.solar,
+                borderWidth: 3,
+            },
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top', labels: { padding: 15, font: { size: 12 } } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.dataset.label + ': ' + fmt(ctx.raw) + ' TWh'; },
+                    afterBody: function(items) {
+                        if (items.length >= 2) {
+                            const ratio = (items[0].raw / items[1].raw).toFixed(1);
+                            return 'Coal is ' + ratio + 'x wind+solar';
+                        }
+                    }
+                }
+            }
+        },
+        scales: {
+            y: { title: { display: true, text: 'TWh' }, beginAtZero: true },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 9: Top 20 Coal Dependence (horizontal bar)
+// ============================================================
+new Chart(document.getElementById('chartCoalDependence'), {
+    type: 'bar',
+    data: {
+        labels: coalDependence.map(d => d.country),
+        datasets: [{
+            label: 'Coal Share of Electricity (%)',
+            data: coalDependence.map(d => d.share),
+            backgroundColor: coalDependence.map(d => {
+                if (d.share >= 70) return COLORS.coal;
+                if (d.share >= 50) return '#5a5a5a';
+                if (d.share >= 30) return '#8a8a8a';
+                return '#b0b0b0';
+            }),
+            borderRadius: 3,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const d = coalDependence[ctx.dataIndex];
+                        return d.share + '% coal (' + fmt(d.twh) + ' TWh from coal)';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { title: { display: true, text: 'Coal Share of Electricity (%)' }, beginAtZero: true, max: 100 },
+            y: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 10: Coal Generation by Country (horizontal bar, TWh)
+// ============================================================
+new Chart(document.getElementById('chartCoalGeneration'), {
+    type: 'bar',
+    data: {
+        labels: coalGenerators.map(d => d.country),
+        datasets: [{
+            label: 'Coal Electricity Generation (TWh)',
+            data: coalGenerators.map(d => d.twh),
+            backgroundColor: coalGenerators.map((d, i) => {
+                if (i === 0) return COLORS.coal;       // China
+                if (i === 1) return '#5a5a5a';          // India
+                return '#8a8a8a';
+            }),
+            borderRadius: 3,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return fmt(ctx.raw) + ' TWh'; }
+                }
+            }
+        },
+        scales: {
+            x: { title: { display: true, text: 'TWh' }, beginAtZero: true },
+            y: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// TABLE: Country detail
+// ============================================================
+(function() {
+    const tbody = document.getElementById('coalCountryTable').querySelector('tbody');
+    // Sort by coal TWh descending
+    const sorted = countryTableData.sort((a, b) => b.coalTwh - a.coalTwh);
+    sorted.forEach(function(d, i) {
+        const share = ((d.coalTwh / d.totalTwh) * 100).toFixed(0);
+        const changeStr = d.change > 0 ? ('+' + d.change) : String(d.change);
+        const trend = d.change <= -10 ? 'Falling fast' : d.change <= -3 ? 'Declining' : d.change >= 2 ? 'Rising' : 'Stable';
+        const trendColor = d.change <= -10 ? '#27ae60' : d.change <= -3 ? '#2ecc71' : d.change >= 2 ? '#c0392b' : '#7f8c8d';
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + (i+1) + '</td>'
+            + '<td>' + d.country + '</td>'
+            + '<td class="num">' + fmt(d.coalTwh) + '</td>'
+            + '<td class="num">' + fmt(d.totalTwh) + '</td>'
+            + '<td class="num"><strong>' + share + '%</strong></td>'
+            + '<td class="num" style="color:' + trendColor + '">' + changeStr + ' pp</td>'
+            + '<td style="color:' + trendColor + '; font-size:0.78rem;">' + trend + '</td>';
+        tbody.appendChild(tr);
+    });
+})();
+
+</script>
 <script src="nav.js"></script>
+
 </body>
 </html>

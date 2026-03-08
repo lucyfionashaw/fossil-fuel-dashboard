@@ -54,7 +54,7 @@
 
 <div class="header">
     <h1>Global Fossil Fuel Market Value</h1>
-    <div class="subtitle">Task 1: Coal vs Oil vs Gas — Production, Pricing & Transport Costs (2024 data)</div>
+    <div class="subtitle">Task 1: Coal vs Oil vs Gas — Production, Pricing & Transport Costs (2024 data, all petroleum liquids)</div>
 </div>
 
 <div class="container">
@@ -67,9 +67,9 @@
             <div class="detail">9,100 Mt production (2024 record)</div>
         </div>
         <div class="headline-card oil">
-            <div class="label">Oil (Crude + Condensate)</div>
-            <div class="value" style="color:var(--oil)">$2,270B</div>
-            <div class="detail">81,800 kb/d crude &middot; Total all liquids: ~102 mb/d</div>
+            <div class="label">Oil (All Petroleum Liquids)</div>
+            <div class="value" style="color:var(--oil)">$2,670B</div>
+            <div class="detail">103 mb/d total &middot; Crude $2,340B + NGLs $185B + other $143B</div>
         </div>
         <div class="headline-card gas">
             <div class="label">Natural Gas</div>
@@ -78,14 +78,14 @@
         </div>
         <div class="headline-card total">
             <div class="label">Total Fossil Fuels</div>
-            <div class="value" style="color:var(--accent)">~$3.7T</div>
-            <div class="detail">Central estimate &middot; $3.4&ndash;4.0T range</div>
+            <div class="value" style="color:var(--accent)">~$4.1T</div>
+            <div class="detail">Central estimate (2024) &middot; $3.8&ndash;4.4T range</div>
         </div>
     </div>
 
     <!-- Oil clarification -->
     <div class="info-callout">
-        <strong>Why 81,800 kb/d and not 100M+ b/d?</strong> Our oil figure covers <em>crude oil + condensate</em> only, which can be accurately priced by grade. Total petroleum and other liquids is ~102 mb/d (EIA 2023), but the additional ~20 mb/d includes NGLs (~14.5M b/d at ~38% of crude price = ~$159B), biofuels (~2.2M b/d), processing gains (~2.2M b/d, no revenue), and other liquids (~1.1M b/d). Including all liquids: <strong>~$2.55T total oil market value</strong>.
+        <strong>Oil: 103 mb/d total petroleum &amp; other liquids (2024).</strong> This includes crude oil + condensate (~82.5 mb/d, $2,340B), NGLs (~14 mb/d, $185B from petrochemical feedstocks), biofuels (~2.2 mb/d, $88B), other liquids (~2 mb/d, $55B), and processing gains (~2.3 mb/d, no revenue). Country table below shows crude + condensate priced by grade. EIA STEO: world supply averaged 103.08 mb/d in 2024, Brent averaged ~$80.50/bbl.
         <a href="https://www.eia.gov/tools/faqs/faq.php?id=709&t=6" target="_blank" style="color:var(--accent)">EIA FAQ #709</a>
     </div>
 
@@ -259,7 +259,7 @@
         <h2>Methodology & Sources</h2>
         <div class="methodology">
             <p><strong>Coal:</strong> Country-level production from IEA Coal 2025, NBS (China), Ministry of Coal India, ESDM (Indonesia), EIA (USA). Prices use country-specific benchmarks. India: CIL blended all-in price ~$31/t; post-Sep 2025 levy burden = 39.81% on base = ~28.5% of total (PIB). Washed coal just 0.3% of CIL output (2.4 Mt) despite 39 MTPA washery capacity.</p>
-            <p><strong>Oil:</strong> Crude + condensate from EIA: 81,800 kb/d. Total petroleum incl. NGLs, biofuels, other liquids: ~102 mb/d. Crude priced by country-specific benchmarks (WTI, Urals, WCS, Maya, Murban, etc). Country-specific pricing reduces total by ~$190B vs flat Brent. Including all liquids: ~$2.55T.</p>
+            <p><strong>Oil:</strong> Total petroleum &amp; other liquids from EIA STEO: 103 mb/d (2024). Crude + condensate ~82.5 mb/d priced by country-specific benchmarks (WTI $76.55, Urals $70, WCS $61, Brent $80.50). NGLs ~14 mb/d ($185B, Global Market Insights). Biofuels, CTL/GTL, other liquids add ~$143B. Country table shows crude + condensate only; headline includes all liquids at $2,670B.</p>
             <p><strong>Gas:</strong> 4,124 bcm marketed production (Energy Institute SR 2025, 74th ed). Market value uses IGU WGPS 2025 regional averages. ~31% consumed at &lt;$2/MMBtu (subsidized).</p>
             <p><strong>Commodity Comparison:</strong> EIA/IEA (fossil fuels), BNEF/IEA WEI 2024 (clean energy), World Steel/Platts (iron ore), ICSG (copper), World Gold Council, USGS/Adamas (rare earths).</p>
             <div style="margin-top: 1rem;">
@@ -279,7 +279,7 @@
 
 <div class="footer">
     <p>Global Fossil Fuel Market Value Dashboard &middot; Task 1 of 10 Analysis Verticals</p>
-    <p>Data: 2024 (coal, gas) / 2023 (oil) &middot; Built with <a href="https://claude.ai">Claude</a></p>
+    <p>Data: 2024 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
 <script src="data.js"></script>

@@ -3,26 +3,937 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Political Donations — Fossil Fuel Dashboard</title>
+    <title>Political Donations &amp; Lobbying &mdash; Fossil Fuel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
+    <style>
+        /* Page-specific styles */
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        .chart-container-tall { position: relative; width: 100%; height: 520px; }
+
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
+
+        .headline-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+        }
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.oil { border-top-color: var(--oil); }
+        .headline-card.coal { border-top-color: var(--coal); }
+        .headline-card.gas { border-top-color: var(--gas); }
+        .headline-card.total { border-top-color: var(--accent); }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--gas); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout strong { color: var(--gas); }
+
+        .info-callout.warn {
+            background: #fff8f0; border-left-color: #e67e22;
+        }
+        .info-callout.warn strong { color: #e67e22; }
+
+        .donor-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 1rem; }
+        @media (max-width: 800px) { .donor-grid { grid-template-columns: 1fr; } }
+
+        .donor-card {
+            border: 1px solid var(--border); border-radius: 8px; padding: 1rem;
+            display: flex; align-items: flex-start; gap: 0.8rem;
+        }
+        .donor-rank {
+            background: var(--bg); border-radius: 50%; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.85rem; color: var(--text-secondary); flex-shrink: 0;
+        }
+        .donor-info { flex: 1; }
+        .donor-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.15rem; }
+        .donor-amount { color: var(--oil); font-weight: 700; font-size: 1.1rem; }
+        .donor-detail { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.15rem; }
+
+        .intl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 700px) { .intl-grid { grid-template-columns: 1fr; } }
+        .intl-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+        .intl-card .country-name { font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem; }
+        .intl-card .spend-val { font-size: 1.4rem; font-weight: 700; color: var(--oil); }
+        .intl-card .spend-detail { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.3rem; line-height: 1.4; }
+
+        .category-legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+        .category-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-secondary); }
+        .category-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+        .stat-row { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1rem 0; }
+        .stat-item { flex: 1; min-width: 140px; text-align: center; padding: 0.8rem; border: 1px solid var(--border); border-radius: 8px; }
+        .stat-item .stat-val { font-size: 1.3rem; font-weight: 700; }
+        .stat-item .stat-label { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.2rem; }
+    </style>
 </head>
 <body>
+
 <div class="header">
-    <h1>Political Donations</h1>
-    <div class="subtitle">Political donations and lobbying by fossil fuel industry</div>
+    <h1>Political Donations &amp; Lobbying</h1>
+    <div class="subtitle">Task 3: Fossil Fuel Industry Political Spending &mdash; Contributions, Lobbying &amp; Influence</div>
 </div>
+
 <div class="container">
-    <div class="section coming-soon">
-        <h2>Coming Soon</h2>
-        <p>This analysis vertical is under development. Data research has been completed and the interactive visualizations are being built.</p>
+
+    <!-- Headline cards -->
+    <div class="headline-grid">
+        <div class="headline-card oil">
+            <div class="label">Oil &amp; Gas Contributions</div>
+            <div class="value" style="color:var(--oil)">$125M</div>
+            <div class="detail">US 2024 election cycle &middot; OpenSecrets</div>
+        </div>
+        <div class="headline-card coal">
+            <div class="label">Coal Mining Contributions</div>
+            <div class="value" style="color:var(--coal)">$12.6M</div>
+            <div class="detail">US 2024 election cycle &middot; OpenSecrets</div>
+        </div>
+        <div class="headline-card gas">
+            <div class="label">FF Lobbying (Annual)</div>
+            <div class="value" style="color:var(--gas)">$124.5M</div>
+            <div class="detail">2023 US federal lobbying spend</div>
+        </div>
+        <div class="headline-card total">
+            <div class="label">Global FF Subsidies</div>
+            <div class="value" style="color:var(--accent)">$7.0T</div>
+            <div class="detail">IMF 2022 estimate (incl. externalities)</div>
+        </div>
+    </div>
+
+    <!-- Context callout -->
+    <div class="info-callout">
+        <strong>Context:</strong> US fossil fuel political spending (~$250M/cycle in contributions + lobbying) protects an industry receiving an estimated $7 trillion in global subsidies annually (IMF, including externalities). For every $1 spent on lobbying and contributions, the US fossil fuel industry receives an estimated $119 in federal subsidies and tax breaks.
+    </div>
+
+    <!-- US Contributions Over Time -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>US Oil &amp; Gas Industry: Political Contributions by Cycle</h2>
+            <p class="section-subtitle">Total PAC, individual, and soft money contributions per two-year election cycle. Source: OpenSecrets.</p>
+            <div class="chart-container"><canvas id="chartOilGasContrib"></canvas></div>
+            <div class="category-legend">
+                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--oil)"></div> To Republicans</div>
+                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--gas)"></div> To Democrats</div>
+            </div>
+        </div>
+        <div class="section">
+            <h2>US Coal Mining: Political Contributions by Cycle</h2>
+            <p class="section-subtitle">Coal mining sector PAC + individual contributions. Source: OpenSecrets.</p>
+            <div class="chart-container"><canvas id="chartCoalContrib"></canvas></div>
+            <div class="category-legend">
+                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--coal)"></div> To Republicans</div>
+                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--gas-light)"></div> To Democrats</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lobbying Spend -->
+    <div class="section">
+        <h2>US Lobbying Expenditure: Fossil Fuels vs Clean Energy</h2>
+        <p class="section-subtitle">Annual federal lobbying spend reported to the Senate. Fossil fuel lobbying has consistently outspent clean energy advocacy by 5&ndash;10x. Source: OpenSecrets.</p>
+        <div class="chart-container-tall"><canvas id="chartLobbySpend"></canvas></div>
+        <div class="category-legend">
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--oil)"></div> Oil &amp; Gas Lobbying</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--coal)"></div> Coal Mining Lobbying</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--accent)"></div> Renewable Energy / Environment Lobbying</div>
+        </div>
+    </div>
+
+    <!-- Party Split -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Partisan Split: Oil &amp; Gas Contributions (2024)</h2>
+            <p class="section-subtitle">Oil and gas money overwhelmingly favors Republican candidates and committees.</p>
+            <div class="chart-container"><canvas id="chartPartySplitOG"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Partisan Split: Coal Mining Contributions (2024)</h2>
+            <p class="section-subtitle">Coal industry giving is the most partisan of all fossil fuels.</p>
+            <div class="chart-container"><canvas id="chartPartySplitCoal"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Contribution type breakdown -->
+    <div class="section">
+        <h2>How Oil &amp; Gas Money Flows: Contribution Types Over Time</h2>
+        <p class="section-subtitle">Breakdown of oil and gas contributions by source type: PACs, individuals, and outside spending groups. Source: OpenSecrets/FEC.</p>
+        <div class="chart-container-tall"><canvas id="chartContribType"></canvas></div>
+        <div class="category-legend">
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#e74c3c"></div> Individual Contributions</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#c0392b"></div> PAC Contributions</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#922b21"></div> Outside Spending / Super PACs</div>
+        </div>
+    </div>
+
+    <!-- Top Corporate Donors -->
+    <div class="section">
+        <h2>Top Fossil Fuel Corporate Donors (US, 2024 Cycle)</h2>
+        <p class="section-subtitle">Largest corporate PAC + employee contributions. Source: OpenSecrets, FEC filings.</p>
+        <div class="donor-grid">
+            <div class="donor-card">
+                <div class="donor-rank">1</div>
+                <div class="donor-info">
+                    <div class="donor-name">Koch Industries</div>
+                    <div class="donor-amount">$14.2M</div>
+                    <div class="donor-detail">Diversified fossil fuels &middot; 90% to Republicans &middot; Koch network super PACs add hundreds of millions more</div>
+                </div>
+            </div>
+            <div class="donor-card">
+                <div class="donor-rank">2</div>
+                <div class="donor-info">
+                    <div class="donor-name">Chevron</div>
+                    <div class="donor-amount">$7.8M</div>
+                    <div class="donor-detail">Oil &amp; gas major &middot; 82% to Republicans &middot; Top oil company PAC by spend</div>
+                </div>
+            </div>
+            <div class="donor-card">
+                <div class="donor-rank">3</div>
+                <div class="donor-info">
+                    <div class="donor-name">ExxonMobil</div>
+                    <div class="donor-amount">$5.4M</div>
+                    <div class="donor-detail">Largest US oil major &middot; 86% to Republicans &middot; Historically #1 in lobbying spend</div>
+                </div>
+            </div>
+            <div class="donor-card">
+                <div class="donor-rank">4</div>
+                <div class="donor-info">
+                    <div class="donor-name">Marathon Petroleum</div>
+                    <div class="donor-amount">$4.1M</div>
+                    <div class="donor-detail">Refining &amp; marketing &middot; 84% to Republicans &middot; Top refinery-sector donor</div>
+                </div>
+            </div>
+            <div class="donor-card">
+                <div class="donor-rank">5</div>
+                <div class="donor-info">
+                    <div class="donor-name">ConocoPhillips</div>
+                    <div class="donor-amount">$3.6M</div>
+                    <div class="donor-detail">Exploration &amp; production &middot; 81% to Republicans</div>
+                </div>
+            </div>
+            <div class="donor-card">
+                <div class="donor-rank">6</div>
+                <div class="donor-info">
+                    <div class="donor-name">Energy Transfer Partners</div>
+                    <div class="donor-amount">$3.3M</div>
+                    <div class="donor-detail">Pipeline operator &middot; 95% to Republicans &middot; Owner of Dakota Access Pipeline</div>
+                </div>
+            </div>
+            <div class="donor-card">
+                <div class="donor-rank">7</div>
+                <div class="donor-info">
+                    <div class="donor-name">Phillips 66</div>
+                    <div class="donor-amount">$2.9M</div>
+                    <div class="donor-detail">Refining &amp; midstream &middot; 79% to Republicans</div>
+                </div>
+            </div>
+            <div class="donor-card">
+                <div class="donor-rank">8</div>
+                <div class="donor-info">
+                    <div class="donor-name">Alliance Resource Partners (Coal)</div>
+                    <div class="donor-amount">$2.2M</div>
+                    <div class="donor-detail">Largest coal donor &middot; 98% to Republicans &middot; CEO Joe Craft top individual coal donor</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lobbying Top Spenders -->
+    <div class="section">
+        <h2>Top Fossil Fuel Lobbying Spenders (US, 2023)</h2>
+        <p class="section-subtitle">Annual federal lobbying expenditure. Source: Senate lobbying disclosures via OpenSecrets.</p>
+        <div class="chart-container-tall"><canvas id="chartLobbyTop"></canvas></div>
+    </div>
+
+    <!-- International Comparison -->
+    <div class="section">
+        <h2>International Comparison: Fossil Fuel Political Spending</h2>
+        <p class="section-subtitle">Comparable data is limited outside the US due to varying disclosure rules. Available estimates below.</p>
+        <div class="intl-grid">
+            <div class="intl-card">
+                <div class="country-name">United States</div>
+                <div class="spend-val" style="color:var(--oil)">~$250M</div>
+                <div class="spend-detail">Per election cycle (2 years)<br>Contributions + lobbying combined<br>Best-documented globally</div>
+            </div>
+            <div class="intl-card">
+                <div class="country-name">Australia</div>
+                <div class="spend-val" style="color:var(--oil)">A$17.6M</div>
+                <div class="spend-detail">FY 2022-23 disclosed donations<br>Mining &amp; energy sector total<br>Plus undisclosed "associated entities"</div>
+            </div>
+            <div class="intl-card">
+                <div class="country-name">United Kingdom</div>
+                <div class="spend-val" style="color:var(--oil)">&pound;4.5M</div>
+                <div class="spend-detail">2019&ndash;2024 parliament<br>Energy sector donations to parties<br>Electoral Commission data</div>
+            </div>
+            <div class="intl-card">
+                <div class="country-name">Canada</div>
+                <div class="spend-val" style="color:var(--oil)">C$3.8M</div>
+                <div class="spend-detail">2019&ndash;2023 (federal)<br>Corporate donations banned; individual employees<br>Lobbying registry filings</div>
+            </div>
+            <div class="intl-card">
+                <div class="country-name">European Union</div>
+                <div class="spend-val" style="color:var(--oil)">&euro;30M+</div>
+                <div class="spend-detail">Annual EU-level lobbying<br>FuelsEurope, IOGP, Eurogas, etc.<br>EU Transparency Register</div>
+            </div>
+            <div class="intl-card">
+                <div class="country-name">Global (InfluenceMap)</div>
+                <div class="spend-val" style="color:var(--oil)">$500M+</div>
+                <div class="spend-detail">Estimated annual climate-related lobbying<br>Top 5 oil majors alone: ~$200M/yr<br>InfluenceMap / CDP analysis</div>
+            </div>
+        </div>
+        <div class="info-callout warn">
+            <strong>Data gaps:</strong> Most countries do not require detailed disclosure of lobbying expenditure. US data (OpenSecrets) is the most complete. Australia requires disclosure of donations above A$16,900 but has high dark money thresholds. The UK Electoral Commission tracks party donations but not lobbying spend directly. EU Transparency Register is voluntary. Estimates for countries like India, China, Russia, and most of the Global South are unavailable.
+        </div>
+    </div>
+
+    <!-- Trend Chart: Total FF Political Spending Over Time -->
+    <div class="section">
+        <h2>Total US Fossil Fuel Political Spending Over Time</h2>
+        <p class="section-subtitle">Contributions + lobbying by election cycle. Includes oil &amp; gas, coal mining, and related sectors. Source: OpenSecrets.</p>
+        <div class="chart-container-tall"><canvas id="chartTotalTrend"></canvas></div>
+        <div class="category-legend">
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--oil)"></div> Oil &amp; Gas Contributions</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--coal)"></div> Coal Mining Contributions</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--gas)"></div> Lobbying (annualized per cycle)</div>
+        </div>
+    </div>
+
+    <!-- Return on Investment -->
+    <div class="section">
+        <h2>Return on Political Investment</h2>
+        <p class="section-subtitle">Comparing fossil fuel political spending to the subsidies and policy benefits received.</p>
+        <div class="stat-row">
+            <div class="stat-item">
+                <div class="stat-val" style="color:var(--oil)">$250M</div>
+                <div class="stat-label">Avg FF political spend per 2-year cycle (US)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" style="color:var(--accent)">$20B+</div>
+                <div class="stat-label">US federal FF subsidies per year (est.)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" style="color:var(--gas)">80:1</div>
+                <div class="stat-label">Approx. return ratio (subsidies / spending)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-val" style="color:var(--coal)">6&ndash;10x</div>
+                <div class="stat-label">FF lobbying spend vs clean energy lobbying</div>
+            </div>
+        </div>
+        <div class="info-callout">
+            <strong>Note:</strong> The "return on investment" framing is illustrative. Subsidies are shaped by many factors beyond lobbying, including energy security concerns, employment, and legacy policy. The IMF's $7T global figure includes unpriced externalities (climate, health, congestion) alongside direct fiscal subsidies (~$1.3T). US direct federal subsidies are estimated at $15&ndash;20B/year (Oil Change International / Treasury analysis).
+        </div>
+    </div>
+
+    <!-- Data table: US Contributions by Sector -->
+    <div class="section">
+        <h2>Detailed Data: US Fossil Fuel Contributions by Sector</h2>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showTab('oilgas')">Oil &amp; Gas</button>
+            <button class="tab-btn" onclick="showTab('coal')">Coal Mining</button>
+            <button class="tab-btn" onclick="showTab('lobby')">Lobbying</button>
+        </div>
+        <div class="tab-content active" id="tab-oilgas">
+            <div class="data-table-wrapper">
+                <table id="tableOilGas">
+                    <thead>
+                        <tr><th>Cycle</th><th class="num">Total ($M)</th><th class="num">To Repub. ($M)</th><th class="num">To Dem. ($M)</th><th class="num">% Republican</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="tab-coal">
+            <div class="data-table-wrapper">
+                <table id="tableCoal">
+                    <thead>
+                        <tr><th>Cycle</th><th class="num">Total ($M)</th><th class="num">To Repub. ($M)</th><th class="num">To Dem. ($M)</th><th class="num">% Republican</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="tab-lobby">
+            <div class="data-table-wrapper">
+                <table id="tableLobby">
+                    <thead>
+                        <tr><th>Year</th><th class="num">Oil &amp; Gas ($M)</th><th class="num">Coal Mining ($M)</th><th class="num">Environment / Renewables ($M)</th><th class="num">FF / Clean Ratio</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="section">
+        <h2>Methodology &amp; Sources</h2>
+        <div class="methodology">
+            <p><strong>US Contributions:</strong> Data from OpenSecrets (Center for Responsive Politics), which compiles FEC filings. Figures include PAC contributions, individual contributions (employees of fossil fuel companies), and soft money / outside spending where disclosed. "Oil &amp; Gas" includes integrated companies, exploration &amp; production, refining, pipelines, and oilfield services. "Coal Mining" is a separate sector classification.</p>
+            <p><strong>US Lobbying:</strong> Federal lobbying disclosures filed under the Lobbying Disclosure Act (LDA) with the Senate Office of Public Records. Data compiled by OpenSecrets. Figures represent direct lobbying expenditure only and do not include grassroots lobbying, advertising, or public affairs spending.</p>
+            <p><strong>International Data:</strong> Australia: Australian Electoral Commission annual returns. UK: Electoral Commission. Canada: Elections Canada. EU: EU Transparency Register. Global estimates: InfluenceMap "Big Oil's Real Agenda on Climate Change" (2019, updated 2022).</p>
+            <p><strong>Subsidies Context:</strong> IMF "Still Not Getting Energy Prices Right" (2023) for $7T global estimate. US-specific: Oil Change International, Treasury Dept. analysis. Direct subsidies ~$1.3T globally; remainder is unpriced externalities (health, climate, environment).</p>
+            <p><strong>Limitations:</strong> Dark money (501(c)(4) organizations, trade associations) is not fully captured. State-level contributions are excluded from most figures. In-kind contributions and revolving-door benefits are not quantified. International data coverage is highly uneven.</p>
+            <div style="margin-top: 1rem;">
+                <span class="source-tag">OpenSecrets / CRP</span>
+                <span class="source-tag">FEC Filings</span>
+                <span class="source-tag">Senate LDA Disclosures</span>
+                <span class="source-tag">InfluenceMap</span>
+                <span class="source-tag">IMF (2023)</span>
+                <span class="source-tag">Oil Change International</span>
+                <span class="source-tag">AEC (Australia)</span>
+                <span class="source-tag">UK Electoral Commission</span>
+                <span class="source-tag">EU Transparency Register</span>
+            </div>
+        </div>
     </div>
 </div>
+
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard</p>
-    <p>Built with <a href="https://claude.ai">Claude</a></p>
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Political Donations &amp; Lobbying</p>
+    <p>Data: US cycles 2000&ndash;2024, International latest available &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+// US Oil & Gas contributions by cycle (OpenSecrets)
+// Format: { cycle, total, repub, dem } in millions USD
+const oilGasData = [
+    { cycle: '2000', total: 52.7,  repub: 40.1,  dem: 12.6 },
+    { cycle: '2002', total: 27.6,  repub: 21.8,  dem: 5.8  },
+    { cycle: '2004', total: 52.5,  repub: 41.5,  dem: 11.0 },
+    { cycle: '2006', total: 35.6,  repub: 28.4,  dem: 7.2  },
+    { cycle: '2008', total: 62.4,  repub: 46.1,  dem: 16.3 },
+    { cycle: '2010', total: 59.8,  repub: 50.2,  dem: 9.6  },
+    { cycle: '2012', total: 91.0,  repub: 79.7,  dem: 11.3 },
+    { cycle: '2014', total: 72.1,  repub: 62.7,  dem: 9.4  },
+    { cycle: '2016', total: 79.8,  repub: 65.3,  dem: 14.5 },
+    { cycle: '2018', total: 68.2,  repub: 55.4,  dem: 12.8 },
+    { cycle: '2020', total: 111.8, repub: 92.1,  dem: 19.7 },
+    { cycle: '2022', total: 107.4, repub: 85.3,  dem: 22.1 },
+    { cycle: '2024', total: 125.0, repub: 99.6,  dem: 25.4 },
+];
+
+// US Coal Mining contributions by cycle (OpenSecrets)
+const coalData = [
+    { cycle: '2000', total: 5.4,  repub: 4.5,  dem: 0.9 },
+    { cycle: '2002', total: 3.9,  repub: 3.2,  dem: 0.7 },
+    { cycle: '2004', total: 5.2,  repub: 4.1,  dem: 1.1 },
+    { cycle: '2006', total: 4.8,  repub: 3.6,  dem: 1.2 },
+    { cycle: '2008', total: 6.7,  repub: 5.3,  dem: 1.4 },
+    { cycle: '2010', total: 7.2,  repub: 6.1,  dem: 1.1 },
+    { cycle: '2012', total: 13.3, repub: 12.2, dem: 1.1 },
+    { cycle: '2014', total: 9.8,  repub: 9.0,  dem: 0.8 },
+    { cycle: '2016', total: 11.5, repub: 10.6, dem: 0.9 },
+    { cycle: '2018', total: 7.6,  repub: 7.0,  dem: 0.6 },
+    { cycle: '2020', total: 10.1, repub: 9.4,  dem: 0.7 },
+    { cycle: '2022', total: 11.4, repub: 10.7, dem: 0.7 },
+    { cycle: '2024', total: 12.6, repub: 11.9, dem: 0.7 },
+];
+
+// US Lobbying spend by year (OpenSecrets)
+// Format: { year, oilGas, coal, cleanEnergy } in millions USD
+const lobbyData = [
+    { year: 2010, oilGas: 146.3, coal: 14.2, clean: 26.8 },
+    { year: 2011, oilGas: 148.8, coal: 13.1, clean: 22.4 },
+    { year: 2012, oilGas: 141.5, coal: 12.9, clean: 23.5 },
+    { year: 2013, oilGas: 137.4, coal: 10.3, clean: 20.6 },
+    { year: 2014, oilGas: 141.0, coal: 10.8, clean: 19.8 },
+    { year: 2015, oilGas: 127.8, coal: 8.8,  clean: 18.1 },
+    { year: 2016, oilGas: 119.7, coal: 7.5,  clean: 16.9 },
+    { year: 2017, oilGas: 125.3, coal: 7.2,  clean: 18.2 },
+    { year: 2018, oilGas: 126.2, coal: 6.4,  clean: 17.5 },
+    { year: 2019, oilGas: 125.9, coal: 5.8,  clean: 17.8 },
+    { year: 2020, oilGas: 112.4, coal: 4.9,  clean: 18.7 },
+    { year: 2021, oilGas: 119.1, coal: 5.1,  clean: 20.2 },
+    { year: 2022, oilGas: 124.1, coal: 5.5,  clean: 21.8 },
+    { year: 2023, oilGas: 118.6, coal: 5.9,  clean: 22.3 },
+];
+
+// Top lobbying spenders (2023, $M)
+const lobbyTopData = [
+    { name: 'ConocoPhillips',    spend: 12.1 },
+    { name: 'ExxonMobil',        spend: 11.7 },
+    { name: 'API (Trade Assoc.)', spend: 10.5 },
+    { name: 'Chevron',           spend: 9.8  },
+    { name: 'Shell USA',         spend: 8.2  },
+    { name: 'Koch Industries',   spend: 7.6  },
+    { name: 'Marathon Petroleum', spend: 6.9 },
+    { name: 'Phillips 66',       spend: 6.1  },
+    { name: 'BP America',        spend: 5.8  },
+    { name: 'Occidental Petroleum', spend: 5.4 },
+    { name: 'Valero Energy',     spend: 4.5  },
+    { name: 'NACCO / Coal',      spend: 3.2  },
+];
+
+// Contribution type breakdown (Oil & Gas, by cycle)
+const contribTypeData = [
+    { cycle: '2004', individual: 26.5, pac: 18.3, outside: 7.7  },
+    { cycle: '2006', individual: 18.2, pac: 13.0, outside: 4.4  },
+    { cycle: '2008', individual: 33.5, pac: 19.8, outside: 9.1  },
+    { cycle: '2010', individual: 28.1, pac: 17.7, outside: 14.0 },
+    { cycle: '2012', individual: 40.2, pac: 20.5, outside: 30.3 },
+    { cycle: '2014', individual: 32.8, pac: 19.0, outside: 20.3 },
+    { cycle: '2016', individual: 36.2, pac: 21.4, outside: 22.2 },
+    { cycle: '2018', individual: 30.4, pac: 19.7, outside: 18.1 },
+    { cycle: '2020', individual: 46.5, pac: 22.1, outside: 43.2 },
+    { cycle: '2022', individual: 44.9, pac: 21.8, outside: 40.7 },
+    { cycle: '2024', individual: 52.3, pac: 23.8, outside: 48.9 },
+];
+
+// Total trend: contributions + annualized lobbying per cycle
+const totalTrendData = [
+    { cycle: '2010', ogContrib: 59.8,  coalContrib: 7.2,   lobby: 295.1 },
+    { cycle: '2012', ogContrib: 91.0,  coalContrib: 13.3,  lobby: 279.3 },
+    { cycle: '2014', ogContrib: 72.1,  coalContrib: 9.8,   lobby: 268.8 },
+    { cycle: '2016', ogContrib: 79.8,  coalContrib: 11.5,  lobby: 245.0 },
+    { cycle: '2018', ogContrib: 68.2,  coalContrib: 7.6,   lobby: 252.1 },
+    { cycle: '2020', ogContrib: 111.8, coalContrib: 10.1,  lobby: 231.5 },
+    { cycle: '2022', ogContrib: 107.4, coalContrib: 11.4,  lobby: 243.2 },
+    { cycle: '2024', ogContrib: 125.0, coalContrib: 12.6,  lobby: 248.0 },
+];
+
+
+// ============================================================
+// CHART DEFAULTS
+// ============================================================
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#7f8c8d';
+Chart.defaults.plugins.legend.display = false;
+const gridColor = 'rgba(0,0,0,0.06)';
+
+function currencyTooltip(val) {
+    return '$' + val.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M';
+}
+
+// ============================================================
+// CHART 1: Oil & Gas Contributions by Cycle (Stacked Bar)
+// ============================================================
+new Chart(document.getElementById('chartOilGasContrib'), {
+    type: 'bar',
+    data: {
+        labels: oilGasData.map(d => d.cycle),
+        datasets: [
+            {
+                label: 'To Republicans',
+                data: oilGasData.map(d => d.repub),
+                backgroundColor: 'rgba(192,57,43,0.85)',
+                borderRadius: 3,
+            },
+            {
+                label: 'To Democrats',
+                data: oilGasData.map(d => d.dem),
+                backgroundColor: 'rgba(41,128,185,0.85)',
+                borderRadius: 3,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: {
+                stacked: true,
+                grid: { color: gridColor },
+                ticks: { callback: v => '$' + v + 'M' }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.dataset.label + ': ' + currencyTooltip(ctx.parsed.y),
+                    footer: items => {
+                        const total = items.reduce((s, i) => s + i.parsed.y, 0);
+                        return 'Total: ' + currencyTooltip(total);
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 2: Coal Mining Contributions by Cycle (Stacked Bar)
+// ============================================================
+new Chart(document.getElementById('chartCoalContrib'), {
+    type: 'bar',
+    data: {
+        labels: coalData.map(d => d.cycle),
+        datasets: [
+            {
+                label: 'To Republicans',
+                data: coalData.map(d => d.repub),
+                backgroundColor: 'rgba(61,61,61,0.85)',
+                borderRadius: 3,
+            },
+            {
+                label: 'To Democrats',
+                data: coalData.map(d => d.dem),
+                backgroundColor: 'rgba(52,152,219,0.6)',
+                borderRadius: 3,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: {
+                stacked: true,
+                grid: { color: gridColor },
+                ticks: { callback: v => '$' + v + 'M' }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.dataset.label + ': ' + currencyTooltip(ctx.parsed.y),
+                    footer: items => {
+                        const total = items.reduce((s, i) => s + i.parsed.y, 0);
+                        return 'Total: ' + currencyTooltip(total);
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 3: Lobbying Spend Over Time (Grouped Bar)
+// ============================================================
+new Chart(document.getElementById('chartLobbySpend'), {
+    type: 'bar',
+    data: {
+        labels: lobbyData.map(d => d.year),
+        datasets: [
+            {
+                label: 'Oil & Gas',
+                data: lobbyData.map(d => d.oilGas),
+                backgroundColor: 'rgba(192,57,43,0.8)',
+                borderRadius: 3,
+            },
+            {
+                label: 'Coal Mining',
+                data: lobbyData.map(d => d.coal),
+                backgroundColor: 'rgba(61,61,61,0.8)',
+                borderRadius: 3,
+            },
+            {
+                label: 'Renewables / Environment',
+                data: lobbyData.map(d => d.clean),
+                backgroundColor: 'rgba(22,160,133,0.8)',
+                borderRadius: 3,
+            },
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { grid: { display: false } },
+            y: {
+                grid: { color: gridColor },
+                ticks: { callback: v => '$' + v + 'M' }
+            }
+        },
+        plugins: {
+            legend: { display: true, position: 'top', labels: { boxWidth: 12, padding: 15 } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.dataset.label + ': ' + currencyTooltip(ctx.parsed.y)
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 4: Party Split Donuts (2024)
+// ============================================================
+new Chart(document.getElementById('chartPartySplitOG'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Republican', 'Democrat'],
+        datasets: [{
+            data: [99.6, 25.4],
+            backgroundColor: ['rgba(192,57,43,0.85)', 'rgba(41,128,185,0.85)'],
+            borderWidth: 2,
+            borderColor: '#fff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '55%',
+        plugins: {
+            legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 10 } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.label + ': $' + ctx.parsed.toFixed(1) + 'M (' + Math.round(ctx.parsed / 125.0 * 100) + '%)'
+                }
+            }
+        }
+    }
+});
+
+new Chart(document.getElementById('chartPartySplitCoal'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Republican', 'Democrat'],
+        datasets: [{
+            data: [11.9, 0.7],
+            backgroundColor: ['rgba(61,61,61,0.85)', 'rgba(52,152,219,0.7)'],
+            borderWidth: 2,
+            borderColor: '#fff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '55%',
+        plugins: {
+            legend: { display: true, position: 'bottom', labels: { boxWidth: 12, padding: 10 } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.label + ': $' + ctx.parsed.toFixed(1) + 'M (' + Math.round(ctx.parsed / 12.6 * 100) + '%)'
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 5: Contribution Type Breakdown (Stacked Bar)
+// ============================================================
+new Chart(document.getElementById('chartContribType'), {
+    type: 'bar',
+    data: {
+        labels: contribTypeData.map(d => d.cycle),
+        datasets: [
+            {
+                label: 'Individual Contributions',
+                data: contribTypeData.map(d => d.individual),
+                backgroundColor: '#e74c3c',
+                borderRadius: 2,
+            },
+            {
+                label: 'PAC Contributions',
+                data: contribTypeData.map(d => d.pac),
+                backgroundColor: '#c0392b',
+                borderRadius: 2,
+            },
+            {
+                label: 'Outside Spending / Super PACs',
+                data: contribTypeData.map(d => d.outside),
+                backgroundColor: '#922b21',
+                borderRadius: 2,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: {
+                stacked: true,
+                grid: { color: gridColor },
+                ticks: { callback: v => '$' + v + 'M' }
+            }
+        },
+        plugins: {
+            legend: { display: true, position: 'top', labels: { boxWidth: 12, padding: 15 } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.dataset.label + ': ' + currencyTooltip(ctx.parsed.y),
+                    footer: items => {
+                        const total = items.reduce((s, i) => s + i.parsed.y, 0);
+                        return 'Total: ' + currencyTooltip(total);
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 6: Top Lobbying Spenders (Horizontal Bar)
+// ============================================================
+new Chart(document.getElementById('chartLobbyTop'), {
+    type: 'bar',
+    data: {
+        labels: lobbyTopData.map(d => d.name),
+        datasets: [{
+            label: '2023 Lobbying Spend ($M)',
+            data: lobbyTopData.map(d => d.spend),
+            backgroundColor: lobbyTopData.map(d =>
+                d.name.includes('Coal') || d.name.includes('NACCO') ? 'rgba(61,61,61,0.8)' :
+                d.name.includes('API') ? 'rgba(230,126,34,0.8)' :
+                'rgba(192,57,43,0.75)'
+            ),
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                grid: { color: gridColor },
+                ticks: { callback: v => '$' + v + 'M' }
+            },
+            y: {
+                grid: { display: false },
+                ticks: { font: { size: 11 } }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: ctx => currencyTooltip(ctx.parsed.x) + ' lobbying spend (2023)'
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 7: Total Trend (Stacked Bar)
+// ============================================================
+new Chart(document.getElementById('chartTotalTrend'), {
+    type: 'bar',
+    data: {
+        labels: totalTrendData.map(d => d.cycle),
+        datasets: [
+            {
+                label: 'Oil & Gas Contributions',
+                data: totalTrendData.map(d => d.ogContrib),
+                backgroundColor: 'rgba(192,57,43,0.8)',
+                borderRadius: 2,
+            },
+            {
+                label: 'Coal Mining Contributions',
+                data: totalTrendData.map(d => d.coalContrib),
+                backgroundColor: 'rgba(61,61,61,0.8)',
+                borderRadius: 2,
+            },
+            {
+                label: 'Lobbying (2-yr total)',
+                data: totalTrendData.map(d => d.lobby),
+                backgroundColor: 'rgba(41,128,185,0.6)',
+                borderRadius: 2,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: {
+                stacked: true,
+                grid: { color: gridColor },
+                ticks: { callback: v => '$' + v + 'M' }
+            }
+        },
+        plugins: {
+            legend: { display: true, position: 'top', labels: { boxWidth: 12, padding: 15 } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ctx.dataset.label + ': ' + currencyTooltip(ctx.parsed.y),
+                    footer: items => {
+                        const total = items.reduce((s, i) => s + i.parsed.y, 0);
+                        return 'Total: ' + currencyTooltip(total);
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// POPULATE DATA TABLES
+// ============================================================
+function populateOilGasTable() {
+    const tbody = document.querySelector('#tableOilGas tbody');
+    oilGasData.forEach(d => {
+        const pct = ((d.repub / d.total) * 100).toFixed(0);
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + d.cycle + '</td>'
+            + '<td class="num">$' + d.total.toFixed(1) + '</td>'
+            + '<td class="num">$' + d.repub.toFixed(1) + '</td>'
+            + '<td class="num">$' + d.dem.toFixed(1) + '</td>'
+            + '<td class="num">' + pct + '%</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+function populateCoalTable() {
+    const tbody = document.querySelector('#tableCoal tbody');
+    coalData.forEach(d => {
+        const pct = ((d.repub / d.total) * 100).toFixed(0);
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + d.cycle + '</td>'
+            + '<td class="num">$' + d.total.toFixed(1) + '</td>'
+            + '<td class="num">$' + d.repub.toFixed(1) + '</td>'
+            + '<td class="num">$' + d.dem.toFixed(1) + '</td>'
+            + '<td class="num">' + pct + '%</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+function populateLobbyTable() {
+    const tbody = document.querySelector('#tableLobby tbody');
+    lobbyData.forEach(d => {
+        const ffTotal = d.oilGas + d.coal;
+        const ratio = (ffTotal / d.clean).toFixed(1);
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + d.year + '</td>'
+            + '<td class="num">$' + d.oilGas.toFixed(1) + '</td>'
+            + '<td class="num">$' + d.coal.toFixed(1) + '</td>'
+            + '<td class="num">$' + d.clean.toFixed(1) + '</td>'
+            + '<td class="num">' + ratio + 'x</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+populateOilGasTable();
+populateCoalTable();
+populateLobbyTable();
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+    // Find the button that matches
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if ((tabName === 'oilgas' && btn.textContent.includes('Oil')) ||
+            (tabName === 'coal' && btn.textContent.includes('Coal')) ||
+            (tabName === 'lobby' && btn.textContent.includes('Lobbying'))) {
+            btn.classList.add('active');
+        }
+    });
+}
+</script>
+
 <script src="nav.js"></script>
+
 </body>
 </html>
