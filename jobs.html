@@ -43,9 +43,6 @@
         .category-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-secondary); }
         .category-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
-        .trend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-        @media (max-width: 800px) { .trend-grid { grid-template-columns: 1fr; } }
-
         .comparison-bar {
             display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0;
             border-bottom: 1px solid var(--border);
@@ -61,7 +58,7 @@
 
 <div class="header">
     <h1>Fossil Fuel Employment</h1>
-    <div class="subtitle">Jobs in Coal, Oil &amp; Gas by Country, Supply Chain Stage &amp; Trend</div>
+    <div class="subtitle">Jobs in Coal, Oil &amp; Gas by Country, Supply Chain Stage &amp; Productivity</div>
 </div>
 
 <div class="container">
@@ -132,41 +129,18 @@
     <!-- Supply chain stages -->
     <div class="section">
         <h2>Employment by Supply Chain Stage</h2>
-        <p class="section-subtitle">Fossil fuel jobs span mining/extraction, transport and logistics, processing/refining, and power generation. Coal is uniquely labor-intensive at the extraction stage.</p>
-        <div class="chart-row">
-            <div>
-                <div class="chart-container"><canvas id="chartSupplyChain"></canvas></div>
-            </div>
-            <div>
-                <div class="chart-container"><canvas id="chartSupplyChainPct"></canvas></div>
-            </div>
+        <p class="section-subtitle">Fossil fuel jobs span mining/extraction, transport and logistics, and processing/refining. Coal is uniquely labor-intensive at the extraction stage.</p>
+        <div class="info-callout" style="border-left-color:#e67e22">
+            <strong style="color:#e67e22">Data note:</strong> Power generation employment is excluded as reliable per-commodity figures are not available. Many power plants use multiple fuel types, making attribution difficult.
         </div>
+        <div class="chart-container"><canvas id="chartSupplyChain"></canvas></div>
     </div>
 
-    <!-- Coal jobs trend -->
+    <!-- Coal productivity -->
     <div class="section">
-        <h2>Coal Employment Trends: Developed vs Developing Countries</h2>
-        <p class="section-subtitle">Coal mining jobs have declined steeply in developed economies (US, EU, Australia) due to mine closures and mechanization, while remaining stable or growing in China, India, and Indonesia.</p>
-        <div class="chart-row">
-            <div>
-                <h3>Developed Countries</h3>
-                <div class="chart-container"><canvas id="chartTrendDeveloped"></canvas></div>
-            </div>
-            <div>
-                <h3>Developing Countries</h3>
-                <div class="chart-container"><canvas id="chartTrendDeveloping"></canvas></div>
-            </div>
-        </div>
-        <div class="info-callout coal-callout">
-            <strong style="color:var(--coal)">Key trend:</strong> The US lost ~75% of coal mining jobs since 1985 (from ~175K to ~42K). Germany went from ~130K to ~18K. Poland from ~390K to ~78K. Meanwhile, India's Coal India Ltd expanded from ~350K employees in 2000 to ~230K direct + significant contract labor, while Indonesian coal mining employment has grown with production surpassing 700 Mt.
-        </div>
-    </div>
-
-    <!-- Coal jobs per Mt -->
-    <div class="section">
-        <h2>Labor Intensity: Coal Mining Jobs per Million Tonnes Produced</h2>
-        <p class="section-subtitle">Labor intensity varies enormously by mining method and mechanization. Indian underground mines employ 10-15x more workers per tonne than Australian open-cut operations.</p>
-        <div class="chart-container-tall"><canvas id="chartLaborIntensity"></canvas></div>
+        <h2>Labor Productivity: Tonnes Produced per Worker</h2>
+        <p class="section-subtitle">Productivity varies enormously by mining method and mechanization. Australian open-cut operations produce 10-15x more tonnes per worker than Indian underground mines.</p>
+        <div class="chart-container-tall"><canvas id="chartProductivity"></canvas></div>
     </div>
 
     <!-- Country detail table -->
@@ -181,7 +155,7 @@
             <div class="data-table-wrapper">
                 <table id="coalJobsTable">
                     <thead><tr>
-                        <th>#</th><th>Country</th><th class="num">Coal Jobs (000s)</th><th class="num">Production (Mt)</th><th class="num">Jobs per Mt</th><th>Primary Method</th><th>Source / Year</th>
+                        <th>#</th><th>Country</th><th class="num">Coal Jobs (000s)</th><th class="num">Production (Mt)</th><th class="num">Tonnes / Worker</th><th>Primary Method</th><th>Source / Year</th>
                     </tr></thead>
                     <tbody></tbody>
                 </table>
@@ -216,7 +190,6 @@
             <p><strong>Coal employment:</strong> China figure (~4M) based on National Bureau of Statistics and China Energy Statistical Yearbook for registered coal mine workers (2022). India (~500K-1M range) from Coal India Ltd annual reports (233K direct CIL employees, plus SCCL, captive mines, and contract labor). Indonesia (~250K) from BPS / ESDM. US (42K) from BLS Quarterly Census of Employment &amp; Wages 2023. EU countries from Eurostat SBS.</p>
             <p><strong>Oil &amp; Gas employment:</strong> Country-level data from ILO ILOSTAT database (ISIC Rev.4 codes 06, 09.1, 19, 49.5), supplemented by national statistics: US BLS (150K direct O&amp;G extraction), Russia Rosstat, Saudi Arabia GASTAT, Brazil IBGE/ANP. Estimates include upstream extraction; midstream and refining add approximately 40-60% more jobs.</p>
             <p><strong>Renewables:</strong> IRENA &amp; ILO "Renewable Energy and Jobs: Annual Review 2024" (data for 2023). Global total 16.2 million jobs. Solar PV is the largest employer (7.2M), followed by biofuels (2.7M), hydropower (2.3M), and wind (1.5M).</p>
-            <p><strong>Trend data:</strong> US historical from EIA Annual Coal Report + BLS. Germany from Statistik der Kohlewirtschaft. Poland from Agencja Rozwoju Przemyslu (ARP). China from NBS. India from CIL annual reports.</p>
             <p><strong>Caveats:</strong> Direct employment only (indirect/induced multiplier effects excluded, typically 2-4x for coal, 3-6x for oil &amp; gas). Informal and contract labor in developing countries is significantly under-counted. Numbers rounded to nearest thousand.</p>
             <div style="margin-top: 1rem;">
                 <span class="source-tag">ILO ILOSTAT</span>
@@ -302,30 +275,12 @@ const renewCountryData = [
 ];
 
 // --- Supply chain breakdown (thousands) ---
+// Power Generation excluded: reliable per-commodity attribution not available
 const supplyChainData = {
-    stages: ['Mining / Extraction', 'Transport & Logistics', 'Processing / Refining', 'Power Generation'],
-    coal:   [6500, 400, 300, 500],
-    oil:    [1800, 600, 900, 500],
-    gas:    [1100, 500, 400, 500],
-};
-
-// --- Coal employment trends (thousands) ---
-const trendYears = [1990, 1995, 2000, 2005, 2010, 2015, 2020, 2023];
-
-const trendDeveloped = {
-    USA:       [147, 104, 82, 75, 87, 66, 42, 42],
-    Germany:   [130, 95, 70, 48, 35, 25, 20, 18],
-    UK:        [50, 20, 8, 6, 4, 2, 0.3, 0.2],
-    Poland:    [390, 280, 200, 140, 115, 95, 82, 78],
-    Australia: [28, 30, 25, 28, 40, 48, 42, 50],
-};
-
-const trendDeveloping = {
-    China:     [5000, 5200, 5000, 5500, 5300, 4400, 3900, 4000],
-    India:     [580, 600, 560, 600, 680, 730, 750, 780],
-    Indonesia: [30, 45, 50, 80, 130, 200, 230, 250],
-    Russia:    [420, 300, 200, 170, 150, 140, 135, 140],
-    SouthAfrica:[100, 90, 80, 80, 85, 88, 90, 92],
+    stages: ['Mining / Extraction', 'Transport & Logistics', 'Processing / Refining'],
+    coal:   [6500, 400, 300],
+    oil:    [1800, 600, 900],
+    gas:    [1100, 500, 400],
 };
 
 // --- Fossil fuel vs renewables over time ---
@@ -344,24 +299,14 @@ const renewBreakdown = {
     colors: ['#f39c12', '#27ae60', '#2980b9', '#8e44ad', '#e67e22', '#16a085', '#c0392b', '#95a5a6'],
 };
 
-// --- Labor intensity (jobs per Mt) ---
-const laborIntensity = [
-    { country: 'Pakistan', value: 3333 },
-    { country: 'Vietnam', value: 1932 },
-    { country: 'India', value: 782 },
-    { country: 'Poland', value: 709 },
-    { country: 'Colombia', value: 750 },
-    { country: 'Turkey', value: 533 },
-    { country: 'South Africa', value: 398 },
-    { country: 'Kazakhstan', value: 478 },
-    { country: 'Russia', value: 319 },
-    { country: 'China', value: 849 },
-    { country: 'Indonesia', value: 323 },
-    { country: 'Germany', value: 176 },
-    { country: 'USA', value: 83 },
-    { country: 'Australia', value: 93 },
-    { country: 'Canada', value: 125 },
-];
+// --- Labor productivity (tonnes per worker, calculated from country data) ---
+// Formula: production_Mt × 1,000,000 / (jobs × 1,000) = tonnes per worker per year
+const laborProductivity = coalCountryData.map(d => ({
+    country: d.country,
+    value: Math.round(d.production * 1000 / d.jobs),  // tonnes per worker
+    jobs: d.jobs,
+    production: d.production,
+}));
 
 
 // ============================================================
@@ -605,141 +550,16 @@ new Chart(document.getElementById('chartSupplyChain'), {
     }
 });
 
-// --- 6. Supply Chain % (stacked bar) ---
-(function() {
-    const stages = supplyChainData.stages;
-    const totals = stages.map((_, i) => supplyChainData.coal[i] + supplyChainData.oil[i] + supplyChainData.gas[i]);
-    new Chart(document.getElementById('chartSupplyChainPct'), {
-        type: 'bar',
-        data: {
-            labels: stages,
-            datasets: [
-                {
-                    label: 'Coal',
-                    data: stages.map((_, i) => (supplyChainData.coal[i] / totals[i] * 100).toFixed(1)),
-                    backgroundColor: COAL_COLOR,
-                    borderRadius: 0,
-                },
-                {
-                    label: 'Oil',
-                    data: stages.map((_, i) => (supplyChainData.oil[i] / totals[i] * 100).toFixed(1)),
-                    backgroundColor: OIL_COLOR,
-                    borderRadius: 0,
-                },
-                {
-                    label: 'Gas',
-                    data: stages.map((_, i) => (supplyChainData.gas[i] / totals[i] * 100).toFixed(1)),
-                    backgroundColor: GAS_COLOR,
-                    borderRadius: 0,
-                },
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                title: { display: true, text: 'Share by Commodity (%)', font: { size: 13, weight: '600' }, color: '#2c3e50' },
-                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15, font: { size: 11 } } },
-                tooltip: {
-                    callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw + '%' }
-                }
-            },
-            scales: {
-                y: { stacked: true, max: 100, ticks: { callback: v => v + '%' } },
-                x: { stacked: true, ticks: { font: { size: 10 } } }
-            }
-        }
-    });
-})();
-
-// --- 7. Trend: Developed Countries ---
-const devColors = { USA: getCountryColor('United States'), Germany: getCountryColor('Germany'), UK: getCountryColor('United Kingdom'), Poland: getCountryColor('Poland'), Australia: getCountryColor('Australia') };
-new Chart(document.getElementById('chartTrendDeveloped'), {
-    type: 'line',
-    data: {
-        labels: trendYears,
-        datasets: Object.entries(trendDeveloped).map(([country, data]) => ({
-            label: country,
-            data: data,
-            borderColor: devColors[country],
-            backgroundColor: devColors[country] + '22',
-            borderWidth: 2,
-            pointRadius: 3,
-            tension: 0.3,
-            fill: false,
-        }))
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12, font: { size: 10 } } },
-            tooltip: {
-                callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw + 'K' }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: { callback: v => v + 'K' },
-                title: { display: true, text: 'Jobs (thousands)' }
-            }
-        }
-    }
-});
-
-// --- 8. Trend: Developing Countries ---
-const devgColors = { China: getCountryColor('China'), India: getCountryColor('India'), Indonesia: getCountryColor('Indonesia'), Russia: getCountryColor('Russia'), SouthAfrica: getCountryColor('South Africa') };
-const devgLabels = { China: 'China', India: 'India', Indonesia: 'Indonesia', Russia: 'Russia', SouthAfrica: 'South Africa' };
-new Chart(document.getElementById('chartTrendDeveloping'), {
-    type: 'line',
-    data: {
-        labels: trendYears,
-        datasets: Object.entries(trendDeveloping).map(([country, data]) => ({
-            label: devgLabels[country] || country,
-            data: data,
-            borderColor: devgColors[country],
-            backgroundColor: devgColors[country] + '22',
-            borderWidth: 2,
-            pointRadius: 3,
-            tension: 0.3,
-            fill: false,
-        }))
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12, font: { size: 10 } } },
-            tooltip: {
-                callbacks: {
-                    label: function(ctx) {
-                        const v = ctx.raw;
-                        return ctx.dataset.label + ': ' + (v >= 1000 ? (v/1000).toFixed(1) + 'M' : v + 'K');
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(1) + 'M' : v + 'K' },
-                title: { display: true, text: 'Jobs (thousands)' }
-            }
-        }
-    }
-});
-
-// --- 9. Labor Intensity (horizontal bar) ---
-const liSorted = [...laborIntensity].sort((a,b) => b.value - a.value);
-new Chart(document.getElementById('chartLaborIntensity'), {
+// --- 6. Labor Productivity (horizontal bar) ---
+const prodSorted = [...laborProductivity].sort((a,b) => b.value - a.value);
+new Chart(document.getElementById('chartProductivity'), {
     type: 'bar',
     data: {
-        labels: liSorted.map(d => d.country),
+        labels: prodSorted.map(d => d.country),
         datasets: [{
-            label: 'Jobs per Mt produced',
-            data: liSorted.map(d => d.value),
-            backgroundColor: liSorted.map(d => getCountryColor(d.country)),
+            label: 'Tonnes per worker',
+            data: prodSorted.map(d => d.value),
+            backgroundColor: prodSorted.map(d => getCountryColor(d.country)),
             borderRadius: 3,
         }]
     },
@@ -749,11 +569,15 @@ new Chart(document.getElementById('chartLaborIntensity'), {
         maintainAspectRatio: false,
         plugins: {
             legend: { display: false },
-            title: { display: true, text: 'Coal mining jobs per million tonnes produced (2023 est.)', font: { size: 13, weight: '600' }, color: '#2c3e50' },
+            title: { display: true, text: 'Coal mining productivity: tonnes per worker per year (2023 est.)', font: { size: 13, weight: '600' }, color: '#2c3e50' },
             tooltip: {
                 callbacks: {
                     label: function(ctx) {
-                        return ctx.raw.toLocaleString() + ' jobs per Mt';
+                        const d = prodSorted[ctx.dataIndex];
+                        return [
+                            fmt(ctx.raw) + ' tonnes per worker',
+                            'Production: ' + fmt(d.production) + ' Mt · Jobs: ' + fmt(d.jobs) + 'K',
+                        ];
                     }
                 }
             }
@@ -761,7 +585,7 @@ new Chart(document.getElementById('chartLaborIntensity'), {
         scales: {
             x: {
                 beginAtZero: true,
-                title: { display: true, text: 'Jobs per Mt' }
+                title: { display: true, text: 'Tonnes per worker per year' }
             }
         }
     }
@@ -776,13 +600,13 @@ new Chart(document.getElementById('chartLaborIntensity'), {
 (function() {
     const tbody = document.querySelector('#coalJobsTable tbody');
     coalCountryData.forEach((d, i) => {
-        const perMt = (d.jobs * 1000 / d.production).toFixed(0);
+        const tonnesPerWorker = Math.round(d.production * 1000 / d.jobs);
         const tr = document.createElement('tr');
         tr.innerHTML = '<td>' + (i+1) + '</td>'
             + '<td><span class="commodity-dot coal"></span>' + d.country + '</td>'
             + '<td class="num">' + d.jobs.toLocaleString() + '</td>'
             + '<td class="num">' + d.production.toLocaleString() + '</td>'
-            + '<td class="num">' + perMt + '</td>'
+            + '<td class="num">' + tonnesPerWorker.toLocaleString() + '</td>'
             + '<td>' + d.method + '</td>'
             + '<td>' + d.source + '</td>';
         tbody.appendChild(tr);
