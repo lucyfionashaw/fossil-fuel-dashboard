@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graveyard — Fossil Fuel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .chart-container-wide { position: relative; width: 100%; height: 450px; }
+        .graveyard-intro {
+            background: #fff8f0; border-left: 4px solid #e67e22; border-radius: 0 8px 8px 0;
+            padding: 1rem 1.2rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text);
+        }
+        .graveyard-intro strong { color: #e67e22; }
+        .origin-tag {
+            display: inline-block; background: var(--bg); padding: 0.15rem 0.5rem;
+            border-radius: 4px; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.5rem;
+        }
+        .risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 700px) { .risk-grid { grid-template-columns: 1fr; } }
+        .risk-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+        .risk-card .risk-score { font-size: 1.8rem; font-weight: 700; }
+        .risk-card .risk-label { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .risk-card .risk-detail { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.3rem; }
+        .risk-high { color: var(--oil); }
+        .risk-medium { color: #e67e22; }
+        .risk-low { color: var(--accent); }
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--gas); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout.warn { background: #fff8f0; border-left-color: #e67e22; }
+        .info-callout.warn strong { color: #e67e22; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Graveyard</h1>
+    <div class="subtitle">Parked charts and sections &mdash; removed from active pages but preserved for potential reuse</div>
+</div>
+
+<div class="container">
+
+    <div class="graveyard-intro">
+        <strong>What is this page?</strong> Charts and data sections that were removed from active dashboard pages are archived here. They're organized by their original source tab so they can be brought back if needed.
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FROM: Import Exposure -->
+    <!-- ============================================================ -->
+
+    <div class="section">
+        <span class="origin-tag">From: Import Exposure</span>
+        <h2>Energy Security Risk Index: Selected Countries</h2>
+        <p class="section-subtitle">Composite index combining import share (40%), source concentration via HHI (30%), and strategic stockpile days (30%). Higher = more exposed. Scale 0&ndash;100.</p>
+        <div class="risk-grid">
+            <div class="risk-card">
+                <div class="risk-label">Highest Risk</div>
+                <div class="risk-score risk-high">87</div>
+                <div class="risk-detail">Japan &mdash; near-total import dependency, limited diversification for LNG</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-label">High Risk</div>
+                <div class="risk-score risk-high">82</div>
+                <div class="risk-detail">South Korea &mdash; 97% gas, 100% oil imports, single-route exposure</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-label">Elevated Risk</div>
+                <div class="risk-score risk-medium">68</div>
+                <div class="risk-detail">EU-27 &mdash; gas crisis in 2022 exposed pipeline dependency on Russia</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-label">Moderate Risk</div>
+                <div class="risk-score risk-medium">55</div>
+                <div class="risk-detail">India &mdash; 85% oil dependency, but domestic coal buffers overall</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-label">Moderate Risk</div>
+                <div class="risk-score risk-medium">48</div>
+                <div class="risk-detail">China &mdash; 72% oil imports offset by 92% coal self-sufficiency</div>
+            </div>
+            <div class="risk-card">
+                <div class="risk-label">Low Risk</div>
+                <div class="risk-score risk-low">12</div>
+                <div class="risk-detail">USA &mdash; net energy exporter since 2020, large strategic reserves</div>
+            </div>
+        </div>
+        <div class="chart-container-wide" style="margin-top:1rem;"><canvas id="chartRiskIndex"></canvas></div>
+    </div>
+
+    <div class="section">
+        <span class="origin-tag">From: Import Exposure</span>
+        <h2>Import Dependency Trends (2000&ndash;2023)</h2>
+        <p class="section-subtitle">How import dependency has shifted over two decades. US became a net energy exporter; China's oil and gas dependency grew sharply.</p>
+        <div class="chart-row" style="margin-bottom:0;">
+            <div>
+                <h3>Oil Import Dependency Over Time</h3>
+                <div class="chart-container-wide"><canvas id="chartOilTrend"></canvas></div>
+            </div>
+            <div>
+                <h3>Gas Import Dependency Over Time</h3>
+                <div class="chart-container-wide"><canvas id="chartGasTrend"></canvas></div>
+            </div>
+        </div>
+        <div class="info-callout warn" style="margin-top:1rem;">
+            <strong style="color:#e67e22">Key shifts:</strong> The US shale revolution made the US a net petroleum exporter by 2020 and net energy exporter by 2019. Meanwhile, China's oil import dependency rose from 31% (2000) to 72% (2023), and gas imports grew from near zero to 40%. The EU's gas dependency was stable at ~80% but the 2022 Russia-Ukraine crisis forced rapid supplier diversification away from Russian pipeline gas (40% to ~15% by 2023).
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    <p>Global Fossil Fuel Dashboard &middot; Graveyard</p>
+    <p>Data: 2023/24 &middot; Built with <a href="https://claude.ai">Claude</a></p>
+</div>
+
+<script src="colors.js"></script>
+<script>
+// ============================================================
+// DATA (from Import Exposure page)
+// ============================================================
+
+// Energy security risk index
+const riskData = [
+    { country: 'Japan', score: 87, impShare: 99, hhi: 2800, stockDays: 200 },
+    { country: 'South Korea', score: 82, impShare: 97, hhi: 2400, stockDays: 180 },
+    { country: 'Taiwan', score: 79, impShare: 99, hhi: 2200, stockDays: 120 },
+    { country: 'Germany', score: 74, impShare: 95, hhi: 2100, stockDays: 90 },
+    { country: 'EU-27', score: 68, impShare: 78, hhi: 1800, stockDays: 85 },
+    { country: 'Turkey', score: 65, impShare: 80, hhi: 2300, stockDays: 60 },
+    { country: 'India', score: 55, impShare: 52, hhi: 1600, stockDays: 65 },
+    { country: 'China', score: 48, impShare: 40, hhi: 1400, stockDays: 80 },
+    { country: 'Brazil', score: 25, impShare: 8, hhi: 800, stockDays: 70 },
+    { country: 'USA', score: 12, impShare: -5, hhi: 400, stockDays: 600 },
+    { country: 'Canada', score: 10, impShare: -45, hhi: 300, stockDays: 150 },
+    { country: 'Russia', score: 8, impShare: -80, hhi: 200, stockDays: 0 },
+];
+
+// Trend data — import dependency over time (%)
+const trendYears = [2000, 2005, 2010, 2015, 2018, 2020, 2023];
+const oilTrends = {
+    'China': [31, 42, 55, 62, 70, 73, 72],
+    'India': [69, 72, 76, 80, 83, 84, 85],
+    'Japan': [100, 100, 100, 99, 99, 99, 99],
+    'EU-27': [76, 82, 85, 88, 89, 90, 90],
+    'USA': [52, 60, 49, 25, 11, -3, -3],
+};
+const gasTrends = {
+    'China': [0, 2, 15, 32, 39, 42, 40],
+    'India': [3, 10, 25, 38, 45, 49, 48],
+    'Japan': [96, 96, 97, 97, 97, 97, 97],
+    'EU-27': [52, 58, 63, 70, 78, 81, 83],
+    'USA': [14, 16, 9, -2, -6, -8, -12],
+};
+
+
+// ============================================================
+// CHARTS
+// ============================================================
+
+const oilColor = PALETTE.oil;
+const gasColor = PALETTE.gas;
+const accentColor = PALETTE.accent;
+
+// Risk index chart
+(function() {
+    const sorted = [...riskData].sort((a, b) => b.score - a.score);
+    const ctx = document.getElementById('chartRiskIndex').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sorted.map(d => d.country),
+            datasets: [{
+                label: 'Risk Score',
+                data: sorted.map(d => d.score),
+                backgroundColor: sorted.map(d => {
+                    if (d.score >= 70) return oilColor;
+                    if (d.score >= 40) return '#e67e22';
+                    return accentColor;
+                }),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const d = sorted[ctx.dataIndex];
+                            return [
+                                'Risk score: ' + d.score + '/100',
+                                'Import share: ' + d.impShare + '%',
+                                'Supplier HHI: ' + d.hhi,
+                                'Stockpile: ' + d.stockDays + ' days'
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: '#f0f0f0' },
+                    ticks: { font: { size: 11 } },
+                    title: { display: true, text: 'Risk Score (0-100)', font: { size: 11 } }
+                },
+                x: {
+                    ticks: { font: { size: 11 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+})();
+
+// Trend charts
+function makeTrendChart(canvasId, trendsObj, baseColor) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const datasets = Object.entries(trendsObj).map(([country, values]) => ({
+        label: country,
+        data: values,
+        borderColor: getCountryColor(country),
+        backgroundColor: getCountryColor(country) + '20',
+        fill: false,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2.5,
+    }));
+    return new Chart(ctx, {
+        type: 'line',
+        data: { labels: trendYears, datasets: datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { boxWidth: 14, font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': ' + ctx.raw + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 } } },
+                y: {
+                    grid: { color: '#f0f0f0' },
+                    ticks: { callback: v => v + '%', font: { size: 11 } },
+                    title: { display: true, text: 'Import Dependency (%)', font: { size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+makeTrendChart('chartOilTrend', oilTrends, oilColor);
+makeTrendChart('chartGasTrend', gasTrends, gasColor);
+</script>
+
+<script src="nav.js"></script>
+
+</body>
+</html>

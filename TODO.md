@@ -5,12 +5,6 @@ Format: just write whatever you want — bullet points, paragraphs, whatever wor
 
 ## Pending Edits
 
-### Graveyard Tab (NEW PAGE)
-- [ ] Create graveyard.html — a parking lot for removed charts/sections
-- [ ] Organize by source tab so items can be brought back easily
-- [ ] Move Energy Security Risk Index from imports.html → graveyard
-- [ ] Move Import Dependency Trends from imports.html → graveyard
-
 ### Import Exposure Rework
 - [ ] Add country toggle chart showing % oil / % coal / % gas (like commodity comparison but toggled by country)
 - [ ] Add energy demand growth comparison by country (how coal/oil/gas demand has grown over time per country)
@@ -43,3 +37,4 @@ Format: just write whatever you want — bullet points, paragraphs, whatever wor
 - [x] Republican color fix (#d6604d → #cc0000)
 - [x] Jobs: remove fabricated power generation data, share-by-commodity chart, dev/developing trends
 - [x] Jobs: flip labor intensity to productivity (tonnes per worker)
+- [x] Graveyard tab: created page, moved Energy Security Risk Index + Import Dependency Trends from imports.html

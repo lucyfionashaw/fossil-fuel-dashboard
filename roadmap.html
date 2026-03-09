@@ -98,9 +98,6 @@
 
 <script>
 const PLANNED = [
-    { title: "Create Graveyard tab", desc: "New page to park removed charts/sections, organized by source tab so they can be brought back easily.", section: "New Page", priority: "medium" },
-    { title: "Move Energy Security Risk Index to Graveyard", desc: "Remove from Import Exposure page and archive in Graveyard.", section: "Import Exposure", priority: "medium" },
-    { title: "Move Import Dependency Trends to Graveyard", desc: "Time axis is misleading and chart isn't adding enough value yet. Archive in Graveyard.", section: "Import Exposure", priority: "medium" },
     { title: "Country toggle chart for import exposure", desc: "Clickable chart showing % oil / % coal / % gas per country, similar to commodity comparison but toggled by country.", section: "Import Exposure", priority: "high" },
     { title: "Energy demand growth comparison by country", desc: "Show how coal/oil/gas demand has grown over the same time period per country (e.g. China coal demand growth vs oil vs gas).", section: "Import Exposure", priority: "high" },
     { title: "Rethink country-level import dependency presentation", desc: "Consider chart where bar width = volume of consumption and height = % imported. Current presentation unclear for small countries.", section: "Import Exposure", priority: "low" },
@@ -123,6 +120,7 @@ const COMPLETED = [
     { title: "Republican color fix", desc: "Changed from orange (#d6604d) to proper red (#cc0000) in colors.js and shared.css.", section: "Political Donations", date: "Mar 2026" },
     { title: "Jobs: remove fabricated data and unnecessary charts", desc: "Removed fabricated power generation data, share-by-commodity chart, and developed/developing country trend charts.", section: "Jobs", date: "Mar 2026" },
     { title: "Jobs: flip labor intensity to productivity", desc: "Chart now shows tonnes per worker (highest productivity at top: USA, Australia, Canada) instead of jobs per Mt.", section: "Jobs", date: "Mar 2026" },
+    { title: "Graveyard tab created", desc: "New page to park removed charts. Moved Energy Security Risk Index and Import Dependency Trends from Import Exposure. Organized by source tab.", section: "New Page + Import Exposure", date: "Mar 2026" },
 ];
 
 function renderEdits(items, containerId, isDone) {
