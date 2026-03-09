@@ -127,8 +127,8 @@
                 <div class="rt-desc">Export taxes, windfall levies, resource rent taxes, lease bonuses</div>
             </div>
         </div>
-        <div class="info-callout">
-            <strong>Note on double-counting:</strong> SOE/NOC revenue includes taxes paid by those companies back to the state. The fiscal-only figure (~$1.8T) strips out SOE commercial operations to show pure government tax/royalty take. The headline ~$4.2T uses a broad definition (NRGI / IMF methodology) encompassing all government revenue streams including SOE profits.
+        <div class="info-callout oil-callout">
+            <strong>Important methodology note:</strong> The ~$4.2T headline includes SOE/NOC gross corporate revenue, which significantly overstates actual government income (since it includes costs, reinvestment, and commercial operations). The fiscal-only figure (~$1.8T) — taxes, royalties, dividends, and direct profit transfers — is the more meaningful measure of government take. SOE/NOC gross revenue is shown separately to illustrate the scale of state-controlled fossil fuel enterprises.
         </div>
     </div>
 
@@ -310,10 +310,10 @@
 // Top countries by total government fossil fuel revenue ($B, 2023)
 const topCountries = [
     { country: 'Saudi Arabia', total: 311, oil: 305, gas: 6, coal: 0, pctGovt: 62 },
-    { country: 'Russia', total: 247, oil: 152, gas: 85, coal: 10, pctGovt: 35 },
+    { country: 'Russia', total: 180, oil: 110, gas: 60, coal: 10, pctGovt: 23 },
     { country: 'China', total: 235, oil: 55, gas: 40, coal: 140, pctGovt: 7 },
     { country: 'UAE', total: 155, oil: 145, gas: 10, coal: 0, pctGovt: 50 },
-    { country: 'Norway', total: 110, oil: 72, gas: 38, coal: 0, pctGovt: 27 },
+    { country: 'Norway', total: 85, oil: 55, gas: 30, coal: 0, pctGovt: 31 },
     { country: 'Iraq', total: 105, oil: 104, gas: 1, coal: 0, pctGovt: 89 },
     { country: 'Iran', total: 80, oil: 65, gas: 15, coal: 0, pctGovt: 40 },
     { country: 'Kuwait', total: 78, oil: 76, gas: 2, coal: 0, pctGovt: 90 },
@@ -352,9 +352,9 @@ const fiscalDep = [
     { country: 'Timor-Leste', pct: 45, fuel: 'oil' },
     { country: 'Iran', pct: 40, fuel: 'oil' },
     { country: 'Azerbaijan', pct: 38, fuel: 'oil' },
-    { country: 'Russia', pct: 35, fuel: 'oil' },
+    { country: 'Russia', pct: 23, fuel: 'oil' },
     { country: 'Kazakhstan', pct: 30, fuel: 'oil' },
-    { country: 'Norway', pct: 27, fuel: 'oil' },
+    { country: 'Norway', pct: 31, fuel: 'oil' },
     { country: 'Indonesia', pct: 20, fuel: 'mixed' },
     { country: 'Malaysia', pct: 18, fuel: 'oil' },
     { country: 'Mexico', pct: 14, fuel: 'oil' },
@@ -383,16 +383,16 @@ const soeData = [
     { name: 'ADNOC', country: 'UAE', commodity: 'Oil & Gas', revenue: 145, netIncome: 48, govtPayments: 120, stateOwnership: 100, color: 'var(--oil)' },
     { name: 'QatarEnergy', country: 'Qatar', commodity: 'Gas & Oil', revenue: 52, netIncome: 28, govtPayments: 55, stateOwnership: 100, color: 'var(--gas)' },
     { name: 'Rosneft', country: 'Russia', commodity: 'Oil', revenue: 114, netIncome: 12, govtPayments: 72, stateOwnership: 50, color: 'var(--oil)' },
-    { name: 'Gazprom', country: 'Russia', commodity: 'Gas', revenue: 85, netIncome: 7, govtPayments: 45, stateOwnership: 50.2, color: 'var(--gas)' },
+    { name: 'Gazprom', country: 'Russia', commodity: 'Gas', revenue: 85, netIncome: -7.4, govtPayments: 25, stateOwnership: 50.2, color: 'var(--gas)' },
     { name: 'PetroChina / CNPC', country: 'China', commodity: 'Oil & Gas', revenue: 430, netIncome: 22, govtPayments: 55, stateOwnership: 90, color: 'var(--oil)' },
-    { name: 'Petrobras', country: 'Brazil', commodity: 'Oil', revenue: 98, netIncome: 26, govtPayments: 38, stateOwnership: 37, color: 'var(--oil)' },
-    { name: 'Equinor (Statoil)', country: 'Norway', commodity: 'Oil & Gas', revenue: 106, netIncome: 12, govtPayments: 88, stateOwnership: 67, color: 'var(--oil)' },
+    { name: 'Petrobras', country: 'Brazil', commodity: 'Oil', revenue: 102, netIncome: 25, govtPayments: 48, stateOwnership: 37, color: 'var(--oil)' },
+    { name: 'Equinor (Statoil)', country: 'Norway', commodity: 'Oil & Gas', revenue: 106, netIncome: 12, govtPayments: 30, stateOwnership: 67, color: 'var(--oil)' },
     { name: 'Petronas', country: 'Malaysia', commodity: 'Oil & Gas', revenue: 66, netIncome: 14, govtPayments: 22, stateOwnership: 100, color: 'var(--oil)' },
     { name: 'Sonatrach', country: 'Algeria', commodity: 'Oil & Gas', revenue: 48, netIncome: 10, govtPayments: 35, stateOwnership: 100, color: 'var(--oil)' },
     { name: 'NNPC', country: 'Nigeria', commodity: 'Oil', revenue: 32, netIncome: 3, govtPayments: 18, stateOwnership: 100, color: 'var(--oil)' },
     { name: 'KazMunayGas', country: 'Kazakhstan', commodity: 'Oil', revenue: 28, netIncome: 3, govtPayments: 12, stateOwnership: 90, color: 'var(--oil)' },
     { name: 'ONGC', country: 'India', commodity: 'Oil & Gas', revenue: 22, netIncome: 4.8, govtPayments: 8.5, stateOwnership: 58.9, color: 'var(--oil)' },
-    { name: 'Coal India (CIL)', country: 'India', commodity: 'Coal', revenue: 18.5, netIncome: 4.2, govtPayments: 12, stateOwnership: 63.1, color: 'var(--coal)' },
+    { name: 'Coal India (CIL)', country: 'India', commodity: 'Coal', revenue: 17, netIncome: 4.5, govtPayments: 7.2, stateOwnership: 63.1, color: 'var(--coal)' },
     { name: 'PT Bukit Asam', country: 'Indonesia', commodity: 'Coal', revenue: 3.2, netIncome: 0.7, govtPayments: 1.8, stateOwnership: 65.9, color: 'var(--coal)' },
     { name: 'Exxaro (partly state)', country: 'South Africa', commodity: 'Coal', revenue: 2.8, netIncome: 0.5, govtPayments: 0.9, stateOwnership: 20, color: 'var(--coal)' },
 ];
@@ -416,9 +416,9 @@ const coalRevData = [
 // Oil & Gas revenue detail
 const oilgasRevData = [
     { country: 'Saudi Arabia', total: 311, royalties: 0, cit: 15, noc: 282, export: 0, regime: 'Concession (Aramco monopoly), 50% income tax on Aramco' },
-    { country: 'Russia', total: 237, royalties: 45, cit: 42, noc: 117, export: 33, regime: 'MET + export duty + profit tax; 2023 reforms (benchmark pricing)' },
+    { country: 'Russia', total: 170, royalties: 35, cit: 35, noc: 72, export: 28, regime: 'MET + export duty + profit tax; 2023 reforms (benchmark pricing)' },
     { country: 'UAE', total: 155, royalties: 10, cit: 25, noc: 120, export: 0, regime: 'ADNOC concession + 2022 CIT (9% above AED 375k)' },
-    { country: 'Norway', total: 110, royalties: 0, cit: 22, noc: 88, export: 0, regime: '78% marginal petroleum tax; SDFI direct interest; SWF >$1.6T' },
+    { country: 'Norway', total: 85, royalties: 0, cit: 22, noc: 30, export: 0, regime: '78% marginal petroleum tax; SDFI direct interest; SWF >$1.6T' },
     { country: 'Iraq', total: 105, royalties: 18, cit: 5, noc: 75, export: 7, regime: 'Technical Service Contracts; SOMO marketing; INOC/BOC' },
     { country: 'Iran', total: 80, royalties: 12, cit: 8, noc: 55, export: 5, regime: 'Buyback/IPC contracts; NIOC; sanctions limit revenue' },
     { country: 'Kuwait', total: 78, royalties: 0, cit: 5, noc: 73, export: 0, regime: 'KPC monopoly; 15% CIT (foreign); near-total state capture' },
@@ -436,12 +436,12 @@ const oilgasRevData = [
 const soeContribData = [
     { company: 'Saudi Aramco', dividends: 98, taxes: 140, royalties: 44 },
     { company: 'ADNOC', dividends: 45, taxes: 55, royalties: 20 },
-    { company: 'Equinor', dividends: 10, taxes: 68, royalties: 10 },
+    { company: 'Equinor', dividends: 8, taxes: 20, royalties: 2 },
     { company: 'QatarEnergy', dividends: 22, taxes: 18, royalties: 15 },
     { company: 'Rosneft', dividends: 8, taxes: 38, royalties: 26 },
-    { company: 'Gazprom', dividends: 5, taxes: 25, royalties: 15 },
-    { company: 'Petrobras', dividends: 12, taxes: 16, royalties: 10 },
-    { company: 'Coal India', dividends: 3.5, taxes: 4.5, royalties: 4 },
+    { company: 'Gazprom', dividends: 2, taxes: 15, royalties: 8 },
+    { company: 'Petrobras', dividends: 15, taxes: 22, royalties: 11 },
+    { company: 'Coal India', dividends: 1.5, taxes: 2.5, royalties: 3.2 },
 ];
 
 

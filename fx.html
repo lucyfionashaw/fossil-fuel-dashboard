@@ -91,7 +91,7 @@
         <div class="headline-card coal">
             <div class="label">Coal Exports</div>
             <div class="value" style="color:var(--coal)">~$185B</div>
-            <div class="detail">10% of total &middot; ~1.45 Gt traded</div>
+            <div class="detail">10% of total &middot; ~1.5 Gt traded</div>
         </div>
     </div>
 
@@ -386,9 +386,9 @@ new Chart(document.getElementById('chartExportSplit'), {
 // ============================================================
 var topExporters = {
     labels: ['Saudi Arabia', 'Russia', 'USA', 'Australia', 'Canada', 'Qatar', 'Norway', 'UAE', 'Iraq', 'Kuwait', 'Nigeria', 'Kazakhstan'],
-    coal:   [0, 17, 8.0, 67, 4.5, 0, 0, 0, 0, 0, 0, 5.5],
-    oil:    [189, 105, 110, 7, 86, 14, 52, 73, 87, 55, 41, 29],
-    gas:    [0, 29, 26, 28, 10, 62, 33, 12, 0.5, 0.3, 17, 6]
+    coal:   [0, 17, 8.0, 64, 4.5, 0, 0, 0, 0, 0, 0, 5.5],
+    oil:    [211, 105, 117, 7, 86, 14, 52, 73, 87, 55, 41, 29],
+    gas:    [0, 29, 26, 50, 10, 62, 33, 12, 0.5, 0.3, 17, 6]
 };
 new Chart(document.getElementById('chartTopExporters'), {
     type: 'bar',
@@ -427,8 +427,8 @@ new Chart(document.getElementById('chartTopExporters'), {
 // ============================================================
 var coalExData = {
     labels: ['Australia', 'Indonesia', 'Russia', 'USA', 'South Africa', 'Colombia', 'Canada', 'Mongolia', 'Mozambique', 'Kazakhstan'],
-    value:  [67, 34, 17, 8.0, 8.5, 5.8, 4.5, 4.0, 3.2, 5.5],
-    volume: [332, 492, 195, 62, 68, 55, 28, 45, 22, 44]
+    value:  [64, 35, 17, 8.0, 8.5, 5.8, 4.5, 4.0, 3.2, 5.5],
+    volume: [353, 521, 211, 62, 68, 55, 28, 45, 22, 44]
 };
 
 new Chart(document.getElementById('chartCoalExportValue'), {
@@ -652,8 +652,8 @@ new Chart(document.getElementById('chartImpGas'), {
 // ============================================================
 var importerData = {
     labels: ['China', 'EU-27', 'India', 'Japan', 'South Korea', 'Taiwan'],
-    grossImport: [370, 340, 175, 148, 110, 52],
-    pctOfImports: [13.7, 12.8, 24.8, 19.5, 16.8, 13.2]
+    grossImport: [475, 340, 175, 148, 110, 52],
+    pctOfImports: [17.6, 12.8, 24.8, 19.5, 16.8, 13.2]
 };
 
 new Chart(document.getElementById('chartImporterCost'), {
@@ -718,7 +718,7 @@ new Chart(document.getElementById('chartImporterPct'), {
 
 // Trade Balance Table
 var tradeBalanceRows = [
-    { country: 'China', imports: 370, exports: 10, net: 360, pct: 13.7, fuels: 'Crude oil (68%), LNG (15%), coal (12%), pipeline gas (5%)' },
+    { country: 'China', imports: 475, exports: 10, net: 465, pct: 17.6, fuels: 'Crude oil (68%), LNG (15%), coal (12%), pipeline gas (5%)' },
     { country: 'EU-27', imports: 340, exports: 65, net: 275, pct: 12.8, fuels: 'Crude oil (48%), pipeline gas (28%), LNG (12%), coal (5%), products (7%)' },
     { country: 'India', imports: 175, exports: 38, net: 137, pct: 24.8, fuels: 'Crude oil (72%), coal (16%), LNG (10%), products re-export (~$35B)' },
     { country: 'Japan', imports: 148, exports: 1, net: 147, pct: 19.5, fuels: 'Crude oil (41%), LNG (36%), coal (18%), products (5%)' },
@@ -741,9 +741,9 @@ tradeBalanceRows.forEach(function(r) {
 
 // Coal Export Table
 var coalExpRows = [
-    { rank: 1, country: 'Australia', vol: 332, val: 67, price: 202, pct: 17.2, types: 'Met (55%) + Thermal (45%)' },
-    { rank: 2, country: 'Indonesia', vol: 492, val: 34, price: 69, pct: 12.8, types: 'Thermal (sub-bituminous, 4,200-5,000 kcal)' },
-    { rank: 3, country: 'Russia', vol: 195, val: 17, price: 87, pct: 3.8, types: 'Thermal (70%) + Met (30%)' },
+    { rank: 1, country: 'Australia', vol: 353, val: 64, price: 181, pct: 17.2, types: 'Met (55%) + Thermal (45%)' },
+    { rank: 2, country: 'Indonesia', vol: 521, val: 35, price: 67, pct: 12.8, types: 'Thermal (sub-bituminous, 4,200-5,000 kcal)' },
+    { rank: 3, country: 'Russia', vol: 211, val: 17, price: 81, pct: 3.8, types: 'Thermal (70%) + Met (30%)' },
     { rank: 4, country: 'South Africa', vol: 68, val: 8.5, price: 125, pct: 7.2, types: 'Thermal (Richards Bay benchmark)' },
     { rank: 5, country: 'USA', vol: 62, val: 8.0, price: 129, pct: 0.5, types: 'Met (60%) + Thermal (40%)' },
     { rank: 6, country: 'Colombia', vol: 55, val: 5.8, price: 105, pct: 11.5, types: 'Thermal (high quality 6,000+ kcal)' },
@@ -769,8 +769,8 @@ coalExpRows.forEach(function(r) {
 
 // Oil Export Table
 var oilExpRows = [
-    { rank: 1, country: 'Saudi Arabia', vol: 7.3, val: 189, pct: 62, grades: 'Arab Light, Arab Heavy, Arab Extra Light' },
-    { rank: 2, country: 'USA', vol: 4.1, val: 110, pct: 5.5, grades: 'WTI Midland, Mars, LLS, WCS (transited)' },
+    { rank: 1, country: 'Saudi Arabia', vol: 7.3, val: 211, pct: 62, grades: 'Arab Light, Arab Heavy, Arab Extra Light' },
+    { rank: 2, country: 'USA', vol: 4.1, val: 117, pct: 5.5, grades: 'WTI Midland, Mars, LLS, WCS (transited)' },
     { rank: 3, country: 'Russia', vol: 4.6, val: 105, pct: 22, grades: 'Urals, ESPO, Sokol (discounted post-sanctions)' },
     { rank: 4, country: 'Iraq', vol: 3.4, val: 87, pct: 92, grades: 'Basrah Medium, Basrah Heavy, Kirkuk' },
     { rank: 5, country: 'Canada', vol: 3.8, val: 86, pct: 15, grades: 'WCS, Cold Lake, MSW, Syncrude' },
@@ -801,7 +801,7 @@ var gasExpRows = [
     { rank: 1, country: 'Qatar', pipe: 0, lng: 107, val: 62, pct: 70, market: 'Asia (Japan, S.Korea, China, India)' },
     { rank: 2, country: 'Norway', pipe: 108, lng: 0, val: 33, pct: 17, market: 'Europe (UK, Germany, France, Belgium)' },
     { rank: 3, country: 'Russia', pipe: 75, lng: 43, val: 29, pct: 6.5, market: 'China (pipeline), Europe (LNG), Asia' },
-    { rank: 4, country: 'Australia', pipe: 0, lng: 108, val: 28, pct: 8.0, market: 'Japan, China, S.Korea, Taiwan' },
+    { rank: 4, country: 'Australia', pipe: 0, lng: 108, val: 50, pct: 13.0, market: 'Japan, China, S.Korea, Taiwan' },
     { rank: 5, country: 'USA', pipe: 53, lng: 115, val: 26, pct: 1.3, market: 'Europe (LNG), Mexico (pipe), Asia (LNG)' },
     { rank: 6, country: 'Nigeria', pipe: 0, lng: 29, val: 17, pct: 24, market: 'Europe, Asia' },
     { rank: 7, country: 'Algeria', pipe: 33, lng: 15, val: 14, pct: 38, market: 'Italy, Spain (pipe + LNG)' },
