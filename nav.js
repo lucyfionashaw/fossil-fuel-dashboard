@@ -17,6 +17,7 @@
         { href: 'electricity.html', label: 'Electricity Costs' },
         { href: 'coaltax.html', label: 'Coal Tax' },
         { href: 'investment.html', label: 'Foreign Investment' },
+        { href: 'roadmap.html', label: 'Roadmap' },
     ];
 
     const nav = document.createElement('nav');

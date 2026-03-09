@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap — Global Fossil Fuel Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .roadmap-intro {
+            background: var(--card-bg); border-radius: 12px; padding: 2rem;
+            margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .roadmap-intro p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7; }
+
+        .roadmap-section { margin-bottom: 2rem; }
+        .roadmap-section h2 {
+            font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .status-badge {
+            display: inline-block; font-size: 0.65rem; padding: 0.2rem 0.6rem;
+            border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .badge-planned { background: #fff3cd; color: #856404; }
+        .badge-inprogress { background: #cce5ff; color: #004085; }
+        .badge-done { background: #d4edda; color: #155724; }
+
+        .edit-list { list-style: none; padding: 0; }
+        .edit-item {
+            background: var(--card-bg); border-radius: 8px; padding: 1rem 1.2rem;
+            margin-bottom: 0.6rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            border-left: 4px solid var(--border); font-size: 0.88rem;
+            display: flex; align-items: flex-start; gap: 0.8rem;
+        }
+        .edit-item.priority-high { border-left-color: var(--oil); }
+        .edit-item.priority-medium { border-left-color: #f39c12; }
+        .edit-item.priority-low { border-left-color: var(--accent); }
+        .edit-item.done { border-left-color: #27ae60; opacity: 0.7; }
+
+        .edit-checkbox {
+            width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px;
+            flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center;
+        }
+        .edit-item.done .edit-checkbox { background: #27ae60; border-color: #27ae60; color: white; font-size: 12px; }
+
+        .edit-body { flex: 1; }
+        .edit-title { font-weight: 600; margin-bottom: 0.2rem; }
+        .edit-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+        .edit-meta { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.3rem; }
+        .edit-meta span { margin-right: 1rem; }
+
+        .suggest-box {
+            background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 8px;
+            padding: 1.2rem; margin-top: 1.5rem; font-size: 0.85rem;
+        }
+        .suggest-box strong { color: #004085; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Roadmap & Planned Edits</h1>
+    <div class="subtitle">What's coming next for the Global Fossil Fuel Dashboard</div>
+</div>
+
+<script src="nav.js"></script>
+
+<div class="container">
+
+    <div class="roadmap-intro">
+        <p>This page tracks planned improvements, data updates, and new features for the dashboard. If you have suggestions for additional data, corrections, or new analysis sections, feel free to open an issue on <a href="https://github.com/lucyfionashaw/fossil-fuel-dashboard/issues" style="color:var(--accent)">GitHub</a>.</p>
+    </div>
+
+    <div class="roadmap-section">
+        <h2>Planned Edits <span class="status-badge badge-planned">Upcoming</span></h2>
+        <ul class="edit-list" id="plannedEdits">
+            <!-- Populated by script below -->
+        </ul>
+    </div>
+
+    <div class="roadmap-section">
+        <h2>Recently Completed <span class="status-badge badge-done">Done</span></h2>
+        <ul class="edit-list" id="completedEdits">
+        </ul>
+    </div>
+
+    <div class="suggest-box">
+        <strong>Have a suggestion?</strong> This dashboard aims to surface underused public data on fossil fuel markets. If you know of a dataset that should be included, or spot an error in the existing data, please <a href="https://github.com/lucyfionashaw/fossil-fuel-dashboard/issues" style="color:var(--accent)">open a GitHub issue</a>.
+    </div>
+
+</div>
+
+<div class="footer">
+    <p>Global Fossil Fuel Dashboard &middot; Roadmap</p>
+    <p>Data: 2023/24 &middot; Built with <a href="https://claude.ai">Claude</a></p>
+</div>
+
+<script>
+const PLANNED = [
+    // Add your planned edits here. Format:
+    // { title: "Edit title", desc: "Description", section: "Section name", priority: "high|medium|low" },
+];
+
+const COMPLETED = [
+    { title: "Consistent color scheme across all pages", desc: "Coal=black, oil=red, gas=grey, solar=yellow, wind=blue, nuclear=pink. Country colors consistent via shared colors.js.", section: "All", date: "Mar 2026" },
+    { title: "Cover/landing page", desc: "New overview page with section cards replacing the old Task 1 homepage.", section: "Overview", date: "Mar 2026" },
+    { title: "CO2 intensity per kWh + coal tonnes per MWh", desc: "Added charts showing end-use emissions intensity accounting for thermal efficiency, and coal consumption per unit of electricity by country.", section: "Energy Context", date: "Mar 2026" },
+    { title: "Job-saving cost case studies", desc: "Bottom-up analysis of cost per job saved: JH Campbell (USA), Polish domestic coal, German lignite transition, Eskom (South Africa), Australian mining concessions.", section: "Subsidies", date: "Mar 2026" },
+    { title: "Existing coal vs new renewables", desc: "Operating cost comparison, crossover timeline (2015-2024), and share of global coal capacity now uneconomic.", section: "Electricity Costs", date: "Mar 2026" },
+    { title: "All 12 analysis sections built", desc: "Market Value, Energy Context, Coal Phaseout, Jobs, Political Donations, FX Revenue, Govt Revenue, Subsidies, Import Exposure, Electricity Costs, Coal Tax, Foreign Investment.", section: "All", date: "Mar 2026" },
+];
+
+function renderEdits(items, containerId, isDone) {
+    const ul = document.getElementById(containerId);
+    if (!items.length) {
+        ul.innerHTML = '<li style="padding:1rem;color:var(--text-secondary);font-size:0.85rem;">Nothing here yet.</li>';
+        return;
+    }
+    items.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'edit-item' + (isDone ? ' done' : '') + (item.priority ? ' priority-' + item.priority : '');
+        li.innerHTML = '<div class="edit-checkbox">' + (isDone ? '&#10003;' : '') + '</div>' +
+            '<div class="edit-body">' +
+            '<div class="edit-title">' + item.title + '</div>' +
+            '<div class="edit-desc">' + item.desc + '</div>' +
+            '<div class="edit-meta">' +
+            '<span>Section: ' + item.section + '</span>' +
+            (item.date ? '<span>' + item.date + '</span>' : '') +
+            (item.priority ? '<span>Priority: ' + item.priority + '</span>' : '') +
+            '</div></div>';
+        ul.appendChild(li);
+    });
+}
+
+renderEdits(PLANNED, 'plannedEdits', false);
+renderEdits(COMPLETED, 'completedEdits', true);
+</script>
+
+</body>
+</html>
