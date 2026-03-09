@@ -52,6 +52,37 @@
         .commodity-legend { display: flex; gap: 1.2rem; margin-bottom: 1rem; flex-wrap: wrap; }
         .commodity-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; color: var(--text-secondary); }
         .commodity-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+        .country-selector { margin-bottom: 1rem; }
+        .country-selector select {
+            padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 6px;
+            font-family: inherit; font-size: 0.9rem; background: white; color: var(--text);
+            cursor: pointer; min-width: 200px;
+        }
+        .country-selector select:focus { outline: none; border-color: var(--accent); }
+
+        .profile-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; }
+        @media (max-width: 600px) { .profile-metrics { grid-template-columns: 1fr; } }
+        .profile-metric {
+            border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center;
+        }
+        .profile-metric .pm-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin-bottom: 0.2rem; }
+        .profile-metric .pm-value { font-size: 1.4rem; font-weight: 700; }
+        .profile-metric .pm-detail { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.15rem; }
+
+        .chart-container-bubble { position: relative; width: 100%; height: 400px; }
+
+        .marimekko-wrap { position: relative; width: 100%; height: 420px; }
+        .marimekko-wrap canvas { width: 100%; height: 100%; }
+        .marimekko-tooltip {
+            display: none; position: absolute; background: white; border: 1px solid var(--border);
+            border-radius: 6px; padding: 0.6rem 0.8rem; font-size: 0.78rem; z-index: 10;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.15); pointer-events: none; min-width: 160px;
+        }
+        .marimekko-tooltip .tt-title { font-weight: 600; margin-bottom: 0.3rem; font-size: 0.85rem; }
+        .marimekko-tooltip .tt-row { display: flex; justify-content: space-between; gap: 1rem; }
+        .marimekko-tooltip .tt-label { color: var(--text-secondary); }
+        .marimekko-tooltip .tt-sources { margin-top: 0.4rem; padding-top: 0.3rem; border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--text-secondary); }
     </style>
 </head>
 <body>
@@ -90,6 +121,67 @@
     <div class="info-callout">
         <strong>Import dependency = net imports / domestic consumption.</strong>
         A value of 100% means the country produces no domestic supply. Negative values indicate net exporters. This metric measures volume exposure, not value — a country importing expensive LNG faces higher financial exposure per unit than one importing cheap pipeline gas. Data from IEA World Energy Balances 2024, EIA International Energy Statistics, and Energy Institute Statistical Review 2024.
+    </div>
+
+    <!-- NEW: Country Import Profile -->
+    <div class="section">
+        <h2>Country Import Profile</h2>
+        <p class="section-subtitle">Select a country to compare its import dependency across coal, oil and gas.</p>
+        <div class="country-selector">
+            <select id="countrySelect" onchange="updateCountryProfile()"></select>
+        </div>
+        <div class="chart-row" style="margin-bottom:0;">
+            <div>
+                <div class="chart-container" style="max-height:300px;"><canvas id="chartCountryProfile"></canvas></div>
+            </div>
+            <div>
+                <div id="profileMetrics" class="profile-metrics"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Energy Demand Growth -->
+    <div class="section">
+        <h2>Energy Demand Growth by Country</h2>
+        <p class="section-subtitle">How fossil fuel consumption has changed since 2015. Indexed: 2015 = 100. Rising lines indicate growing demand.</p>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showDemandTab('coal')">Coal</button>
+            <button class="tab-btn" onclick="showDemandTab('oil')">Oil</button>
+            <button class="tab-btn" onclick="showDemandTab('gas')">Gas</button>
+        </div>
+        <div class="tab-content active" id="demand-coal">
+            <div class="chart-container-tall"><canvas id="chartDemandCoal"></canvas></div>
+        </div>
+        <div class="tab-content" id="demand-oil">
+            <div class="chart-container-tall"><canvas id="chartDemandOil"></canvas></div>
+        </div>
+        <div class="tab-content" id="demand-gas">
+            <div class="chart-container-tall"><canvas id="chartDemandGas"></canvas></div>
+        </div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Energy Institute Statistical Review 2024</span>
+            <span class="source-tag">IEA World Energy Balances</span>
+        </div>
+    </div>
+
+    <!-- NEW: Marimekko — Consumption Volume vs Import Dependency -->
+    <div class="section">
+        <h2>Consumption Volume vs Import Dependency</h2>
+        <p class="section-subtitle">Column width = consumption volume. Column height = import dependency (%). Wide, tall columns are large consumers that are highly import-dependent &mdash; the most exposed.</p>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showMarimekkoTab('coal')">Coal</button>
+            <button class="tab-btn" onclick="showMarimekkoTab('oil')">Oil</button>
+            <button class="tab-btn" onclick="showMarimekkoTab('gas')">Gas</button>
+        </div>
+        <div class="tab-content active" id="marimekko-coal">
+            <div class="marimekko-wrap"><canvas id="canvasMarimekkoCoal"></canvas><div class="marimekko-tooltip" id="ttCoal"></div></div>
+        </div>
+        <div class="tab-content" id="marimekko-oil">
+            <div class="marimekko-wrap"><canvas id="canvasMarimekkoOil"></canvas><div class="marimekko-tooltip" id="ttOil"></div></div>
+        </div>
+        <div class="tab-content" id="marimekko-gas">
+            <div class="marimekko-wrap"><canvas id="canvasMarimekkoGas"></canvas><div class="marimekko-tooltip" id="ttGas"></div></div>
+        </div>
     </div>
 
     <!-- Coal Import Dependency -->
@@ -332,6 +424,65 @@ const threeWayData = [
     { country: 'Australia', coal: -72, oil: 55, gas: -85 },
 ];
 
+// Extended country profiles (for country selector)
+const countryProfiles = [
+    { country: 'Japan',        coal: 100, oil: 99,  gas: 97,  coalCons: 175, oilCons: 3300, gasCons: 90,  coalNote: 'Zero domestic production', oilNote: 'Near-total Middle East dependency', gasNote: '~97% LNG imports' },
+    { country: 'South Korea',  coal: 100, oil: 98,  gas: 98,  coalCons: 130, oilCons: 2600, gasCons: 57,  coalNote: 'No domestic coal', oilNote: 'Major refining hub', gasNote: 'Almost entirely LNG' },
+    { country: 'Taiwan',       coal: 100, oil: 99,  gas: 98,  coalCons: 66,  oilCons: 1000, gasCons: 24,  coalNote: 'No domestic production', oilNote: 'No significant production', gasNote: 'All LNG' },
+    { country: 'Germany',      coal: 98,  oil: 96,  gas: 95,  coalCons: 120, oilCons: 2100, gasCons: 75,  coalNote: 'Only lignite domestic', oilNote: 'Minimal domestic', gasNote: 'Built 3 floating LNG terminals' },
+    { country: 'EU-27',        coal: 57,  oil: 90,  gas: 83,  coalCons: 418, oilCons: 9900, gasCons: 310, coalNote: 'Hard coal mostly imported', oilNote: 'Norway is top supplier', gasNote: 'Shift from Russia to US/Qatar LNG' },
+    { country: 'Turkey',       coal: 62,  oil: 89,  gas: 98,  coalCons: 115, oilCons: 950,  gasCons: 50,  coalNote: 'Domestic lignite partial', oilNote: 'Russia, Iraq, KSA suppliers', gasNote: 'Pipeline + LNG' },
+    { country: 'India',        coal: 27,  oil: 85,  gas: 48,  coalCons: 1050,oilCons: 5200, gasCons: 60,  coalNote: 'Imports mostly coking coal', oilNote: 'Increased Russian crude since 2022', gasNote: 'Growing LNG imports' },
+    { country: 'China',        coal: 8,   oil: 72,  gas: 40,  coalCons: 4530,oilCons: 15800,gasCons: 385, coalNote: '~92% self-sufficient', oilNote: 'World\'s largest crude importer', gasNote: 'Pipeline + LNG' },
+    { country: 'Indonesia',    coal: -70, oil: 30,  gas: -5,  coalCons: 200, oilCons: 1700, gasCons: 40,  coalNote: 'World\'s largest thermal exporter', oilNote: 'Left OPEC, production declining', gasNote: 'Small net exporter' },
+    { country: 'USA',          coal: -8,  oil: -3,  gas: -12, coalCons: 410, oilCons: 20100,gasCons: 880, coalNote: 'Net exporter', oilNote: 'Net petroleum exporter since 2020', gasNote: 'World\'s largest producer' },
+    { country: 'Russia',       coal: -48, oil: -170,gas: -37, coalCons: 230, oilCons: 3800, gasCons: 420, coalNote: 'Major exporter to Asia', oilNote: 'Diverted from EU', gasNote: 'Pipeline to China growing' },
+    { country: 'Australia',    coal: -72, oil: 55,  gas: -85, coalCons: 100, oilCons: 1050, gasCons: 45,  coalNote: '#1 met, #2 thermal exporter', oilNote: 'Refinery closures increased dependency', gasNote: '#1 LNG exporter' },
+    { country: 'Brazil',       coal: 75,  oil: -3,  gas: 12,  coalCons: 22,  oilCons: 2900, gasCons: 35,  coalNote: 'Small consumer, imports met coal', oilNote: 'Pre-salt turned net exporter', gasNote: 'Bolivia pipeline + LNG' },
+    { country: 'UK',           coal: 95,  oil: 55,  gas: 55,  coalCons: 8,   oilCons: 1400, gasCons: 71,  coalNote: 'Near-zero coal power by 2024', oilNote: 'North Sea declining', gasNote: 'Norway pipeline + LNG' },
+    { country: 'Vietnam',      coal: 42,  oil: 20,  gas: -10, coalCons: 72,  oilCons: 500,  gasCons: 10,  coalNote: 'Shifted to net importer ~2015', oilNote: 'Some domestic production', gasNote: 'Small domestic producer' },
+    { country: 'Thailand',     coal: 50,  oil: 63,  gas: 28,  coalCons: 25,  oilCons: 1050, gasCons: 48,  coalNote: 'Imports from Indonesia', oilNote: 'Some condensate offsets', gasNote: 'Myanmar pipeline + LNG' },
+    { country: 'Pakistan',     coal: 45,  oil: 78,  gas: 22,  coalCons: 16,  oilCons: 430,  gasCons: 38,  coalNote: 'Growing thermal imports', oilNote: 'Imports from UAE, KSA', gasNote: 'Domestic declining' },
+    { country: 'Philippines',  coal: 68,  oil: 55,  gas: 0,   coalCons: 35,  oilCons: 400,  gasCons: 4,   coalNote: 'Rising imports for power', oilNote: 'Mostly imported', gasNote: 'Malampaya field nearly depleted' },
+    { country: 'South Africa', coal: -32, oil: 90,  gas: 0,   coalCons: 170, oilCons: 500,  gasCons: 4,   coalNote: 'Exports via Richards Bay', oilNote: 'Sasol CTL covers some demand', gasNote: 'Mozambique pipeline small' },
+    { country: 'Poland',       coal: 5,   oil: 96,  gas: 78,  coalCons: 100, oilCons: 600,  gasCons: 18,  coalNote: 'Domestic lignite + hard coal', oilNote: 'Russian pipeline + diversifying', gasNote: 'Baltic Pipe from Norway' },
+];
+
+// Energy demand growth data (indexed, 2015=100)
+const demandYears = ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023'];
+const demandGrowth = {
+    coal: {
+        'China':     [100, 98, 101, 104, 105, 103, 108, 111, 116],
+        'India':     [100, 105, 111, 116, 117, 109, 119, 126, 130],
+        'USA':       [100, 91, 89, 86, 73, 59, 65, 64, 55],
+        'Indonesia': [100, 113, 125, 144, 163, 175, 200, 225, 250],
+        'Japan':     [100, 97, 100, 97, 95, 84, 89, 92, 92],
+        'Germany':   [100, 94, 94, 86, 75, 61, 72, 78, 67],
+        'Vietnam':   [100, 114, 131, 150, 163, 169, 181, 194, 200],
+        'Turkey':    [100, 106, 111, 111, 111, 111, 122, 128, 128],
+    },
+    oil: {
+        'China':     [100, 103, 107, 111, 118, 113, 124, 123, 133],
+        'India':     [100, 105, 110, 115, 117, 102, 115, 121, 127],
+        'USA':       [100, 101, 103, 105, 105, 93, 101, 103, 104],
+        'Japan':     [100, 98, 96, 95, 93, 83, 85, 84, 83],
+        'South Korea':[100,103, 106, 108, 106, 95, 100, 102, 103],
+        'Brazil':    [100, 97, 99, 101, 103, 93, 99, 103, 106],
+        'Indonesia': [100, 102, 106, 110, 113, 103, 108, 112, 113],
+        'EU-27':     [100, 102, 103, 104, 104, 88, 95, 97, 98],
+    },
+    gas: {
+        'China':     [100, 108, 123, 144, 159, 169, 192, 188, 197],
+        'India':     [100, 102, 110, 116, 120, 110, 116, 114, 120],
+        'USA':       [100, 101, 104, 108, 109, 106, 110, 111, 111],
+        'Japan':     [100, 95, 95, 90, 86, 81, 86, 84, 86],
+        'EU-27':     [100, 104, 107, 107, 107, 100, 103, 90, 85],
+        'South Korea':[100,102, 107, 112, 110, 105, 112, 108, 109],
+        'Australia': [100, 105, 110, 113, 115, 112, 118, 120, 118],
+        'Turkey':    [100, 96, 108, 104, 96, 98, 110, 104, 108],
+    }
+};
+
 // Supply sources for coal
 const coalSources = [
     { importer: 'Japan', s1: 'Australia', s1p: 60, s2: 'Indonesia', s2p: 17, s3: 'Russia', s3p: 10, hhi: 4100 },
@@ -441,6 +592,324 @@ makeDepChart('chartOilImports', oilImportData, 'oil', oilColor);
 
 // Gas imports chart
 makeDepChart('chartGasImports', gasImportData, 'gas', gasColor);
+
+// ============================================================
+// NEW: Country Profile Selector
+// ============================================================
+(function() {
+    const select = document.getElementById('countrySelect');
+    countryProfiles.forEach(function(p, i) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = p.country;
+        select.appendChild(opt);
+    });
+
+    const ctx = document.getElementById('chartCountryProfile').getContext('2d');
+    window._profileChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Coal', 'Oil', 'Gas'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: [coalColor, oilColor, gasColor],
+                borderRadius: 6,
+                barThickness: 50,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var lines = [ctx.raw + '% import dependency'];
+                            var idx = parseInt(document.getElementById('countrySelect').value);
+                            var country = countryProfiles[idx].country;
+                            var commodity = ['coal', 'oil', 'gas'][ctx.dataIndex];
+                            var srcArr = commodity === 'coal' ? coalSources : commodity === 'oil' ? oilSources : gasSources;
+                            var src = srcArr.find(function(s) { return s.importer === country; });
+                            if (src) {
+                                lines.push('');
+                                lines.push('Top sources:');
+                                lines.push('  #1 ' + src.s1 + ' (' + src.s1p + '%)');
+                                lines.push('  #2 ' + src.s2 + ' (' + src.s2p + '%)');
+                                lines.push('  #3 ' + src.s3 + ' (' + src.s3p + '%)');
+                            }
+                            return lines;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: -200, max: 110,
+                    grid: { color: '#f0f0f0' },
+                    ticks: { callback: function(v) { return v + '%'; }, font: { size: 11 } },
+                    title: { display: true, text: 'Import Dependency (%)', font: { size: 11 } }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    // trigger initial
+    updateCountryProfile();
+})();
+
+function updateCountryProfile() {
+    const idx = parseInt(document.getElementById('countrySelect').value);
+    const p = countryProfiles[idx];
+    const chart = window._profileChart;
+    chart.data.datasets[0].data = [p.coal, p.oil, p.gas];
+    chart.options.scales.y.min = Math.min(-100, p.coal, p.oil, p.gas) - 20;
+    chart.update();
+
+    // Update metrics
+    const metricsDiv = document.getElementById('profileMetrics');
+    function depLabel(val) {
+        if (val > 80) return '<span style="color:var(--oil);font-weight:600">High dependency</span>';
+        if (val > 30) return '<span style="color:#e67e22;font-weight:600">Moderate</span>';
+        if (val >= 0) return '<span style="color:var(--accent);font-weight:600">Low</span>';
+        return '<span style="color:var(--accent);font-weight:600">Net exporter</span>';
+    }
+    metricsDiv.innerHTML =
+        '<div class="profile-metric" style="border-top:3px solid ' + coalColor + '">' +
+            '<div class="pm-label">Coal</div>' +
+            '<div class="pm-value" style="color:' + coalColor + '">' + p.coal + '%</div>' +
+            '<div class="pm-detail">' + depLabel(p.coal) + '</div>' +
+            '<div class="pm-detail">' + p.coalNote + '</div>' +
+        '</div>' +
+        '<div class="profile-metric" style="border-top:3px solid ' + oilColor + '">' +
+            '<div class="pm-label">Oil</div>' +
+            '<div class="pm-value" style="color:' + oilColor + '">' + p.oil + '%</div>' +
+            '<div class="pm-detail">' + depLabel(p.oil) + '</div>' +
+            '<div class="pm-detail">' + p.oilNote + '</div>' +
+        '</div>' +
+        '<div class="profile-metric" style="border-top:3px solid ' + gasColor + '">' +
+            '<div class="pm-label">Gas</div>' +
+            '<div class="pm-value" style="color:' + gasColor + '">' + p.gas + '%</div>' +
+            '<div class="pm-detail">' + depLabel(p.gas) + '</div>' +
+            '<div class="pm-detail">' + p.gasNote + '</div>' +
+        '</div>';
+}
+
+// ============================================================
+// NEW: Energy Demand Growth Charts
+// ============================================================
+function makeDemandChart(canvasId, commodityData) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const countries = Object.keys(commodityData);
+    const datasets = countries.map(function(c) {
+        return {
+            label: c,
+            data: commodityData[c],
+            borderColor: getCountryColor(c),
+            backgroundColor: getCountryColor(c) + '20',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            tension: 0.3,
+            fill: false,
+        };
+    });
+    return new Chart(ctx, {
+        type: 'line',
+        data: { labels: demandYears, datasets: datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { boxWidth: 14, font: { size: 11 }, padding: 12 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var change = ctx.raw - 100;
+                            var sign = change >= 0 ? '+' : '';
+                            return ctx.dataset.label + ': ' + ctx.raw + ' (' + sign + change + '%)';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    title: { display: true, text: 'Index (2015 = 100)', font: { size: 11 } },
+                    grid: { color: '#f0f0f0' },
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+makeDemandChart('chartDemandCoal', demandGrowth.coal);
+makeDemandChart('chartDemandOil', demandGrowth.oil);
+makeDemandChart('chartDemandGas', demandGrowth.gas);
+
+// ============================================================
+// NEW: Marimekko Chart (consumption volume on x, % import dep on y)
+// ============================================================
+function drawMarimekko(canvasId, tooltipId, importData, unit, sourceData) {
+    var canvas = document.getElementById(canvasId);
+    var tooltip = document.getElementById(tooltipId);
+    var ctx = canvas.getContext('2d');
+
+    // Only show importers (dep > 0) sorted by consumption descending
+    var data = importData.filter(function(d) { return d.dep > 0 && d.cons; })
+        .sort(function(a, b) { return b.cons - a.cons; });
+
+    var totalCons = data.reduce(function(s, d) { return s + d.cons; }, 0);
+
+    // Chart area
+    var padding = { top: 10, right: 20, bottom: 60, left: 50 };
+
+    function render() {
+        var W = canvas.clientWidth;
+        var H = canvas.clientHeight;
+        canvas.width = W * (window.devicePixelRatio || 1);
+        canvas.height = H * (window.devicePixelRatio || 1);
+        ctx.setTransform((window.devicePixelRatio || 1), 0, 0, (window.devicePixelRatio || 1), 0, 0);
+
+        var cw = W - padding.left - padding.right;
+        var ch = H - padding.top - padding.bottom;
+        var gap = 2;
+
+        ctx.clearRect(0, 0, W, H);
+
+        // Y axis
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = '#7f8c8d';
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (var pct = 0; pct <= 100; pct += 25) {
+            var y = padding.top + ch - (pct / 100) * ch;
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(W - padding.right, y);
+            ctx.stroke();
+            ctx.fillText(pct + '%', padding.left - 6, y);
+        }
+        // Y axis label
+        ctx.save();
+        ctx.translate(12, padding.top + ch / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.font = '11px Inter, sans-serif';
+        ctx.fillText('Import Dependency (%)', 0, 0);
+        ctx.restore();
+
+        // Draw bars
+        var cumX = 0;
+        var hitRects = [];
+        data.forEach(function(d) {
+            var barW = (d.cons / totalCons) * cw - gap;
+            if (barW < 2) barW = 2;
+            var barH = Math.max((d.dep / 100) * ch, 1);
+            var x = padding.left + cumX;
+            var y = padding.top + ch - barH;
+
+            ctx.fillStyle = getCountryColor(d.country) + 'cc';
+            ctx.fillRect(x, y, barW, barH);
+
+            // Border
+            ctx.strokeStyle = getCountryColor(d.country);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, barW, barH);
+
+            // Label (only if bar is wide enough)
+            if (barW > 28) {
+                ctx.fillStyle = '#fff';
+                ctx.font = '600 10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                var label = d.country;
+                if (barW < 55) label = d.country.substring(0, 5);
+                ctx.fillText(label, x + barW / 2, y + barH / 2);
+            }
+
+            // X axis label (country name rotated)
+            ctx.save();
+            ctx.fillStyle = '#7f8c8d';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.translate(x + barW / 2, padding.top + ch + 6);
+            ctx.rotate(-Math.PI / 4);
+            ctx.fillText(d.country, 0, 0);
+            ctx.restore();
+
+            hitRects.push({ x: x, y: y, w: barW, h: barH, data: d, xEnd: x + barW });
+            cumX += barW + gap;
+        });
+
+        // X axis label
+        ctx.fillStyle = '#7f8c8d';
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Consumption Volume (' + unit + ') — column width proportional to consumption', padding.left + cw / 2, H - 12);
+
+        return hitRects;
+    }
+
+    var hitRects = render();
+    window.addEventListener('resize', function() { hitRects = render(); });
+
+    // Tooltip on mousemove
+    canvas.addEventListener('mousemove', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        var mx = e.clientX - rect.left;
+        var my = e.clientY - rect.top;
+        var hit = null;
+        for (var i = 0; i < hitRects.length; i++) {
+            var r = hitRects[i];
+            if (mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h) {
+                hit = r;
+                break;
+            }
+        }
+        if (hit) {
+            var d = hit.data;
+            var srcArr = sourceData;
+            var src = srcArr ? srcArr.find(function(s) { return s.importer === d.country; }) : null;
+            var srcHtml = '';
+            if (src) {
+                srcHtml = '<div class="tt-sources"><strong>Top suppliers:</strong><br>' +
+                    '#1 ' + src.s1 + ' (' + src.s1p + '%) · ' +
+                    '#2 ' + src.s2 + ' (' + src.s2p + '%) · ' +
+                    '#3 ' + src.s3 + ' (' + src.s3p + '%)</div>';
+            }
+            tooltip.innerHTML =
+                '<div class="tt-title">' + d.country + '</div>' +
+                '<div class="tt-row"><span class="tt-label">Import dependency</span><strong>' + d.dep + '%</strong></div>' +
+                '<div class="tt-row"><span class="tt-label">Consumption</span>' + fmt(d.cons) + ' ' + unit + '</div>' +
+                '<div class="tt-row"><span class="tt-label">Net imports</span>' + fmt(d.netImp) + ' ' + unit + '</div>' +
+                '<div class="tt-row"><span class="tt-label">Production</span>' + fmt(d.prod) + ' ' + unit + '</div>' +
+                srcHtml;
+            tooltip.style.display = 'block';
+            var tx = e.clientX - rect.left + 15;
+            var ty = e.clientY - rect.top - 10;
+            if (tx + 200 > rect.width) tx = e.clientX - rect.left - 210;
+            tooltip.style.left = tx + 'px';
+            tooltip.style.top = ty + 'px';
+        } else {
+            tooltip.style.display = 'none';
+        }
+    });
+    canvas.addEventListener('mouseleave', function() {
+        tooltip.style.display = 'none';
+    });
+}
+
+drawMarimekko('canvasMarimekkoCoal', 'ttCoal', coalImportData, 'Mt', coalSources);
+drawMarimekko('canvasMarimekkoOil', 'ttOil', oilImportData, 'kb/d', oilSources);
+drawMarimekko('canvasMarimekkoGas', 'ttGas', gasImportData, 'bcm', gasSources);
 
 // Three-way comparison (grouped bar)
 (function() {
@@ -617,6 +1086,22 @@ populateDataTable('dataGasTable', gasImportData);
 // ============================================================
 // TAB SWITCHING
 // ============================================================
+
+function showDemandTab(tab) {
+    document.querySelectorAll('#demand-coal,#demand-oil,#demand-gas').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('demand-' + tab).classList.add('active');
+    var btns = document.getElementById('demand-coal').parentElement.querySelectorAll('.tab-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    event.target.classList.add('active');
+}
+
+function showMarimekkoTab(tab) {
+    document.querySelectorAll('#marimekko-coal,#marimekko-oil,#marimekko-gas').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('marimekko-' + tab).classList.add('active');
+    var btns = document.getElementById('marimekko-coal').parentElement.querySelectorAll('.tab-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    event.target.classList.add('active');
+}
 
 function showSupplyTab(tab) {
     document.querySelectorAll('#supply-coal,#supply-oil,#supply-gas').forEach(el => el.classList.remove('active'));
