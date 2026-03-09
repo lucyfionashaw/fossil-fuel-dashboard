@@ -111,6 +111,26 @@
         </div>
     </div>
 
+    <div class="section">
+        <span class="origin-tag">From: Import Exposure</span>
+        <h2>Individual Commodity Import Dependency Charts</h2>
+        <p class="section-subtitle">Replaced by the combined three-commodity comparison chart. Showing net imports as % of consumption (2023).</p>
+        <div class="chart-row" style="margin-bottom:0;">
+            <div>
+                <h3>Coal Import Dependency</h3>
+                <div class="chart-container-wide"><canvas id="chartCoalDep"></canvas></div>
+            </div>
+            <div>
+                <h3>Oil Import Dependency</h3>
+                <div class="chart-container-wide"><canvas id="chartOilDep"></canvas></div>
+            </div>
+        </div>
+        <div style="margin-top:1rem;">
+            <h3>Gas Import Dependency</h3>
+            <div class="chart-container-wide"><canvas id="chartGasDep"></canvas></div>
+        </div>
+    </div>
+
 </div>
 
 <div class="footer">
@@ -268,6 +288,116 @@ function makeTrendChart(canvasId, trendsObj, baseColor) {
 
 makeTrendChart('chartOilTrend', oilTrends, oilColor);
 makeTrendChart('chartGasTrend', gasTrends, gasColor);
+
+// ============================================================
+// Individual commodity import dependency charts (moved from Import Exposure)
+// ============================================================
+const coalColor = PALETTE.coal;
+
+const coalDepData = [
+    { country: 'Japan', dep: 100, notes: 'Zero domestic production' },
+    { country: 'South Korea', dep: 100, notes: 'No domestic coal' },
+    { country: 'Taiwan', dep: 100, notes: 'No domestic production' },
+    { country: 'Germany', dep: 98, notes: 'Only lignite domestic' },
+    { country: 'UK', dep: 95, notes: 'Near-zero coal power' },
+    { country: 'Brazil', dep: 75, notes: 'Imports met coal' },
+    { country: 'Philippines', dep: 57, notes: 'Rising imports for power' },
+    { country: 'EU-27', dep: 57, notes: 'Hard coal mostly imported' },
+    { country: 'Vietnam', dep: 42, notes: 'Net importer since ~2015' },
+    { country: 'Turkey', dep: 39, notes: 'Domestic lignite partial' },
+    { country: 'Pakistan', dep: 44, notes: 'Growing thermal imports' },
+    { country: 'India', dep: 15, notes: 'Mostly coking coal imports' },
+    { country: 'China', dep: 8, notes: '~92% self-sufficient' },
+    { country: 'Poland', dep: 5, notes: 'Domestic lignite + hard coal' },
+    { country: 'USA', dep: -7, notes: 'Net exporter' },
+    { country: 'South Africa', dep: -35, notes: 'Exports via Richards Bay' },
+    { country: 'Canada', dep: -82, notes: 'Net exporter, mostly met coal' },
+    { country: 'Russia', dep: -91, notes: 'Major exporter to Asia' },
+    { country: 'Colombia', dep: -686, notes: 'Major thermal exporter' },
+    { country: 'Indonesia', dep: -288, notes: 'Worlds largest thermal exporter' },
+    { country: 'Australia', dep: -370, notes: '#1 met, #2 thermal exporter' },
+];
+const oilDepData = [
+    { country: 'Japan', dep: 99, notes: 'Near-total Middle East dependency' },
+    { country: 'Taiwan', dep: 99, notes: 'No significant production' },
+    { country: 'South Korea', dep: 98, notes: 'Major refining hub' },
+    { country: 'Germany', dep: 96, notes: 'Minimal domestic' },
+    { country: 'EU-27', dep: 90, notes: 'Norway is top supplier' },
+    { country: 'Turkey', dep: 89, notes: 'Russia, Iraq, KSA suppliers' },
+    { country: 'India', dep: 85, notes: 'Increased Russian crude since 2022' },
+    { country: 'Pakistan', dep: 78, notes: 'Imports from UAE, KSA' },
+    { country: 'China', dep: 72, notes: 'Worlds largest crude importer' },
+    { country: 'Thailand', dep: 63, notes: 'Some condensate offsets' },
+    { country: 'Indonesia', dep: 30, notes: 'Left OPEC; production declining' },
+    { country: 'USA', dep: -3, notes: 'Net petroleum exporter since 2020' },
+    { country: 'Brazil', dep: -17, notes: 'Pre-salt deepwater' },
+    { country: 'Canada', dep: -148, notes: 'Oil sands; exports to US' },
+    { country: 'Russia', dep: -182, notes: 'Diverted exports from EU' },
+    { country: 'Saudi Arabia', dep: -171, notes: 'OPEC swing producer' },
+];
+const gasDepData = [
+    { country: 'Turkey', dep: 98, notes: 'Pipeline + LNG' },
+    { country: 'South Korea', dep: 98, notes: 'Almost entirely LNG' },
+    { country: 'Taiwan', dep: 98, notes: 'All LNG' },
+    { country: 'Japan', dep: 98, notes: '~97% LNG imports' },
+    { country: 'Germany', dep: 95, notes: 'Built 3 floating LNG terminals' },
+    { country: 'Italy', dep: 92, notes: 'Algeria, Azerbaijan, LNG' },
+    { country: 'EU-27', dep: 83, notes: 'Shift from Russia to US/Qatar LNG' },
+    { country: 'UK', dep: 52, notes: 'Norway pipeline + LNG' },
+    { country: 'India', dep: 43, notes: 'Growing LNG imports' },
+    { country: 'China', dep: 40, notes: 'Pipeline + LNG' },
+    { country: 'Thailand', dep: 33, notes: 'Myanmar pipeline + LNG' },
+    { country: 'Pakistan', dep: 21, notes: 'Domestic declining' },
+    { country: 'USA', dep: -18, notes: 'Worlds largest gas producer' },
+    { country: 'Russia', dep: -40, notes: 'Pipeline to China growing' },
+    { country: 'Australia', dep: -238, notes: '#1 LNG exporter' },
+    { country: 'Qatar', dep: -343, notes: '#2 LNG exporter' },
+    { country: 'Norway', dep: -2950, notes: 'Key EU pipeline supplier' },
+];
+
+function makeGraveyardDepChart(canvasId, data, baseColor) {
+    var sorted = data.slice().sort(function(a, b) { return b.dep - a.dep; });
+    new Chart(document.getElementById(canvasId), {
+        type: 'bar',
+        data: {
+            labels: sorted.map(function(d) { return d.country; }),
+            datasets: [{
+                data: sorted.map(function(d) { return d.dep; }),
+                backgroundColor: sorted.map(function(d) { return d.dep >= 0 ? baseColor : accentColor; }),
+                borderRadius: 3,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var d = sorted[ctx.dataIndex];
+                            return d.dep + '% — ' + d.notes;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: '#f0f0f0' },
+                    ticks: { callback: function(v) { return v + '%'; }, font: { size: 11 } },
+                    max: 100,
+                    title: { display: true, text: 'Net imports as % of consumption', font: { size: 11 } }
+                },
+                y: { ticks: { font: { size: 10 } }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+makeGraveyardDepChart('chartCoalDep', coalDepData, coalColor);
+makeGraveyardDepChart('chartOilDep', oilDepData, oilColor);
+makeGraveyardDepChart('chartGasDep', gasDepData, gasColor);
 </script>
 
 <script src="nav.js"></script>

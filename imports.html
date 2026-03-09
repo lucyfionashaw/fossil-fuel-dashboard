@@ -138,6 +138,7 @@
                 <div id="profileMetrics" class="profile-metrics"></div>
             </div>
         </div>
+        <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Sources: <a href="https://www.energyinst.org/statistical-review" target="_blank" style="color:var(--text-secondary);">Energy Institute Statistical Review 2024</a>, <a href="https://www.iea.org/data-and-statistics" target="_blank" style="color:var(--text-secondary);">IEA World Energy Balances 2024</a>, <a href="https://www.eia.gov/international/data/world" target="_blank" style="color:var(--text-secondary);">US EIA International Energy Statistics</a></p>
     </div>
 
     <!-- NEW: Energy Demand Growth -->
@@ -182,33 +183,15 @@
         <div class="tab-content" id="marimekko-gas">
             <div class="marimekko-wrap"><canvas id="canvasMarimekkoGas"></canvas><div class="marimekko-tooltip" id="ttGas"></div></div>
         </div>
+        <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Sources: <a href="https://www.energyinst.org/statistical-review" target="_blank" style="color:var(--text-secondary);">Energy Institute Statistical Review 2024</a>, <a href="https://www.iea.org/data-and-statistics" target="_blank" style="color:var(--text-secondary);">IEA World Energy Balances 2024</a></p>
     </div>
 
-    <!-- Coal Import Dependency -->
-    <div class="chart-row">
-        <div class="section">
-            <h2>Coal Import Dependency by Country</h2>
-            <p class="section-subtitle">% of domestic coal consumption met by net imports (2023). Negative = net exporter.</p>
-            <div class="chart-container-tall"><canvas id="chartCoalImports"></canvas></div>
-        </div>
-        <div class="section">
-            <h2>Oil Import Dependency by Country</h2>
-            <p class="section-subtitle">% of domestic oil consumption met by net imports (2023). Negative = net exporter.</p>
-            <div class="chart-container-tall"><canvas id="chartOilImports"></canvas></div>
-        </div>
-    </div>
-
-    <div class="chart-row">
-        <div class="section">
-            <h2>Gas Import Dependency by Country</h2>
-            <p class="section-subtitle">% of domestic gas consumption met by net imports (2023). Negative = net exporter.</p>
-            <div class="chart-container-tall"><canvas id="chartGasImports"></canvas></div>
-        </div>
-        <div class="section">
-            <h2>Three-Commodity Comparison: Major Economies</h2>
-            <p class="section-subtitle">Import dependency across coal, oil and gas for the world's largest energy consumers.</p>
-            <div class="chart-container-tall"><canvas id="chartThreeWay"></canvas></div>
-        </div>
+    <!-- Three-Commodity Comparison -->
+    <div class="section">
+        <h2>Import Dependency by Country: Coal, Oil &amp; Gas</h2>
+        <p class="section-subtitle">Net imports as % of domestic consumption (2023). Positive = net importer, negative = net exporter. 0% line marks self-sufficiency.</p>
+        <div style="position:relative;width:100%;height:720px;"><canvas id="chartThreeWay"></canvas></div>
+        <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Sources: <a href="https://www.energyinst.org/statistical-review" target="_blank" style="color:var(--text-secondary);">Energy Institute Statistical Review 2024</a>, <a href="https://www.iea.org/data-and-statistics" target="_blank" style="color:var(--text-secondary);">IEA World Energy Balances 2024</a>, <a href="https://www.eia.gov/international/data/world" target="_blank" style="color:var(--text-secondary);">US EIA International Energy Statistics</a></p>
     </div>
 
     <!-- Supply Source Diversification -->
@@ -408,22 +391,6 @@ const gasImportData = [
     { country: 'Turkmenistan', dep: -80, prod: 80, cons: 30, netImp: -50, status: 'Exporter', notes: 'Pipeline exports to China (CNPC)' },
 ];
 
-// Three-way comparison for major economies
-const threeWayData = [
-    { country: 'Japan', coal: 100, oil: 99, gas: 97 },
-    { country: 'S. Korea', coal: 100, oil: 98, gas: 98 },
-    { country: 'Taiwan', coal: 100, oil: 99, gas: 98 },
-    { country: 'Germany', coal: 98, oil: 96, gas: 95 },
-    { country: 'EU-27', coal: 57, oil: 90, gas: 83 },
-    { country: 'Turkey', coal: 62, oil: 89, gas: 98 },
-    { country: 'India', coal: 27, oil: 85, gas: 48 },
-    { country: 'China', coal: 8, oil: 72, gas: 40 },
-    { country: 'Brazil', coal: 75, oil: -3, gas: 12 },
-    { country: 'USA', coal: -8, oil: -3, gas: -12 },
-    { country: 'Russia', coal: -48, oil: -170, gas: -37 },
-    { country: 'Australia', coal: -72, oil: 55, gas: -85 },
-];
-
 // Extended country profiles (for country selector)
 const countryProfiles = [
     { country: 'Japan',        coal: 100, oil: 99,  gas: 97,  coalCons: 175, oilCons: 3300, gasCons: 90,  coalNote: 'Zero domestic production', oilNote: 'Near-total Middle East dependency', gasNote: '~97% LNG imports' },
@@ -447,6 +414,29 @@ const countryProfiles = [
     { country: 'South Africa', coal: -32, oil: 90,  gas: 0,   coalCons: 170, oilCons: 500,  gasCons: 4,   coalNote: 'Exports via Richards Bay', oilNote: 'Sasol CTL covers some demand', gasNote: 'Mozambique pipeline small' },
     { country: 'Poland',       coal: 5,   oil: 96,  gas: 78,  coalCons: 100, oilCons: 600,  gasCons: 18,  coalNote: 'Domestic lignite + hard coal', oilNote: 'Russian pipeline + diversifying', gasNote: 'Baltic Pipe from Norway' },
 ];
+
+// ============================================================
+// RECALCULATE dep from raw data: dep = netImp / cons * 100
+// ============================================================
+[coalImportData, oilImportData, gasImportData].forEach(function(arr) {
+    arr.forEach(function(d) {
+        if (d.cons > 0) d.dep = Math.round((d.netImp / d.cons) * 100);
+    });
+});
+// Sync countryProfiles to corrected dep values
+countryProfiles.forEach(function(p) {
+    var c = coalImportData.find(function(d) { return d.country === p.country || (p.country === 'South Korea' && d.country === 'South Korea'); });
+    if (c) p.coal = c.dep;
+    var o = oilImportData.find(function(d) { return d.country === p.country; });
+    if (o) p.oil = o.dep;
+    var g = gasImportData.find(function(d) { return d.country === p.country; });
+    if (g) p.gas = g.dep;
+});
+
+// Three-way comparison — derived from country profiles, sorted by average dependency
+const threeWayData = countryProfiles
+    .map(function(p) { return { country: p.country, coal: p.coal, oil: p.oil, gas: p.gas }; })
+    .sort(function(a, b) { return ((b.coal + b.oil + b.gas) / 3) - ((a.coal + a.oil + a.gas) / 3); });
 
 // Energy demand growth data (indexed, 2015=100)
 const demandYears = ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023'];
@@ -531,67 +521,9 @@ const gasColor = PALETTE.gas;
 const gasColorLight = PALETTE.gasLight;
 const accentColor = PALETTE.accent;
 
-function depColor(val, baseColor) {
-    return val >= 0 ? baseColor : accentColor;
-}
-
-function makeDepChart(canvasId, data, commodity, baseColor) {
-    const sorted = [...data].sort((a, b) => b.dep - a.dep);
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    return new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: sorted.map(d => d.country),
-            datasets: [{
-                data: sorted.map(d => d.dep),
-                backgroundColor: sorted.map(d => d.dep >= 0 ? baseColor : accentColor),
-                borderWidth: 0,
-                borderRadius: 3,
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            const d = sorted[ctx.dataIndex];
-                            return d.dep + '% — ' + d.notes;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { color: '#f0f0f0' },
-                    ticks: { callback: v => v + '%', font: { size: 11 } },
-                    min: Math.min(-100, ...sorted.map(d => d.dep)) - 10,
-                    max: 110
-                },
-                y: {
-                    ticks: { font: { size: 11 } },
-                    grid: { display: false }
-                }
-            }
-        }
-    });
-}
-
 // ============================================================
 // INITIALIZE CHARTS
 // ============================================================
-
-// Coal imports chart
-makeDepChart('chartCoalImports', coalImportData, 'coal', coalColor);
-
-// Oil imports chart
-makeDepChart('chartOilImports', oilImportData, 'oil', oilColor);
-
-// Gas imports chart
-makeDepChart('chartGasImports', gasImportData, 'gas', gasColor);
 
 // ============================================================
 // NEW: Country Profile Selector
@@ -645,10 +577,10 @@ makeDepChart('chartGasImports', gasImportData, 'gas', gasColor);
             },
             scales: {
                 y: {
-                    min: -200, max: 110,
+                    min: -100, max: 100,
                     grid: { color: '#f0f0f0' },
                     ticks: { callback: function(v) { return v + '%'; }, font: { size: 11 } },
-                    title: { display: true, text: 'Import Dependency (%)', font: { size: 11 } }
+                    title: { display: true, text: '← Net exporter | Net importer →', font: { size: 11, style: 'italic' } }
                 },
                 x: { grid: { display: false } }
             }
@@ -759,9 +691,9 @@ function drawMarimekko(canvasId, tooltipId, importData, unit, sourceData) {
     var tooltip = document.getElementById(tooltipId);
     var ctx = canvas.getContext('2d');
 
-    // Only show importers (dep > 0) sorted by consumption descending
+    // Only show importers (dep > 0) sorted by import dependency descending
     var data = importData.filter(function(d) { return d.dep > 0 && d.cons; })
-        .sort(function(a, b) { return b.cons - a.cons; });
+        .sort(function(a, b) { return b.dep - a.dep; });
 
     var totalCons = data.reduce(function(s, d) { return s + d.cons; }, 0);
 
@@ -960,11 +892,12 @@ drawMarimekko('canvasMarimekkoGas', 'ttGas', gasImportData, 'bcm', gasSources);
                 x: {
                     grid: { color: '#f0f0f0' },
                     ticks: { callback: v => v + '%', font: { size: 11 } },
-                    min: -200,
-                    max: 110
+                    min: -100,
+                    max: 100,
+                    title: { display: true, text: '← Net exporter | Net importer →', font: { size: 11, style: 'italic' } }
                 },
                 y: {
-                    ticks: { font: { size: 11 } },
+                    ticks: { font: { size: 10 } },
                     grid: { display: false }
                 }
             }
