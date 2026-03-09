@@ -52,8 +52,19 @@
 
         .suggest-box {
             background: #f0f7ff; border: 1px solid #cce5ff; border-radius: 8px;
-            padding: 1.2rem; margin-top: 1.5rem; font-size: 0.85rem;
+            padding: 1.2rem; margin-bottom: 1.5rem; font-size: 0.85rem;
         }
+
+        .completed-toggle {
+            cursor: pointer; user-select: none;
+        }
+        .completed-toggle::after {
+            content: '▸'; margin-left: 0.4rem; font-size: 0.9rem; transition: transform 0.2s;
+            display: inline-block;
+        }
+        .completed-toggle.open::after { transform: rotate(90deg); }
+        #completedEdits { display: none; }
+        #completedEdits.visible { display: block; }
         .suggest-box strong { color: #004085; }
     </style>
 </head>
@@ -68,8 +79,12 @@
 
 <div class="container">
 
+    <div class="suggest-box">
+        <strong>Have a suggestion?</strong> This dashboard aims to surface underused public data on fossil fuel markets. If you know of a dataset that should be included, or spot an error in the existing data, please <a href="https://github.com/lucyfionashaw/fossil-fuel-dashboard/issues" style="color:var(--accent)">open a GitHub issue</a>.
+    </div>
+
     <div class="roadmap-intro">
-        <p>This page tracks planned improvements, data updates, and new features for the dashboard. If you have suggestions for additional data, corrections, or new analysis sections, feel free to open an issue on <a href="https://github.com/lucyfionashaw/fossil-fuel-dashboard/issues" style="color:var(--accent)">GitHub</a>.</p>
+        <p>This page tracks planned improvements, data updates, and new features for the dashboard.</p>
     </div>
 
     <div class="roadmap-section">
@@ -80,13 +95,9 @@
     </div>
 
     <div class="roadmap-section">
-        <h2>Recently Completed <span class="status-badge badge-done">Done</span></h2>
+        <h2 class="completed-toggle" onclick="this.classList.toggle('open'); document.getElementById('completedEdits').classList.toggle('visible');">Recently Completed <span class="status-badge badge-done">Done</span></h2>
         <ul class="edit-list" id="completedEdits">
         </ul>
-    </div>
-
-    <div class="suggest-box">
-        <strong>Have a suggestion?</strong> This dashboard aims to surface underused public data on fossil fuel markets. If you know of a dataset that should be included, or spot an error in the existing data, please <a href="https://github.com/lucyfionashaw/fossil-fuel-dashboard/issues" style="color:var(--accent)">open a GitHub issue</a>.
     </div>
 
 </div>
