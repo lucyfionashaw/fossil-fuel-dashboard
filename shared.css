@@ -10,7 +10,7 @@
     --solar: #f1c40f; --wind: #3498db; --hydro: #2980b9;
     --nuclear: #e84393; --biomass: #27ae60;
     /* Political colors */
-    --democrat: #2166ac; --republican: #d6604d;
+    --democrat: #2166ac; --republican: #cc0000;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

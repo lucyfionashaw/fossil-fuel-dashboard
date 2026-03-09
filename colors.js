@@ -26,7 +26,7 @@ const PALETTE = {
 
     // === POLITICAL COLORS ===
     democrat: '#2166ac',    // blue
-    republican: '#d6604d',  // red
+    republican: '#cc0000',  // red
     independent: '#7f8c8d',
     otherParty: '#95a5a6',
 
