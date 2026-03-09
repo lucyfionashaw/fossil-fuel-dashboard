@@ -1,11 +1,16 @@
 /* shared.css — Global styles for all dashboard pages */
 :root {
-    --coal: #3d3d3d; --coal-light: #6b6b6b;
+    --coal: #2d2d2d; --coal-light: #5a5a5a;
     --oil: #c0392b; --oil-light: #e74c3c;
-    --gas: #2980b9; --gas-light: #3498db;
+    --gas: #95a5a6; --gas-light: #bdc3c7;
     --bg: #f8f9fa; --card-bg: #ffffff;
     --text: #2c3e50; --text-secondary: #7f8c8d;
     --border: #e0e0e0; --accent: #16a085;
+    /* Technology / generation colors */
+    --solar: #f1c40f; --wind: #3498db; --hydro: #2980b9;
+    --nuclear: #e84393; --biomass: #27ae60;
+    /* Political colors */
+    --democrat: #2166ac; --republican: #d6604d;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

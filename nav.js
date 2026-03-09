@@ -1,9 +1,11 @@
 // nav.js — Shared navigation across all dashboard pages
 (function() {
-    const path = window.location.pathname.split('/').pop() || 'index.html';
+    let path = window.location.pathname.split('/').pop() || 'index.html';
+    if (path === '' || path === '/') path = 'index.html';
 
     const pages = [
-        { href: 'index.html', label: 'Market Value' },
+        { href: 'index.html', label: 'Overview' },
+        { href: 'marketvalue.html', label: 'Market Value' },
         { href: 'context.html', label: 'Energy Context' },
         { href: 'phaseout.html', label: 'Coal Phaseout' },
         { href: 'jobs.html', label: 'Jobs' },

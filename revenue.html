@@ -67,7 +67,7 @@
 
 <div class="header">
     <h1>Government Revenue from Fossil Fuels</h1>
-    <div class="subtitle">Task 5: Income tax, royalties, dividends &amp; fiscal dependence on coal, oil &amp; gas (2023/24 data)</div>
+    <div class="subtitle">Income tax, royalties, dividends &amp; fiscal dependence on coal, oil &amp; gas (2023/24 data)</div>
 </div>
 
 <div class="container">
@@ -297,10 +297,11 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard &middot; Task 5 of 10 Analysis Verticals</p>
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Section 7: Govt Revenue</p>
     <p>Data: 2023/24 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
+<script src="colors.js"></script>
 <script>
 // ============================================================
 //  DATA
@@ -469,12 +470,12 @@ new Chart(document.getElementById('chartTopCountries'), {
             {
                 label: 'Gas',
                 data: topCountries.slice(0, 15).map(d => d.gas),
-                backgroundColor: 'rgba(41, 128, 185, 0.85)',
+                backgroundColor: 'rgba(149, 165, 166, 0.85)',
             },
             {
                 label: 'Coal',
                 data: topCountries.slice(0, 15).map(d => d.coal),
-                backgroundColor: 'rgba(61, 61, 61, 0.85)',
+                backgroundColor: 'rgba(45, 45, 45, 0.85)',
             },
         ]
     },
@@ -519,8 +520,8 @@ new Chart(document.getElementById('chartFiscalDependency'), {
             data: fiscalDep.slice(0, 15).map(d => d.pct),
             backgroundColor: fiscalDep.slice(0, 15).map(d => {
                 if (d.fuel === 'oil') return 'rgba(192, 57, 43, 0.75)';
-                if (d.fuel === 'gas') return 'rgba(41, 128, 185, 0.75)';
-                if (d.fuel === 'coal') return 'rgba(61, 61, 61, 0.75)';
+                if (d.fuel === 'gas') return 'rgba(149, 165, 166, 0.75)';
+                if (d.fuel === 'coal') return 'rgba(45, 45, 45, 0.75)';
                 return 'rgba(22, 160, 133, 0.75)';
             }),
             borderRadius: 3,
@@ -561,8 +562,8 @@ new Chart(document.getElementById('chartFuelBreakdown'), {
         labels: breakdownCountries.map(d => d.country),
         datasets: [
             { label: 'Oil', data: breakdownCountries.map(d => d.oil), backgroundColor: 'rgba(192, 57, 43, 0.8)' },
-            { label: 'Gas', data: breakdownCountries.map(d => d.gas), backgroundColor: 'rgba(41, 128, 185, 0.8)' },
-            { label: 'Coal', data: breakdownCountries.map(d => d.coal), backgroundColor: 'rgba(61, 61, 61, 0.8)' },
+            { label: 'Gas', data: breakdownCountries.map(d => d.gas), backgroundColor: 'rgba(149, 165, 166, 0.8)' },
+            { label: 'Coal', data: breakdownCountries.map(d => d.coal), backgroundColor: 'rgba(45, 45, 45, 0.8)' },
         ]
     },
     options: {
@@ -596,7 +597,7 @@ new Chart(document.getElementById('chartTrend'), {
             {
                 label: 'Oil',
                 data: trendData.oil,
-                borderColor: 'var(--oil)',
+                borderColor: PALETTE.oil,
                 backgroundColor: 'rgba(192, 57, 43, 0.1)',
                 fill: true,
                 tension: 0.3,
@@ -606,8 +607,8 @@ new Chart(document.getElementById('chartTrend'), {
             {
                 label: 'Gas',
                 data: trendData.gas,
-                borderColor: 'var(--gas)',
-                backgroundColor: 'rgba(41, 128, 185, 0.1)',
+                borderColor: PALETTE.gas,
+                backgroundColor: 'rgba(149, 165, 166, 0.1)',
                 fill: true,
                 tension: 0.3,
                 borderWidth: 2,
@@ -616,8 +617,8 @@ new Chart(document.getElementById('chartTrend'), {
             {
                 label: 'Coal',
                 data: trendData.coal,
-                borderColor: 'var(--coal)',
-                backgroundColor: 'rgba(61, 61, 61, 0.1)',
+                borderColor: PALETTE.coal,
+                backgroundColor: 'rgba(45, 45, 45, 0.1)',
                 fill: true,
                 tension: 0.3,
                 borderWidth: 2,
@@ -662,8 +663,8 @@ new Chart(document.getElementById('chartSOE'), {
             label: 'Total Revenue ($B)',
             data: sortedSOE.map(d => d.revenue),
             backgroundColor: sortedSOE.map(d => {
-                if (d.commodity.includes('Coal')) return 'rgba(61, 61, 61, 0.8)';
-                if (d.commodity.includes('Gas') && !d.commodity.includes('Oil')) return 'rgba(41, 128, 185, 0.8)';
+                if (d.commodity.includes('Coal')) return 'rgba(45, 45, 45, 0.8)';
+                if (d.commodity.includes('Gas') && !d.commodity.includes('Oil')) return 'rgba(149, 165, 166, 0.8)';
                 return 'rgba(192, 57, 43, 0.8)';
             }),
             borderRadius: 3,
@@ -703,7 +704,7 @@ new Chart(document.getElementById('chartSOEContrib'), {
         datasets: [
             { label: 'Dividends', data: soeContribData.map(d => d.dividends), backgroundColor: 'rgba(22, 160, 133, 0.8)' },
             { label: 'Taxes', data: soeContribData.map(d => d.taxes), backgroundColor: 'rgba(192, 57, 43, 0.8)' },
-            { label: 'Royalties', data: soeContribData.map(d => d.royalties), backgroundColor: 'rgba(41, 128, 185, 0.8)' },
+            { label: 'Royalties', data: soeContribData.map(d => d.royalties), backgroundColor: 'rgba(149, 165, 166, 0.8)' },
         ]
     },
     options: {

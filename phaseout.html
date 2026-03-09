@@ -3,26 +3,814 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coal Phaseout — Fossil Fuel Dashboard</title>
+    <title>Coal Phaseout &mdash; Fossil Fuel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
+    <style>
+        /* Page-specific styles */
+        .chart-container { position: relative; width: 100%; max-height: 420px; }
+        .chart-container-tall { position: relative; width: 100%; height: 550px; }
+        .chart-container-xl { position: relative; width: 100%; height: 650px; }
+        .chart-container-timeline { position: relative; width: 100%; height: 400px; }
+
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
+
+        .headline-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+        }
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.green { border-top-color: #27ae60; }
+        .headline-card.red { border-top-color: #c0392b; }
+        .headline-card.coal { border-top-color: var(--coal); }
+        .headline-card.accent { border-top-color: var(--accent); }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--accent); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout strong { color: var(--accent); }
+
+        .timeline-bar {
+            display: flex; align-items: center; padding: 0.3rem 0; font-size: 0.82rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .timeline-country { width: 120px; font-weight: 500; flex-shrink: 0; }
+        .timeline-track { flex: 1; position: relative; height: 24px; background: #f5f5f5; border-radius: 4px; }
+        .timeline-fill {
+            position: absolute; top: 2px; bottom: 2px; border-radius: 3px;
+            display: flex; align-items: center; justify-content: flex-end;
+            padding-right: 6px; font-size: 0.7rem; font-weight: 600; color: white;
+            min-width: 40px;
+        }
+        .timeline-done { background: #27ae60; }
+        .timeline-soon { background: #f39c12; }
+        .timeline-late { background: #e74c3c; }
+        .timeline-none { background: #95a5a6; }
+        .timeline-label { margin-left: 8px; font-size: 0.72rem; color: var(--text-secondary); width: 80px; flex-shrink: 0; text-align: right; }
+
+        .legend-inline { display: flex; flex-wrap: wrap; gap: 1rem; margin: 0.8rem 0; font-size: 0.78rem; }
+        .legend-inline span { display: flex; align-items: center; gap: 4px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+        .ppca-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+        @media (max-width: 600px) { .ppca-stats { grid-template-columns: 1fr; } }
+        .ppca-stat-card {
+            border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; text-align: center;
+        }
+        .ppca-stat-card .big { font-size: 2rem; font-weight: 700; }
+        .ppca-stat-card .desc { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        .status-badge {
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px;
+            font-size: 0.7rem; font-weight: 600;
+        }
+        .status-badge.done { background: #d4edda; color: #155724; }
+        .status-badge.committed { background: #fff3cd; color: #856404; }
+        .status-badge.none { background: #f8d7da; color: #721c24; }
+        .status-badge.member { background: #d1ecf1; color: #0c5460; }
+    </style>
 </head>
 <body>
+
 <div class="header">
     <h1>Coal Phaseout</h1>
-    <div class="subtitle">Coal power plant capacity: additions, retirements, and net change by country and year</div>
+    <div class="subtitle">Tracking which countries are retiring coal power and at what pace</div>
 </div>
+
 <div class="container">
-    <div class="section coming-soon">
-        <h2>Coming Soon</h2>
-        <p>This analysis vertical is under development. Data research has been completed and the interactive visualizations are being built.</p>
+
+    <!-- Headline cards -->
+    <div class="headline-grid">
+        <div class="headline-card green">
+            <div class="label">PPCA Members</div>
+            <div class="value" style="color:#27ae60">56</div>
+            <div class="detail">Countries/regions committed to phaseout</div>
+        </div>
+        <div class="headline-card green">
+            <div class="label">Coal Capacity Retired</div>
+            <div class="value" style="color:#27ae60">270 GW</div>
+            <div class="detail">Retired since 2010 globally</div>
+        </div>
+        <div class="headline-card red">
+            <div class="label">Under Construction</div>
+            <div class="value" style="color:#c0392b">176 GW</div>
+            <div class="detail">New coal plants being built (2024)</div>
+        </div>
+        <div class="headline-card coal">
+            <div class="label">Net Change (2015&ndash;2024)</div>
+            <div class="value" style="color:var(--coal)">+233 GW</div>
+            <div class="detail">New builds still exceed retirements</div>
+        </div>
+    </div>
+
+    <div class="info-callout">
+        <strong>The coal phaseout paradox:</strong> While 56 countries have joined the Powering Past Coal Alliance and over 270 GW has been retired since 2010, these commitments cover a small fraction of global coal capacity. China and India, which together operate ~1,400 GW, have no phaseout dates. New construction, overwhelmingly in Asia, continues to outpace retirements globally, resulting in a net increase of ~233 GW since 2015.
+    </div>
+
+    <!-- Chart 1: Coal Capacity by Status (horizontal stacked bar) -->
+    <div class="section">
+        <h2>Coal Capacity by Status (Top 15 Countries)</h2>
+        <p class="section-subtitle">Operating, under construction, planned, and retired capacity in GW. China's operating fleet exceeds the next 14 countries combined.</p>
+        <div class="legend-inline">
+            <span><span class="legend-dot" style="background:var(--coal)"></span> Operating</span>
+            <span><span class="legend-dot" style="background:rgba(61,61,61,0.5)"></span> Under Construction</span>
+            <span><span class="legend-dot" style="background:rgba(61,61,61,0.25)"></span> Planned/Announced</span>
+            <span><span class="legend-dot" style="background:#27ae60"></span> Retired since 2010</span>
+        </div>
+        <div class="chart-container-xl"><canvas id="chartCapacityByStatus"></canvas></div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Global Energy Monitor, Global Coal Plant Tracker (Jan 2025)</span>
+            <span class="source-tag">Carbon Brief</span>
+        </div>
+    </div>
+
+    <!-- Chart 2: Retirements vs New Builds (annual) -->
+    <div class="section">
+        <h2>Global Coal Retirements vs New Builds (2015&ndash;2024)</h2>
+        <p class="section-subtitle">GW retired per year vs GW commissioned. China accounts for the majority of new capacity; the US and Europe dominate retirements.</p>
+        <div class="chart-container-tall"><canvas id="chartRetirementsVsBuilds"></canvas></div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Global Energy Monitor 2025</span>
+            <span class="source-tag">Carbon Brief analysis</span>
+        </div>
+    </div>
+
+    <!-- Chart 3: Phaseout Timeline -->
+    <div class="section">
+        <h2>Coal Phaseout Commitments by Country</h2>
+        <p class="section-subtitle">Committed or conditional phaseout dates for selected countries. Green = complete, amber = by 2035, red = after 2035 or conditional, grey = no date.</p>
+        <div class="chart-container-tall"><canvas id="chartPhaseoutTimeline"></canvas></div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">PPCA</span>
+            <span class="source-tag">National government announcements</span>
+            <span class="source-tag">Carbon Brief tracker</span>
+        </div>
+    </div>
+
+    <!-- Chart 4: PPCA Members vs Non-Members -->
+    <div class="section">
+        <h2>PPCA Members vs Non-Members</h2>
+        <p class="section-subtitle">The Powering Past Coal Alliance has 56 national members, but they account for only ~5% of global coal capacity. The vast majority of coal is operated by non-members.</p>
+        <div class="chart-row">
+            <div>
+                <div class="chart-container"><canvas id="chartPPCA"></canvas></div>
+            </div>
+            <div>
+                <div class="ppca-stats">
+                    <div class="ppca-stat-card">
+                        <div class="big" style="color:#27ae60">56</div>
+                        <div class="desc">PPCA member countries/regions</div>
+                    </div>
+                    <div class="ppca-stat-card">
+                        <div class="big" style="color:#c0392b">~95%</div>
+                        <div class="desc">Global coal capacity in non-member countries</div>
+                    </div>
+                    <div class="ppca-stat-card">
+                        <div class="big" style="color:var(--coal)">~2,130 GW</div>
+                        <div class="desc">Total global operating coal capacity</div>
+                    </div>
+                    <div class="ppca-stat-card">
+                        <div class="big" style="color:var(--accent)">~107 GW</div>
+                        <div class="desc">Capacity covered by PPCA members</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">PPCA membership list (2024)</span>
+            <span class="source-tag">Global Energy Monitor</span>
+        </div>
+    </div>
+
+    <!-- Chart 5: Coal Generation Trend (stacked area by region) -->
+    <div class="section">
+        <h2>Global Coal Electricity Generation by Region (2010&ndash;2024)</h2>
+        <p class="section-subtitle">Coal generation peaked at ~10,400 TWh in 2024 after a dip during Covid. China now generates over half the world's coal electricity. European and American generation has fallen sharply.</p>
+        <div class="chart-container-tall"><canvas id="chartCoalGenTrend"></canvas></div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Ember Global Electricity Review 2025</span>
+            <span class="source-tag">Energy Institute Statistical Review 2025</span>
+            <span class="source-tag">IEA</span>
+        </div>
+    </div>
+
+    <!-- Data table -->
+    <div class="section">
+        <h2>Coal Phaseout: Country Detail</h2>
+        <div class="data-table-wrapper">
+            <table id="phaseoutTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Country</th>
+                        <th class="num">Operating (GW)</th>
+                        <th class="num">Under Constr. (GW)</th>
+                        <th class="num">Retired since 2010 (GW)</th>
+                        <th>Phaseout Date</th>
+                        <th>PPCA Member</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div style="margin-top:0.5rem;">
+            <span class="source-tag">Global Energy Monitor GCPT 2025</span>
+            <span class="source-tag">PPCA</span>
+            <span class="source-tag">National government statements</span>
+        </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="section">
+        <h2>Methodology &amp; Sources</h2>
+        <div class="methodology">
+            <p><strong>Coal capacity data:</strong> Operating, under-construction, planned/announced, and retired coal power plant capacity from the Global Energy Monitor (GEM) Global Coal Plant Tracker, January 2025 update. Capacity figures are in gross nameplate capacity (GW). Retired capacity covers plants closed from 2010 onwards.</p>
+            <p><strong>Phaseout commitments:</strong> A country is classified as "committed" if its national government has made a public statement, enacted legislation, or signed an international agreement (e.g., PPCA) specifying a date to end unabated coal power generation. Conditional commitments (e.g., subject to international finance) are noted. "No date" means the country has not set a coal phaseout target, even if it has climate pledges that imply future coal reduction.</p>
+            <p><strong>PPCA membership:</strong> The Powering Past Coal Alliance is a coalition of national and sub-national governments, businesses, and organisations committed to phasing out unabated coal power. As of 2024, the PPCA has 56 national government members plus many sub-national and institutional members. However, no major coal power country (China, India, USA, Indonesia) is a member.</p>
+            <p><strong>Coal generation trend:</strong> Regional coal electricity generation data from Ember Global Electricity Review (2025) and the Energy Institute Statistical Review (2025, formerly BP). Regions: China, India, Rest of Asia (Japan, South Korea, Indonesia, Vietnam, etc.), Europe (EU + UK + Turkey), Americas (USA, Canada, Latin America), Other (Africa, Middle East, Oceania).</p>
+            <p><strong>Retirements vs new builds:</strong> Annual GW of coal capacity commissioned (reaching commercial operation) vs retired (permanently closed) globally, from Global Energy Monitor. Note that "commissioned" includes plants that were under construction for years; the commissioning year is when they began generating power.</p>
+            <ul>
+                <li>Global Energy Monitor, Global Coal Plant Tracker (Jan 2025)</li>
+                <li>Ember, Global Electricity Review 2025</li>
+                <li>Powering Past Coal Alliance (PPCA), membership and announcements</li>
+                <li>IEA, World Energy Outlook 2024</li>
+                <li>Carbon Brief, coal phaseout tracker</li>
+                <li>Energy Institute Statistical Review of World Energy 2025</li>
+            </ul>
+            <div style="margin-top: 1rem;">
+                <span class="source-tag">Global Energy Monitor GCPT 2025</span>
+                <span class="source-tag">Ember 2025</span>
+                <span class="source-tag">PPCA</span>
+                <span class="source-tag">IEA World Energy Outlook 2024</span>
+                <span class="source-tag">Carbon Brief</span>
+                <span class="source-tag">Energy Institute SR 2025</span>
+            </div>
+        </div>
     </div>
 </div>
+
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard</p>
-    <p>Built with <a href="https://claude.ai">Claude</a></p>
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Coal Phaseout</p>
+    <p>Data: 2024 estimates &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
+
+<script src="colors.js"></script>
+<script>
+// ============================================================
+// CHART DEFAULTS
+// ============================================================
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#7f8c8d';
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyleWidth = 10;
+
+// ============================================================
+// DATA
+// ============================================================
+
+// Status colors
+const STATUS = {
+    operating: PALETTE.techCoal,
+    operatingAlpha: 'rgba(61,61,61,1)',
+    construction: 'rgba(61,61,61,0.5)',
+    planned: 'rgba(61,61,61,0.25)',
+    retired: '#27ae60',
+    phaseoutDone: '#27ae60',
+    phaseoutSoon: '#f39c12',
+    phaseoutLate: '#e74c3c',
+    phaseoutNone: '#95a5a6',
+};
+
+// --- Capacity by status (GW) - top 15 coal countries ---
+const capacityData = [
+    { country: 'China',        operating: 1150, construction: 100, planned: 50,  retired: 55  },
+    { country: 'India',        operating: 245,  construction: 30,  planned: 25,  retired: 15  },
+    { country: 'USA',          operating: 190,  construction: 0,   planned: 0,   retired: 125 },
+    { country: 'Japan',        operating: 50,   construction: 2,   planned: 0,   retired: 8   },
+    { country: 'South Africa', operating: 44,   construction: 0,   planned: 0,   retired: 3   },
+    { country: 'Indonesia',    operating: 40,   construction: 10,  planned: 15,  retired: 1   },
+    { country: 'Germany',      operating: 40,   construction: 0,   planned: 0,   retired: 18  },
+    { country: 'South Korea',  operating: 38,   construction: 2,   planned: 0,   retired: 5   },
+    { country: 'Poland',       operating: 28,   construction: 0,   planned: 0,   retired: 5   },
+    { country: 'Vietnam',      operating: 25,   construction: 5,   planned: 8,   retired: 0   },
+    { country: 'Australia',    operating: 23,   construction: 0,   planned: 0,   retired: 12  },
+    { country: 'Turkey',       operating: 20,   construction: 3,   planned: 5,   retired: 1   },
+    { country: 'Philippines',  operating: 12,   construction: 2,   planned: 3,   retired: 0   },
+    { country: 'Bangladesh',   operating: 3,    construction: 4,   planned: 0,   retired: 0   },
+    { country: 'UK',           operating: 0,    construction: 0,   planned: 0,   retired: 28  },
+];
+
+// --- Retirements vs new builds (GW per year, global) ---
+const annualYears = ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'];
+const annualData = {
+    commissioned: [84, 65, 42, 50, 44, 50, 25, 45, 69, 53],
+    retired:      [23, 25, 20, 31, 34, 21, 25, 26, 22, 24],
+    // China's share of commissioning
+    commChina:    [52, 42, 25, 33, 29, 38, 15, 30, 47, 36],
+};
+
+// --- Phaseout timeline data ---
+const phaseoutTimeline = [
+    { country: 'UK',          year: 2024, status: 'done',   label: '2024 (done!)' },
+    { country: 'Italy',       year: 2025, status: 'done',   label: '2025' },
+    { country: 'France',      year: 2027, status: 'soon',   label: '2027' },
+    { country: 'Canada',      year: 2030, status: 'soon',   label: '2030' },
+    { country: 'Germany',     year: 2038, status: 'soon',   label: '2038 (ideally 2030)' },
+    { country: 'South Korea', year: 2036, status: 'soon',   label: '2036' },
+    { country: 'Chile',       year: 2040, status: 'late',   label: '2040' },
+    { country: 'Poland',      year: 2049, status: 'late',   label: '2049' },
+    { country: 'Indonesia',   year: 2060, status: 'late',   label: '2060 (conditional)' },
+    { country: 'China',       year: null, status: 'none',   label: 'No date (peak by 2030)' },
+    { country: 'India',       year: null, status: 'none',   label: 'No date' },
+].sort((a, b) => {
+    if (a.year === null && b.year === null) return 0;
+    if (a.year === null) return 1;
+    if (b.year === null) return 1;
+    return a.year - b.year;
+});
+
+// --- Coal generation by region (TWh, 2010-2024) ---
+const genYears = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'];
+const coalGenByRegion = {
+    china:      [3270, 3720, 3780, 4110, 4110, 3920, 3900, 4150, 4440, 4560, 4630, 5040, 5210, 5400, 5600],
+    india:      [680,  750,  810,  870,  930,  960,  990,  1050, 1130, 1110, 1030, 1200, 1290, 1330, 1390],
+    restAsia:   [850,  900,  930,  970,  1010, 1040, 1060, 1100, 1130, 1130, 1050, 1120, 1180, 1200, 1220],
+    europe:     [940,  920,  900,  870,  830,  800,  750,  720,  680,  580,  470,  510,  490,  410,  380],
+    americas:   [1950, 1850, 1700, 1700, 1710, 1550, 1400, 1360, 1290, 1120, 910,  970,  920,  850,  800],
+    other:      [310,  310,  280,  280,  310,  330,  300,  320,  330,  300,  310,  360,  410,  410,  410],
+};
+// Stack order: China (bottom) up to Other
+const regionColors = {
+    china:    getCountryColor('China'),
+    india:    getCountryColor('India'),
+    restAsia: '#48cae4',
+    europe:   '#495057',
+    americas: '#457b9d',
+    other:    '#adb5bd',
+};
+
+// --- Table data ---
+const tableData = [
+    { country: 'China',        operating: 1150, construction: 100, retired: 55,  phaseout: 'No date',               ppca: false, source: 'GEM GCPT 2025' },
+    { country: 'India',        operating: 245,  construction: 30,  retired: 15,  phaseout: 'No date',               ppca: false, source: 'GEM GCPT 2025' },
+    { country: 'USA',          operating: 190,  construction: 0,   retired: 125, phaseout: 'No date (market-led)',   ppca: false, source: 'GEM / EIA' },
+    { country: 'Japan',        operating: 50,   construction: 2,   retired: 8,   phaseout: 'No date (ambiguous)',    ppca: false, source: 'GEM GCPT 2025' },
+    { country: 'South Africa', operating: 44,   construction: 0,   retired: 3,   phaseout: 'No date (IRP 2019)',    ppca: false, source: 'GEM / Eskom' },
+    { country: 'Indonesia',    operating: 40,   construction: 10,  retired: 1,   phaseout: '2060 (conditional)',     ppca: false, source: 'GEM / JETP' },
+    { country: 'Germany',      operating: 40,   construction: 0,   retired: 18,  phaseout: '2038 (ideally 2030)',    ppca: true,  source: 'GEM / BMWK' },
+    { country: 'South Korea',  operating: 38,   construction: 2,   retired: 5,   phaseout: '2036',                  ppca: true,  source: 'GEM / KEI' },
+    { country: 'Poland',       operating: 28,   construction: 0,   retired: 5,   phaseout: '2049',                  ppca: false, source: 'GEM / EPP2040' },
+    { country: 'Vietnam',      operating: 25,   construction: 5,   retired: 0,   phaseout: 'No date (JETP talks)',  ppca: false, source: 'GEM GCPT 2025' },
+    { country: 'Australia',    operating: 23,   construction: 0,   retired: 12,  phaseout: 'No date (market-led)',   ppca: false, source: 'GEM / AEMO' },
+    { country: 'Turkey',       operating: 20,   construction: 3,   retired: 1,   phaseout: 'No date',               ppca: false, source: 'GEM GCPT 2025' },
+    { country: 'Philippines',  operating: 12,   construction: 2,   retired: 0,   phaseout: 'No date (moratorium)',   ppca: false, source: 'GEM GCPT 2025' },
+    { country: 'Canada',       operating: 5,    construction: 0,   retired: 10,  phaseout: '2030',                  ppca: true,  source: 'GEM / Gov Canada' },
+    { country: 'UK',           operating: 0,    construction: 0,   retired: 28,  phaseout: '2024 (complete!)',       ppca: true,  source: 'GEM / DESNZ' },
+    { country: 'France',       operating: 1,    construction: 0,   retired: 6,   phaseout: '2027',                  ppca: true,  source: 'GEM / Gouv.fr' },
+    { country: 'Italy',        operating: 5,    construction: 0,   retired: 8,   phaseout: '2025',                  ppca: true,  source: 'GEM / PNIEC' },
+    { country: 'Chile',        operating: 4,    construction: 0,   retired: 3,   phaseout: '2040',                  ppca: true,  source: 'GEM / MinEnergia' },
+    { country: 'Bangladesh',   operating: 3,    construction: 4,   retired: 0,   phaseout: 'No date (cancelled planned)', ppca: false, source: 'GEM GCPT 2025' },
+    { country: 'Czech Republic',operating: 8,   construction: 0,   retired: 4,   phaseout: '2033',                  ppca: false, source: 'GEM / Czech Coal Com.' },
+];
+
+
+// ============================================================
+// CHART 1: Coal Capacity by Status (horizontal stacked bar)
+// ============================================================
+(function() {
+    const labels = capacityData.map(d => d.country);
+
+    new Chart(document.getElementById('chartCapacityByStatus'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Operating',
+                    data: capacityData.map(d => d.operating),
+                    backgroundColor: capacityData.map(d => getCountryColor(d.country)),
+                    borderRadius: 2,
+                },
+                {
+                    label: 'Under Construction',
+                    data: capacityData.map(d => d.construction),
+                    backgroundColor: capacityData.map(d => {
+                        // lighter version of country color
+                        const c = getCountryColor(d.country);
+                        return c + '80'; // add alpha
+                    }),
+                    borderRadius: 2,
+                },
+                {
+                    label: 'Planned / Announced',
+                    data: capacityData.map(d => d.planned),
+                    backgroundColor: capacityData.map(d => {
+                        const c = getCountryColor(d.country);
+                        return c + '40';
+                    }),
+                    borderRadius: 2,
+                },
+                {
+                    label: 'Retired since 2010',
+                    data: capacityData.map(d => -d.retired),  // negative to show on opposite side
+                    backgroundColor: STATUS.retired,
+                    borderRadius: 2,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { font: { size: 11 }, padding: 15 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const val = Math.abs(ctx.raw);
+                            if (val === 0) return null;
+                            return ctx.dataset.label + ': ' + fmt(val) + ' GW';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    title: { display: true, text: 'Capacity (GW)' },
+                    ticks: {
+                        callback: function(v) { return Math.abs(v); }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                y: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+})();
+
+
+// ============================================================
+// CHART 2: Retirements vs New Builds (grouped bar)
+// ============================================================
+(function() {
+    new Chart(document.getElementById('chartRetirementsVsBuilds'), {
+        type: 'bar',
+        data: {
+            labels: annualYears,
+            datasets: [
+                {
+                    label: 'New Capacity Commissioned (GW)',
+                    data: annualData.commissioned,
+                    backgroundColor: '#c0392b',
+                    borderRadius: 3,
+                },
+                {
+                    label: '  of which China',
+                    data: annualData.commChina,
+                    backgroundColor: getCountryColor('China') + '50',
+                    borderColor: getCountryColor('China'),
+                    borderWidth: 1,
+                    borderRadius: 3,
+                    type: 'bar',
+                },
+                {
+                    label: 'Capacity Retired (GW)',
+                    data: annualData.retired.map(d => -d),
+                    backgroundColor: '#27ae60',
+                    borderRadius: 3,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { font: { size: 11 }, padding: 15 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const val = Math.abs(ctx.raw);
+                            if (val === 0) return null;
+                            return ctx.dataset.label.trim() + ': ' + fmt(val) + ' GW';
+                        },
+                        afterBody: function(items) {
+                            // Find commissioned and retired for net
+                            const yr = items[0].dataIndex;
+                            const net = annualData.commissioned[yr] - annualData.retired[yr];
+                            return '\nNet change: +' + fmt(net) + ' GW';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: {
+                    title: { display: true, text: 'GW' },
+                    ticks: {
+                        callback: function(v) { return Math.abs(v); }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
+            }
+        }
+    });
+})();
+
+
+// ============================================================
+// CHART 3: Phaseout Timeline (horizontal bar)
+// ============================================================
+(function() {
+    const baseYear = 2020;
+    const maxYear = 2065;
+    const range = maxYear - baseYear;
+    const currentYear = 2025;
+
+    const statusColors = {
+        done: '#27ae60',
+        soon: '#f39c12',
+        late: '#e74c3c',
+        none: '#95a5a6',
+    };
+
+    const labels = phaseoutTimeline.map(d => d.country);
+    const barData = phaseoutTimeline.map(d => {
+        if (d.year === null) return maxYear - baseYear; // full bar for "no date"
+        return d.year - baseYear;
+    });
+    const colors = phaseoutTimeline.map(d => statusColors[d.status]);
+
+    new Chart(document.getElementById('chartPhaseoutTimeline'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: barData,
+                backgroundColor: colors,
+                borderRadius: 3,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(items) {
+                            return phaseoutTimeline[items[0].dataIndex].country;
+                        },
+                        label: function(ctx) {
+                            const d = phaseoutTimeline[ctx.dataIndex];
+                            return 'Phaseout: ' + d.label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Year' },
+                    min: 0,
+                    max: range,
+                    ticks: {
+                        stepSize: 5,
+                        callback: function(v) { return v + baseYear; }
+                    },
+                    grid: {
+                        color: function(ctx) {
+                            if (ctx.tick && ctx.tick.value + baseYear === currentYear) return 'rgba(0,0,0,0.3)';
+                            return 'rgba(0,0,0,0.05)';
+                        },
+                        lineWidth: function(ctx) {
+                            if (ctx.tick && ctx.tick.value + baseYear === currentYear) return 2;
+                            return 1;
+                        }
+                    }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11, weight: '500' } }
+                }
+            }
+        },
+        plugins: [{
+            id: 'phaseoutLabels',
+            afterDatasetDraw: function(chart) {
+                const ctx2 = chart.ctx;
+                const meta = chart.getDatasetMeta(0);
+                ctx2.save();
+                meta.data.forEach(function(bar, i) {
+                    const d = phaseoutTimeline[i];
+                    ctx2.fillStyle = '#fff';
+                    ctx2.font = '600 10px Inter, sans-serif';
+                    ctx2.textAlign = 'right';
+                    ctx2.textBaseline = 'middle';
+                    const barRight = bar.x;
+                    const barY = bar.y;
+                    if (barRight - bar.base > 60) {
+                        ctx2.fillText(d.label, barRight - 6, barY);
+                    }
+                });
+                ctx2.restore();
+            }
+        }]
+    });
+})();
+
+
+// ============================================================
+// CHART 4: PPCA Members vs Non-Members (doughnut)
+// ============================================================
+(function() {
+    new Chart(document.getElementById('chartPPCA'), {
+        type: 'doughnut',
+        data: {
+            labels: ['PPCA Member Capacity', 'Non-Member Capacity'],
+            datasets: [{
+                data: [107, 2023],
+                backgroundColor: ['#27ae60', PALETTE.techCoal],
+                borderWidth: 2,
+                borderColor: '#fff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '55%',
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 15, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = ((ctx.raw / total) * 100).toFixed(1);
+                            return ctx.label + ': ~' + fmt(ctx.raw) + ' GW (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+
+// ============================================================
+// CHART 5: Coal Generation Trend by Region (stacked area)
+// ============================================================
+(function() {
+    new Chart(document.getElementById('chartCoalGenTrend'), {
+        type: 'line',
+        data: {
+            labels: genYears,
+            datasets: [
+                {
+                    label: 'China',
+                    data: coalGenByRegion.china,
+                    backgroundColor: regionColors.china + '60',
+                    borderColor: regionColors.china,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2,
+                },
+                {
+                    label: 'India',
+                    data: coalGenByRegion.india,
+                    backgroundColor: regionColors.india + '60',
+                    borderColor: regionColors.india,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2,
+                },
+                {
+                    label: 'Rest of Asia',
+                    data: coalGenByRegion.restAsia,
+                    backgroundColor: regionColors.restAsia + '60',
+                    borderColor: regionColors.restAsia,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2,
+                },
+                {
+                    label: 'Europe',
+                    data: coalGenByRegion.europe,
+                    backgroundColor: regionColors.europe + '60',
+                    borderColor: regionColors.europe,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2,
+                },
+                {
+                    label: 'Americas',
+                    data: coalGenByRegion.americas,
+                    backgroundColor: regionColors.americas + '60',
+                    borderColor: regionColors.americas,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2,
+                },
+                {
+                    label: 'Other',
+                    data: coalGenByRegion.other,
+                    backgroundColor: regionColors.other + '60',
+                    borderColor: regionColors.other,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 2,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { padding: 15, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': ' + fmt(ctx.raw) + ' TWh';
+                        },
+                        afterBody: function(items) {
+                            const total = items.reduce((s, i) => s + i.raw, 0);
+                            return '\nGlobal total: ~' + fmt(total) + ' TWh';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    title: { display: true, text: 'TWh' },
+                    stacked: true,
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+})();
+
+
+// ============================================================
+// TABLE: Country detail
+// ============================================================
+(function() {
+    const tbody = document.querySelector('#phaseoutTable tbody');
+    const sorted = tableData.sort((a, b) => b.operating - a.operating);
+
+    sorted.forEach(function(d, i) {
+        const tr = document.createElement('tr');
+
+        // Phaseout badge
+        let badgeClass = 'none';
+        if (d.phaseout.includes('complete') || d.phaseout.includes('done')) badgeClass = 'done';
+        else if (d.phaseout.match(/20[2-3][0-9]/)) badgeClass = 'committed';
+        else if (d.phaseout.match(/20[4-9][0-9]/)) badgeClass = 'committed';
+
+        const ppcaBadge = d.ppca
+            ? '<span class="status-badge member">Yes</span>'
+            : '<span style="color:var(--text-secondary);font-size:0.78rem;">No</span>';
+
+        tr.innerHTML = '<td>' + (i + 1) + '</td>'
+            + '<td><strong>' + d.country + '</strong></td>'
+            + '<td class="num">' + fmt(d.operating) + '</td>'
+            + '<td class="num">' + (d.construction > 0 ? fmt(d.construction) : '&mdash;') + '</td>'
+            + '<td class="num">' + (d.retired > 0 ? fmt(d.retired) : '&mdash;') + '</td>'
+            + '<td><span class="status-badge ' + badgeClass + '">' + d.phaseout + '</span></td>'
+            + '<td>' + ppcaBadge + '</td>'
+            + '<td><span class="source-tag">' + d.source + '</span></td>';
+        tbody.appendChild(tr);
+    });
+})();
+
+</script>
 <script src="nav.js"></script>
+
 </body>
 </html>

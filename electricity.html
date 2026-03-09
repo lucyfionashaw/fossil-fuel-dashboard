@@ -24,7 +24,7 @@
         }
         .headline-card:hover { transform: translateY(-2px); }
         .headline-card.coal-card { border-top-color: var(--coal); }
-        .headline-card.solar-card { border-top-color: #f39c12; }
+        .headline-card.solar-card { border-top-color: #f1c40f; }
         .headline-card.wind-card { border-top-color: var(--accent); }
         .headline-card.gas-card { border-top-color: var(--gas); }
         .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
@@ -72,7 +72,7 @@
 
 <div class="header">
     <h1>Electricity Costs: Coal vs Alternatives</h1>
-    <div class="subtitle">Task 8: Levelised cost of electricity (LCOE) by source &mdash; with and without carbon &amp; health externalities</div>
+    <div class="subtitle">Section 8: Levelised cost of electricity (LCOE) by source &mdash; with and without carbon &amp; health externalities</div>
 </div>
 
 <div class="container">
@@ -86,7 +86,7 @@
         </div>
         <div class="headline-card solar-card">
             <div class="label">Solar PV LCOE</div>
-            <div class="value" style="color:#f39c12">$30&ndash;50</div>
+            <div class="value" style="color:#f1c40f">$30&ndash;50</div>
             <div class="detail">$/MWh &middot; Utility-scale (2024)</div>
         </div>
         <div class="headline-card wind-card">
@@ -129,7 +129,7 @@
     <!-- Key country callouts -->
     <div class="stat-grid">
         <div class="stat-card">
-            <div class="pct" style="color:#f39c12">$25&ndash;35</div>
+            <div class="pct" style="color:#f1c40f">$25&ndash;35</div>
             <div class="desc">India solar LCOE ($/MWh)<br>Cheapest solar in the world</div>
         </div>
         <div class="stat-card">
@@ -227,7 +227,7 @@
         <div class="chart-container-wide"><canvas id="chartHistorical"></canvas></div>
         <div class="stat-grid">
             <div class="stat-card">
-                <div class="pct" style="color:#f39c12">&minus;90%</div>
+                <div class="pct" style="color:#f1c40f">&minus;90%</div>
                 <div class="desc">Solar PV cost decline<br>since 2010</div>
             </div>
             <div class="stat-card">
@@ -280,12 +280,73 @@
                 <div class="desc">New coal plant LCOE ($/MWh)<br>Including construction + fuel</div>
             </div>
             <div class="stat-card">
-                <div class="pct" style="color:#f39c12">$30&ndash;50</div>
+                <div class="pct" style="color:#f1c40f">$30&ndash;50</div>
                 <div class="desc">New solar PV ($/MWh)<br>Utility-scale, no subsidy</div>
             </div>
             <div class="stat-card">
                 <div class="pct" style="color:#c0392b">40 years</div>
                 <div class="desc">Typical coal plant life<br>Locked into high costs for decades</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 8: Existing Coal vs New Renewables -->
+    <div class="section">
+        <h2>Existing Coal vs New Renewables</h2>
+        <p class="section-subtitle">Proponents of coal argue that existing plants &mdash; with capital costs already sunk &mdash; are cheaper to run than building new renewables. This was once true, but is increasingly not. Running costs (fuel + O&amp;M) of existing coal plants now exceed the full LCOE of new solar and wind in most markets.</p>
+
+        <div class="info-callout">
+            <strong>Key finding:</strong> In 2024, it is cheaper to build new solar or wind than to continue running approximately 60% of the world&rsquo;s existing coal plants, even ignoring the sunk capital costs of those plants. This share has grown from less than 10% in 2015. Source: Carbon Tracker / BloombergNEF.
+        </div>
+
+        <!-- Chart: Existing coal running costs vs new-build renewables by country -->
+        <h3>Existing Coal Running Costs vs New-Build Renewable LCOE by Country (2023/24)</h3>
+        <p class="section-subtitle">Existing coal marginal cost (fuel + O&amp;M only, no capital) compared to full LCOE of new-build solar and wind. Midpoint estimates in $/MWh.</p>
+        <div class="chart-container-tall"><canvas id="chartExistingVsNew"></canvas></div>
+
+        <div class="key-finding">
+            <div class="finding-title">In 6 of 10 major coal markets, new renewables already undercut existing coal running costs</div>
+            <div class="finding-detail">India, China, USA, Australia, and South Africa can build new solar or wind for less than it costs to keep burning coal in existing plants. Only in markets with very cheap domestic coal (Indonesia) or expensive renewables (Japan, Vietnam) does existing coal still hold a marginal cost advantage.</div>
+        </div>
+
+        <!-- Chart: Crossover timeline -->
+        <h3>The Crossover Timeline: Existing Coal vs New Renewables (Global Average)</h3>
+        <p class="section-subtitle">Global average existing coal running costs have risen (fuel, carbon, maintenance on aging fleet) while new renewable LCOE has fallen dramatically. The lines crossed around 2020&ndash;2021.</p>
+        <div class="chart-container-wide"><canvas id="chartCrossover"></canvas></div>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="pct" style="color:var(--coal)">$30 &rarr; $42</div>
+                <div class="desc">Existing coal running costs<br>2015 &rarr; 2024 ($/MWh, global avg)</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:#f1c40f">$120 &rarr; $30</div>
+                <div class="desc">New solar LCOE<br>2015 &rarr; 2024 ($/MWh, global avg)</div>
+            </div>
+            <div class="stat-card">
+                <div class="pct" style="color:#3498db">~2021</div>
+                <div class="desc">Crossover year<br>When new renewables beat existing coal</div>
+            </div>
+        </div>
+
+        <!-- Chart: Share uneconomic -->
+        <h3>Share of Existing Coal Capacity Now More Expensive to Run Than Building New Renewables (2024)</h3>
+        <p class="section-subtitle">Percentage of existing coal fleet where marginal running costs exceed the LCOE of new-build solar or wind. Source: Carbon Tracker, BNEF.</p>
+        <div class="chart-container-wide"><canvas id="chartUneconomic"></canvas></div>
+
+        <div class="key-finding">
+            <div class="finding-title">95% of EU coal capacity is now uneconomic against new renewables</div>
+            <div class="finding-detail">High fuel costs, carbon pricing (EU ETS), and aging infrastructure have made nearly all European coal plants more expensive to operate than building new solar or wind from scratch. Even in China and India, roughly half of existing coal capacity is now uneconomic.</div>
+        </div>
+
+        <!-- Methodology note -->
+        <div class="methodology" style="margin-top: 1.5rem;">
+            <p><strong>Sources &amp; methodology:</strong> BNEF LCOE data (2H 2024), Carbon Tracker &ldquo;How to Waste Over Half a Trillion Dollars&rdquo; (2024 update), Lazard Levelised Cost of Energy v17, IRENA Renewable Power Generation Costs 2024. Existing coal running costs include fuel, variable O&amp;M, and fixed O&amp;M but exclude sunk capital costs. New renewable LCOE includes full capital costs amortised over project life. Country-level coal running costs reflect local fuel prices, plant efficiency, and applicable carbon costs.</p>
+            <div style="margin-top: 0.5rem;">
+                <span class="source-tag">BNEF 2H 2024</span>
+                <span class="source-tag">Carbon Tracker (2024)</span>
+                <span class="source-tag">Lazard LCOE v17</span>
+                <span class="source-tag">IRENA 2024</span>
             </div>
         </div>
     </div>
@@ -387,11 +448,12 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard &middot; Task 8 of 10 Analysis Verticals</p>
+    <p>Global Fossil Fuel Dashboard &middot; Section 10: Electricity Costs</p>
     <p>Data: 2024 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
 <script src="nav.js"></script>
+<script src="colors.js"></script>
 <script>
 // ─── Tab switching ───
 function showTab(tabId) {
@@ -401,20 +463,20 @@ function showTab(tabId) {
     event.target.classList.add('active');
 }
 
-// ─── Color palette ───
+// ─── Color palette (from shared colors.js) ───
 const COLORS = {
-    coal: '#3d3d3d',
-    coalLight: '#6b6b6b',
-    gas: '#2980b9',
-    gasLight: '#3498db',
-    solar: '#f39c12',
-    solarLight: '#f1c40f',
-    windOnshore: '#16a085',
-    windOffshore: '#1abc9c',
-    nuclear: '#8e44ad',
+    coal: PALETTE.techCoal,
+    coalLight: PALETTE.coalLight,
+    gas: PALETTE.techGas,
+    gasLight: PALETTE.gasLight,
+    solar: PALETTE.solar,
+    solarLight: PALETTE.solar,
+    windOnshore: PALETTE.wind,
+    windOffshore: PALETTE.hydro,
+    nuclear: PALETTE.nuclear,
     health: '#e74c3c',
     carbon: '#e67e22',
-    subsidy: '#c0392b'
+    subsidy: PALETTE.oil
 };
 
 // ─── Shared Chart.js defaults ───
@@ -955,6 +1017,219 @@ const historicalData = {
                             const w = newWind[idx];
                             const cheapest = Math.min(s, w);
                             return 'Coal premium over cheapest renewable: +$' + Math.round(c - cheapest) + '/MWh (' + Math.round((c / cheapest - 1) * 100) + '% more)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+// ─── CHART 11: Existing coal running costs vs new-build renewables by country ───
+(function() {
+    const ctx = document.getElementById('chartExistingVsNew').getContext('2d');
+    const existingCoalData = [
+        { country: 'India',        coal: 40, solar: 30, wind: 35 },
+        { country: 'China',        coal: 45, solar: 25, wind: 30 },
+        { country: 'USA',          coal: 35, solar: 30, wind: 25 },
+        { country: 'Germany',      coal: 65, solar: 50, wind: 45 },
+        { country: 'Australia',    coal: 42.5, solar: 30, wind: 35 },
+        { country: 'South Africa', coal: 47.5, solar: 35, wind: 40 },
+        { country: 'Indonesia',    coal: 40, solar: 42.5, wind: 52.5 },
+        { country: 'Poland',       coal: 70, solar: 50, wind: 45 },
+        { country: 'Japan',        coal: 57.5, solar: 62.5, wind: 72.5 },
+        { country: 'Vietnam',      coal: 47.5, solar: 42.5, wind: 57.5 },
+    ];
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: existingCoalData.map(d => d.country),
+            datasets: [
+                {
+                    label: 'Existing Coal (fuel + O&M)',
+                    data: existingCoalData.map(d => d.coal),
+                    backgroundColor: PALETTE.techCoal,
+                    borderRadius: 3,
+                },
+                {
+                    label: 'New Solar LCOE',
+                    data: existingCoalData.map(d => d.solar),
+                    backgroundColor: PALETTE.solar,
+                    borderRadius: 3,
+                },
+                {
+                    label: 'New Onshore Wind LCOE',
+                    data: existingCoalData.map(d => d.wind),
+                    backgroundColor: PALETTE.wind,
+                    borderRadius: 3,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: { display: true, text: '$/MWh' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true,
+                },
+                x: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': $' + ctx.parsed.y + '/MWh';
+                        },
+                        afterBody: function(items) {
+                            const idx = items[0].dataIndex;
+                            const d = existingCoalData[idx];
+                            const cheapestRen = Math.min(d.solar, d.wind);
+                            if (d.coal > cheapestRen) {
+                                return 'Existing coal costs $' + Math.round(d.coal - cheapestRen) + '/MWh MORE than cheapest new renewable';
+                            } else {
+                                return 'Existing coal still $' + Math.round(cheapestRen - d.coal) + '/MWh cheaper (for now)';
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+
+// ─── CHART 12: The Crossover Timeline ───
+(function() {
+    const ctx = document.getElementById('chartCrossover').getContext('2d');
+    const years = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
+    const coalRunning = [30, 28, 30, 35, 33, 30, 40, 55, 45, 42];
+    const solarLCOE  = [120, 100, 85, 70, 55, 45, 40, 42, 35, 30];
+    const windLCOE   = [70, 60, 55, 50, 45, 40, 38, 37, 33, 30];
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: years,
+            datasets: [
+                {
+                    label: 'Existing Coal Running Cost',
+                    data: coalRunning,
+                    borderColor: PALETTE.techCoal,
+                    backgroundColor: 'rgba(61, 61, 61, 0.08)',
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointBackgroundColor: PALETTE.techCoal,
+                    borderWidth: 3,
+                },
+                {
+                    label: 'New Solar LCOE',
+                    data: solarLCOE,
+                    borderColor: PALETTE.solar,
+                    backgroundColor: 'rgba(241, 196, 15, 0.08)',
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointBackgroundColor: PALETTE.solar,
+                    borderWidth: 3,
+                },
+                {
+                    label: 'New Onshore Wind LCOE',
+                    data: windLCOE,
+                    borderColor: PALETTE.wind,
+                    backgroundColor: 'rgba(52, 152, 219, 0.08)',
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointBackgroundColor: PALETTE.wind,
+                    borderWidth: 3,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: { display: true, text: '$/MWh (global average)' },
+                    grid: { color: '#f0f0f0' },
+                    beginAtZero: true,
+                    max: 130,
+                },
+                x: { grid: { color: '#f8f8f8' } }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': $' + ctx.parsed.y + '/MWh';
+                        }
+                    }
+                },
+                annotation: undefined // no annotation plugin needed; crossover is visible
+            }
+        }
+    });
+})();
+
+// ─── CHART 13: Share of existing coal capacity now uneconomic ───
+(function() {
+    const ctx = document.getElementById('chartUneconomic').getContext('2d');
+    const regions = [
+        { name: 'EU',             pct: 95 },
+        { name: 'USA',            pct: 75 },
+        { name: 'Japan/Korea',    pct: 70 },
+        { name: 'Global',         pct: 60 },
+        { name: 'India',          pct: 50 },
+        { name: 'China',          pct: 45 },
+        { name: 'Southeast Asia', pct: 35 },
+    ];
+
+    const bgColors = regions.map(r => {
+        if (r.name === 'USA') return getCountryColor('USA');
+        if (r.name === 'India') return getCountryColor('India');
+        if (r.name === 'China') return getCountryColor('China');
+        if (r.name === 'Japan/Korea') return getCountryColor('Japan');
+        if (r.name === 'EU') return '#003399';
+        if (r.name === 'Southeast Asia') return '#2d6a4f';
+        // Global
+        return PALETTE.techCoal;
+    });
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: regions.map(r => r.name),
+            datasets: [{
+                label: '% of coal capacity uneconomic vs new renewables',
+                data: regions.map(r => r.pct),
+                backgroundColor: bgColors,
+                borderRadius: 3,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: '% of existing coal capacity' },
+                    grid: { color: '#f0f0f0' },
+                    min: 0,
+                    max: 100,
+                    ticks: { callback: v => v + '%' }
+                },
+                y: { grid: { display: false } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.parsed.x + '% of existing coal capacity is now uneconomic vs new renewables';
                         }
                     }
                 }

@@ -66,7 +66,7 @@
 
 <div class="header">
     <h1>FX Revenue &amp; Import Substitution</h1>
-    <div class="subtitle">Task 4: Foreign exchange revenue from fossil fuel exports, import costs, and trade dependency (2023 data)</div>
+    <div class="subtitle">Foreign exchange revenue from fossil fuel exports, import costs, and trade dependency (2023 data)</div>
 </div>
 
 <div class="container">
@@ -305,11 +305,12 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard &middot; Task 4: FX Revenue &amp; Import Substitution</p>
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Section 6: FX Revenue</p>
     <p>Data: 2023 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
 <script src="nav.js"></script>
+<script src="colors.js"></script>
 <script>
 // ============================================================
 // TAB SWITCHING
@@ -342,11 +343,11 @@ Chart.defaults.font.size = 12;
 Chart.defaults.plugins.legend.labels.usePointStyle = true;
 Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
 
-var COAL = '#3d3d3d';
-var OIL = '#c0392b';
-var GAS = '#2980b9';
-var ACCENT = '#16a085';
-var TEXT_SEC = '#7f8c8d';
+var COAL = PALETTE.coal;
+var OIL = PALETTE.oil;
+var GAS = PALETTE.gas;
+var ACCENT = PALETTE.accent;
+var TEXT_SEC = PALETTE.textSecondary;
 
 // ============================================================
 // CHART 1: Export Value Split (Doughnut)
@@ -662,7 +663,7 @@ new Chart(document.getElementById('chartImporterCost'), {
         datasets: [{
             label: 'Gross FF Import Cost ($B)',
             data: importerData.grossImport,
-            backgroundColor: [OIL, '#8e44ad', '#e67e22', GAS, COAL, ACCENT],
+            backgroundColor: importerData.labels.map(function(c) { return getCountryColor(c); }),
             borderRadius: 4
         }]
     },
@@ -690,7 +691,7 @@ new Chart(document.getElementById('chartImporterPct'), {
         datasets: [{
             label: 'FF Imports as % of Total Imports',
             data: importerData.pctOfImports,
-            backgroundColor: [OIL, '#8e44ad', '#e67e22', GAS, COAL, ACCENT],
+            backgroundColor: importerData.labels.map(function(c) { return getCountryColor(c); }),
             borderRadius: 4
         }]
     },

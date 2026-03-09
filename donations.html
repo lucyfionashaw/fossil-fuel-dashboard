@@ -79,7 +79,7 @@
 
 <div class="header">
     <h1>Political Donations &amp; Lobbying</h1>
-    <div class="subtitle">Task 3: Fossil Fuel Industry Political Spending &mdash; Contributions, Lobbying &amp; Influence</div>
+    <div class="subtitle">Fossil Fuel Industry Political Spending &mdash; Contributions, Lobbying &amp; Influence</div>
 </div>
 
 <div class="container">
@@ -120,8 +120,8 @@
             <p class="section-subtitle">Total PAC, individual, and soft money contributions per two-year election cycle. Source: OpenSecrets.</p>
             <div class="chart-container"><canvas id="chartOilGasContrib"></canvas></div>
             <div class="category-legend">
-                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--oil)"></div> To Republicans</div>
-                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--gas)"></div> To Democrats</div>
+                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--republican)"></div> To Republicans</div>
+                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--democrat)"></div> To Democrats</div>
             </div>
         </div>
         <div class="section">
@@ -129,8 +129,8 @@
             <p class="section-subtitle">Coal mining sector PAC + individual contributions. Source: OpenSecrets.</p>
             <div class="chart-container"><canvas id="chartCoalContrib"></canvas></div>
             <div class="category-legend">
-                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--coal)"></div> To Republicans</div>
-                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--gas-light)"></div> To Democrats</div>
+                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--republican)"></div> To Republicans</div>
+                <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--democrat)"></div> To Democrats</div>
             </div>
         </div>
     </div>
@@ -167,8 +167,8 @@
         <p class="section-subtitle">Breakdown of oil and gas contributions by source type: PACs, individuals, and outside spending groups. Source: OpenSecrets/FEC.</p>
         <div class="chart-container-tall"><canvas id="chartContribType"></canvas></div>
         <div class="category-legend">
-            <div class="category-legend-item"><div class="category-legend-dot" style="background:#e74c3c"></div> Individual Contributions</div>
-            <div class="category-legend-item"><div class="category-legend-dot" style="background:#c0392b"></div> PAC Contributions</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--oil-light)"></div> Individual Contributions</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:var(--oil)"></div> PAC Contributions</div>
             <div class="category-legend-item"><div class="category-legend-dot" style="background:#922b21"></div> Outside Spending / Super PACs</div>
         </div>
     </div>
@@ -401,6 +401,7 @@
     <p>Data: US cycles 2000&ndash;2024, International latest available &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
+<script src="colors.js"></script>
 <script>
 // ============================================================
 // DATA
@@ -528,13 +529,13 @@ new Chart(document.getElementById('chartOilGasContrib'), {
             {
                 label: 'To Republicans',
                 data: oilGasData.map(d => d.repub),
-                backgroundColor: 'rgba(192,57,43,0.85)',
+                backgroundColor: PALETTE.republican,
                 borderRadius: 3,
             },
             {
                 label: 'To Democrats',
                 data: oilGasData.map(d => d.dem),
-                backgroundColor: 'rgba(41,128,185,0.85)',
+                backgroundColor: PALETTE.democrat,
                 borderRadius: 3,
             }
         ]
@@ -575,13 +576,13 @@ new Chart(document.getElementById('chartCoalContrib'), {
             {
                 label: 'To Republicans',
                 data: coalData.map(d => d.repub),
-                backgroundColor: 'rgba(61,61,61,0.85)',
+                backgroundColor: PALETTE.republican,
                 borderRadius: 3,
             },
             {
                 label: 'To Democrats',
                 data: coalData.map(d => d.dem),
-                backgroundColor: 'rgba(52,152,219,0.6)',
+                backgroundColor: PALETTE.democrat,
                 borderRadius: 3,
             }
         ]
@@ -622,19 +623,19 @@ new Chart(document.getElementById('chartLobbySpend'), {
             {
                 label: 'Oil & Gas',
                 data: lobbyData.map(d => d.oilGas),
-                backgroundColor: 'rgba(192,57,43,0.8)',
+                backgroundColor: PALETTE.oil,
                 borderRadius: 3,
             },
             {
                 label: 'Coal Mining',
                 data: lobbyData.map(d => d.coal),
-                backgroundColor: 'rgba(61,61,61,0.8)',
+                backgroundColor: PALETTE.coal,
                 borderRadius: 3,
             },
             {
                 label: 'Renewables / Environment',
                 data: lobbyData.map(d => d.clean),
-                backgroundColor: 'rgba(22,160,133,0.8)',
+                backgroundColor: PALETTE.accent,
                 borderRadius: 3,
             },
         ]
@@ -669,7 +670,7 @@ new Chart(document.getElementById('chartPartySplitOG'), {
         labels: ['Republican', 'Democrat'],
         datasets: [{
             data: [99.6, 25.4],
-            backgroundColor: ['rgba(192,57,43,0.85)', 'rgba(41,128,185,0.85)'],
+            backgroundColor: [PALETTE.republican, PALETTE.democrat],
             borderWidth: 2,
             borderColor: '#fff',
         }]
@@ -695,7 +696,7 @@ new Chart(document.getElementById('chartPartySplitCoal'), {
         labels: ['Republican', 'Democrat'],
         datasets: [{
             data: [11.9, 0.7],
-            backgroundColor: ['rgba(61,61,61,0.85)', 'rgba(52,152,219,0.7)'],
+            backgroundColor: [PALETTE.republican, PALETTE.democrat],
             borderWidth: 2,
             borderColor: '#fff',
         }]
@@ -726,13 +727,13 @@ new Chart(document.getElementById('chartContribType'), {
             {
                 label: 'Individual Contributions',
                 data: contribTypeData.map(d => d.individual),
-                backgroundColor: '#e74c3c',
+                backgroundColor: PALETTE.oilLight,
                 borderRadius: 2,
             },
             {
                 label: 'PAC Contributions',
                 data: contribTypeData.map(d => d.pac),
-                backgroundColor: '#c0392b',
+                backgroundColor: PALETTE.oil,
                 borderRadius: 2,
             },
             {
@@ -780,9 +781,9 @@ new Chart(document.getElementById('chartLobbyTop'), {
             label: '2023 Lobbying Spend ($M)',
             data: lobbyTopData.map(d => d.spend),
             backgroundColor: lobbyTopData.map(d =>
-                d.name.includes('Coal') || d.name.includes('NACCO') ? 'rgba(61,61,61,0.8)' :
+                d.name.includes('Coal') || d.name.includes('NACCO') ? PALETTE.coal :
                 d.name.includes('API') ? 'rgba(230,126,34,0.8)' :
-                'rgba(192,57,43,0.75)'
+                PALETTE.oil
             ),
             borderRadius: 4,
         }]
@@ -822,19 +823,19 @@ new Chart(document.getElementById('chartTotalTrend'), {
             {
                 label: 'Oil & Gas Contributions',
                 data: totalTrendData.map(d => d.ogContrib),
-                backgroundColor: 'rgba(192,57,43,0.8)',
+                backgroundColor: PALETTE.oil,
                 borderRadius: 2,
             },
             {
                 label: 'Coal Mining Contributions',
                 data: totalTrendData.map(d => d.coalContrib),
-                backgroundColor: 'rgba(61,61,61,0.8)',
+                backgroundColor: PALETTE.coal,
                 borderRadius: 2,
             },
             {
                 label: 'Lobbying (2-yr total)',
                 data: totalTrendData.map(d => d.lobby),
-                backgroundColor: 'rgba(41,128,185,0.6)',
+                backgroundColor: PALETTE.gas,
                 borderRadius: 2,
             }
         ]

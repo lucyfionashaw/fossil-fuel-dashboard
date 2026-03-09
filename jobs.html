@@ -61,7 +61,7 @@
 
 <div class="header">
     <h1>Fossil Fuel Employment</h1>
-    <div class="subtitle">Task 2: Jobs in Coal, Oil &amp; Gas by Country, Supply Chain Stage &amp; Trend</div>
+    <div class="subtitle">Jobs in Coal, Oil &amp; Gas by Country, Supply Chain Stage &amp; Trend</div>
 </div>
 
 <div class="container">
@@ -235,10 +235,11 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Employment Dashboard &middot; Task 2 of 10 Analysis Verticals</p>
+    <p>Global Fossil Fuel Employment Dashboard &middot; Section 4: Jobs</p>
     <p>Data: 2022&ndash;2023 estimates &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
+<script src="colors.js"></script>
 <script>
 // ============================================================
 // DATA
@@ -370,12 +371,12 @@ Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
 Chart.defaults.font.size = 12;
 Chart.defaults.color = '#7f8c8d';
 
-const COAL_COLOR = '#3d3d3d';
-const COAL_LIGHT = '#6b6b6b';
-const OIL_COLOR = '#c0392b';
-const GAS_COLOR = '#2980b9';
+const COAL_COLOR = PALETTE.coal;
+const COAL_LIGHT = PALETTE.coalLight;
+const OIL_COLOR = PALETTE.oil;
+const GAS_COLOR = PALETTE.gas;
 const RENEW_COLOR = '#27ae60';
-const ACCENT_COLOR = '#16a085';
+const ACCENT_COLOR = PALETTE.accent;
 
 
 // ============================================================
@@ -477,7 +478,7 @@ new Chart(document.getElementById('chartCoalCountries'), {
         datasets: [{
             label: 'Coal mining jobs (thousands)',
             data: coalSorted.map(d => d.jobs),
-            backgroundColor: coalSorted.map(d => d.jobs > 200 ? COAL_COLOR : COAL_LIGHT),
+            backgroundColor: coalSorted.map(d => getCountryColor(d.country)),
             borderRadius: 3,
         }]
     },
@@ -519,11 +520,7 @@ new Chart(document.getElementById('chartOGCountries'), {
         datasets: [{
             label: 'Oil & gas jobs (thousands)',
             data: ogSorted.map(d => d.jobs),
-            backgroundColor: ogSorted.map((d, i) => {
-                if (i < 3) return OIL_COLOR;
-                if (i < 8) return '#e74c3c';
-                return '#f1948a';
-            }),
+            backgroundColor: ogSorted.map(d => getCountryColor(d.country)),
             borderRadius: 3,
         }]
     },
@@ -656,7 +653,7 @@ new Chart(document.getElementById('chartSupplyChain'), {
 })();
 
 // --- 7. Trend: Developed Countries ---
-const devColors = { USA: '#b71c1c', Germany: '#1565c0', UK: '#2e7d32', Poland: '#f57f17', Australia: '#6a1b9a' };
+const devColors = { USA: getCountryColor('United States'), Germany: getCountryColor('Germany'), UK: getCountryColor('United Kingdom'), Poland: getCountryColor('Poland'), Australia: getCountryColor('Australia') };
 new Chart(document.getElementById('chartTrendDeveloped'), {
     type: 'line',
     data: {
@@ -692,7 +689,7 @@ new Chart(document.getElementById('chartTrendDeveloped'), {
 });
 
 // --- 8. Trend: Developing Countries ---
-const devgColors = { China: '#c62828', India: '#e65100', Indonesia: '#2e7d32', Russia: '#283593', SouthAfrica: '#f9a825' };
+const devgColors = { China: getCountryColor('China'), India: getCountryColor('India'), Indonesia: getCountryColor('Indonesia'), Russia: getCountryColor('Russia'), SouthAfrica: getCountryColor('South Africa') };
 const devgLabels = { China: 'China', India: 'India', Indonesia: 'Indonesia', Russia: 'Russia', SouthAfrica: 'South Africa' };
 new Chart(document.getElementById('chartTrendDeveloping'), {
     type: 'line',
@@ -742,12 +739,7 @@ new Chart(document.getElementById('chartLaborIntensity'), {
         datasets: [{
             label: 'Jobs per Mt produced',
             data: liSorted.map(d => d.value),
-            backgroundColor: liSorted.map(d => {
-                if (d.value > 1000) return '#c0392b';
-                if (d.value > 500) return '#e67e22';
-                if (d.value > 200) return COAL_COLOR;
-                return COAL_LIGHT;
-            }),
+            backgroundColor: liSorted.map(d => getCountryColor(d.country)),
             borderRadius: 3,
         }]
     },

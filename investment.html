@@ -3,26 +3,668 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foreign Investment — Fossil Fuel Dashboard</title>
+    <title>Foreign Investment in Coal — Fossil Fuel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
+    <style>
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        .chart-container-tall { position: relative; width: 100%; height: 520px; }
+        .chart-container-mid { position: relative; width: 100%; height: 380px; }
+        .chart-container-wide { position: relative; width: 100%; height: 450px; }
+
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
+
+        .headline-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+        }
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.invest { border-top-color: var(--coal); }
+        .headline-card.countries { border-top-color: var(--accent); }
+        .headline-card.top-investor { border-top-color: #e63946; }
+        .headline-card.trend { border-top-color: #27ae60; }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--accent); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout strong { color: var(--accent); }
+        .info-callout.warn { background: #fff8f0; border-left-color: #e67e22; }
+        .info-callout.warn strong { color: #e67e22; }
+        .info-callout.coal-callout { background: #f5f5f5; border-left-color: var(--coal); }
+        .info-callout.coal-callout strong { color: var(--coal); }
+
+        .timeline-container { position: relative; padding-left: 2rem; margin: 1.5rem 0; }
+        .timeline-container::before {
+            content: ''; position: absolute; left: 0.7rem; top: 0; bottom: 0;
+            width: 2px; background: var(--border);
+        }
+        .timeline-item {
+            position: relative; margin-bottom: 1.2rem; padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--bg);
+        }
+        .timeline-item:last-child { border-bottom: none; margin-bottom: 0; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -1.65rem; top: 0.35rem;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--coal); border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--border);
+        }
+        .timeline-item.green::before { background: #27ae60; }
+        .timeline-item.red::before { background: #e74c3c; }
+        .timeline-item.blue::before { background: #3498db; }
+        .timeline-year {
+            font-size: 0.75rem; font-weight: 700; color: var(--accent);
+            text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem;
+        }
+        .timeline-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.15rem; }
+        .timeline-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45; }
+
+        .status-badge {
+            display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px;
+            font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+        }
+        .status-badge.active { background: #d5f5e3; color: #1e8449; }
+        .status-badge.completed { background: #d4efdf; color: #1e8449; }
+        .status-badge.cancelled { background: #fadbd8; color: #c0392b; }
+        .status-badge.suspended { background: #fef9e7; color: #b7950b; }
+        .status-badge.proposed { background: #eaf2f8; color: #2980b9; }
+        .status-badge.shelved { background: #f5eef8; color: #7d3c98; }
+
+        .decline-arrow { color: #27ae60; font-weight: 700; }
+    </style>
 </head>
 <body>
+
 <div class="header">
-    <h1>Foreign Investment</h1>
-    <div class="subtitle">Foreign investment in coal projects worldwide</div>
+    <h1>Foreign Investment in Coal Projects</h1>
+    <div class="subtitle">Cross-border coal finance &mdash; mining, power plants &amp; infrastructure &middot; GEM / OECD / BU GDP Center data</div>
 </div>
+
 <div class="container">
-    <div class="section coming-soon">
-        <h2>Coming Soon</h2>
-        <p>This analysis vertical is under development. Data research has been completed and the interactive visualizations are being built.</p>
+
+    <!-- ========== HEADLINE CARDS ========== -->
+    <div class="headline-grid">
+        <div class="headline-card invest">
+            <div class="label">Foreign Coal Finance (2023)</div>
+            <div class="value" style="color:var(--coal)">~$17B</div>
+            <div class="detail">Annual cross-border coal investment &middot; down from ~$35B in 2015</div>
+        </div>
+        <div class="headline-card countries">
+            <div class="label">Recipient Countries</div>
+            <div class="value" style="color:var(--accent)">42</div>
+            <div class="detail">Countries receiving foreign coal project finance</div>
+        </div>
+        <div class="headline-card top-investor">
+            <div class="label">Top Investor Country</div>
+            <div class="value" style="color:#e63946">China</div>
+            <div class="detail">~60% of remaining overseas coal finance via BRI</div>
+        </div>
+        <div class="headline-card trend">
+            <div class="label">Trend (2015&ndash;2024)</div>
+            <div class="value decline-arrow">&darr; 52%</div>
+            <div class="detail">Declining post-Paris &amp; COP26 pledges</div>
+        </div>
     </div>
+
+    <div class="info-callout coal-callout">
+        <strong>What counts as "foreign investment":</strong> This page tracks cross-border finance for coal projects &mdash; including direct foreign investment (equity stakes), export credit agency (ECA) loans, development finance institution (DFI) lending, and commercial bank syndicated loans where the capital originates from a different country than the project. Domestic investment (e.g., India's Coal India spending) is excluded.
+    </div>
+
+    <!-- ========== CHART: DESTINATION COUNTRIES ========== -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Foreign Coal Investment by Destination Country</h2>
+            <p class="section-subtitle">Cumulative foreign coal finance received, 2013&ndash;2023 ($B). Includes mining, power plants, and infrastructure.</p>
+            <div class="chart-container-tall"><canvas id="chartDestination"></canvas></div>
+        </div>
+
+        <!-- ========== CHART: SOURCE COUNTRIES ========== -->
+        <div class="section">
+            <h2>Foreign Coal Investment by Source Country</h2>
+            <p class="section-subtitle">Who is financing coal projects abroad? Cumulative outflows 2013&ndash;2023 ($B).</p>
+            <div class="chart-container-tall"><canvas id="chartSource"></canvas></div>
+        </div>
+    </div>
+
+    <!-- ========== CHART: TREND OVER TIME ========== -->
+    <div class="section">
+        <h2>Foreign Coal Investment Trend Over Time</h2>
+        <p class="section-subtitle">Annual cross-border coal finance commitments ($B), 2015&ndash;2024. Tracks the impact of Paris Agreement, ESG policies, and COP26 pledges.</p>
+        <div class="chart-container-wide"><canvas id="chartTrend"></canvas></div>
+        <div class="info-callout" style="margin-top:1rem;">
+            <strong>Key inflection points:</strong> The Paris Agreement (2015) began a gradual decline. Japan and South Korea pledged to stop overseas coal financing in 2021. China's Xi Jinping announced an end to new overseas coal power in September 2021 at UNGA. These three countries represented ~95% of public coal finance abroad.
+        </div>
+    </div>
+
+    <!-- ========== CHART: INVESTMENT BY TYPE ========== -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Investment by Project Type</h2>
+            <p class="section-subtitle">How foreign coal finance is allocated across project categories (cumulative 2013&ndash;2023).</p>
+            <div class="chart-container"><canvas id="chartType"></canvas></div>
+        </div>
+
+        <div class="section">
+            <h2>Project Type Breakdown</h2>
+            <p class="section-subtitle">Estimated share of cumulative foreign coal finance by project type.</p>
+            <div style="margin-top: 1rem;">
+                <div class="type-bar-row">
+                    <div style="display:flex;align-items:center;gap:0.8rem;margin:0.5rem 0;font-size:0.82rem;">
+                        <div style="width:140px;text-align:right;flex-shrink:0;">Coal power plants</div>
+                        <div style="flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative;">
+                            <div style="height:100%;width:55%;background:var(--coal);border-radius:4px;display:flex;align-items:center;padding-left:8px;">
+                                <span style="font-size:0.72rem;color:white;font-weight:600;">$68B (55%)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem;margin:0.5rem 0;font-size:0.82rem;">
+                        <div style="width:140px;text-align:right;flex-shrink:0;">Coal mining</div>
+                        <div style="flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative;">
+                            <div style="height:100%;width:28%;background:var(--coal-light);border-radius:4px;display:flex;align-items:center;padding-left:8px;">
+                                <span style="font-size:0.72rem;color:white;font-weight:600;">$35B (28%)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem;margin:0.5rem 0;font-size:0.82rem;">
+                        <div style="width:140px;text-align:right;flex-shrink:0;">Port &amp; rail infra</div>
+                        <div style="flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative;">
+                            <div style="height:100%;width:12%;background:#7f8c8d;border-radius:4px;display:flex;align-items:center;padding-left:8px;">
+                                <span style="font-size:0.72rem;color:white;font-weight:600;">$15B (12%)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.8rem;margin:0.5rem 0;font-size:0.82rem;">
+                        <div style="width:140px;text-align:right;flex-shrink:0;">Coal-to-chemicals</div>
+                        <div style="flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative;">
+                            <div style="height:100%;width:5%;background:#95a5a6;border-radius:4px;display:flex;align-items:center;padding-left:8px;">
+                                <span style="font-size:0.72rem;color:white;font-weight:600;">$6B (5%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== POLICY TIMELINE ========== -->
+    <div class="section">
+        <h2>Key Policy Changes &amp; Divestment Decisions</h2>
+        <p class="section-subtitle">Major institutional and government commitments to end overseas coal finance.</p>
+        <div class="timeline-container">
+            <div class="timeline-item green">
+                <div class="timeline-year">2013</div>
+                <div class="timeline-title">World Bank ends coal financing</div>
+                <div class="timeline-desc">World Bank Group announces it will no longer finance greenfield coal power projects except in rare circumstances of extreme energy poverty.</div>
+            </div>
+            <div class="timeline-item green">
+                <div class="timeline-year">2013</div>
+                <div class="timeline-title">US &amp; Nordic countries restrict export credit for coal</div>
+                <div class="timeline-desc">Obama administration limits US Ex-Im Bank coal financing. Nordic countries follow with ECA restrictions on coal power abroad.</div>
+            </div>
+            <div class="timeline-item green">
+                <div class="timeline-year">2015</div>
+                <div class="timeline-title">OECD restricts export credits for coal plants</div>
+                <div class="timeline-desc">OECD Arrangement restricts export credit agency financing for the least efficient coal-fired power plants (sub-critical technology). Tightened further in 2017 and 2021.</div>
+            </div>
+            <div class="timeline-item blue">
+                <div class="timeline-year">2015</div>
+                <div class="timeline-title">Paris Agreement adopted</div>
+                <div class="timeline-desc">196 parties commit to limiting warming to well below 2&deg;C. Accelerates ESG-driven divestment from coal by development banks, pension funds, and commercial lenders.</div>
+            </div>
+            <div class="timeline-item green">
+                <div class="timeline-year">2017</div>
+                <div class="timeline-title">France bans public coal finance abroad</div>
+                <div class="timeline-desc">France becomes the first major economy to legislate a ban on all public export finance for coal projects, taking effect across all French institutions.</div>
+            </div>
+            <div class="timeline-item green">
+                <div class="timeline-year">2019</div>
+                <div class="timeline-title">European Investment Bank ends fossil fuel finance</div>
+                <div class="timeline-desc">EIB announces it will stop financing all fossil fuel projects (coal, oil, gas) from end of 2021. Largest multilateral development bank climate policy to date.</div>
+            </div>
+            <div class="timeline-item green">
+                <div class="timeline-year">2020</div>
+                <div class="timeline-title">Major commercial banks exit coal lending</div>
+                <div class="timeline-desc">Over 100 major global financial institutions adopt coal exclusion policies. HSBC, Deutsche Bank, UniCredit, Standard Chartered restrict new coal project finance.</div>
+            </div>
+            <div class="timeline-item red">
+                <div class="timeline-year">2021 (Apr)</div>
+                <div class="timeline-title">South Korea pledges to end overseas coal finance</div>
+                <div class="timeline-desc">President Moon announces Korea will stop all public financing for overseas coal power. KEXIM and Korea Development Bank had been major coal financiers in SE Asia.</div>
+            </div>
+            <div class="timeline-item red">
+                <div class="timeline-year">2021 (Jun)</div>
+                <div class="timeline-title">Japan pledges to stop overseas coal finance</div>
+                <div class="timeline-desc">At G7 Summit, Japan commits to ending overseas unabated coal finance by end of 2021. JBIC had been the world's largest public coal financier alongside China.</div>
+            </div>
+            <div class="timeline-item red">
+                <div class="timeline-year">2021 (Sep)</div>
+                <div class="timeline-title">China pledges to stop overseas coal power</div>
+                <div class="timeline-desc">President Xi Jinping announces at UNGA that China will stop building new coal-fired power projects abroad. Affects ~$50B pipeline of BRI coal plants across Asia and Africa.</div>
+            </div>
+            <div class="timeline-item green">
+                <div class="timeline-year">2021 (Nov)</div>
+                <div class="timeline-title">COP26 Glasgow: 40+ countries pledge coal phaseout</div>
+                <div class="timeline-desc">Global Coal to Clean Power Transition Statement commits signatories to phase out coal power domestically and end international coal finance.</div>
+            </div>
+            <div class="timeline-item green">
+                <div class="timeline-year">2022</div>
+                <div class="timeline-title">G7 ends public finance for unabated fossil fuels abroad</div>
+                <div class="timeline-desc">G7 Elmau Summit commits to ending public finance for unabated overseas fossil fuel projects by end of 2022, broadening beyond coal to oil and gas.</div>
+            </div>
+            <div class="timeline-item blue">
+                <div class="timeline-year">2023&ndash;2024</div>
+                <div class="timeline-title">Implementation and loopholes</div>
+                <div class="timeline-desc">Pledges translate into measurable decline. However, some Chinese-financed projects continue under pre-pledge commitments. Japan allows "ammonia co-firing" exceptions. Enforcement varies.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== DATA TABLE ========== -->
+    <div class="section">
+        <h2>Major Foreign-Financed Coal Projects</h2>
+        <p class="section-subtitle">Selected cross-border coal projects showing investor country, recipient, project type, value, and current status.</p>
+        <div class="data-table-wrapper" style="max-height: 600px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Investor</th>
+                        <th>Recipient</th>
+                        <th>Project</th>
+                        <th>Type</th>
+                        <th class="num">Value ($B)</th>
+                        <th>Status</th>
+                        <th>Year</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody id="projectTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========== METHODOLOGY ========== -->
+    <div class="section">
+        <h2>Methodology &amp; Sources</h2>
+        <div class="methodology">
+            <h3>Data Sources</h3>
+            <ul>
+                <li><strong>Global Energy Monitor (GEM):</strong> Global Coal Finance Tracker (primary dataset). Tracks individual coal project-level finance commitments including investor identity, amount, date, and project status. Updated quarterly.</li>
+                <li><strong>Boston University Global Development Policy Center:</strong> China's Global Energy Finance database. Tracks Chinese overseas energy investment via China Development Bank (CDB) and Export-Import Bank of China (CHEXIM).</li>
+                <li><strong>OECD:</strong> Export credit data on coal-related ECA financing commitments and volumes by member country.</li>
+                <li><strong>Oil Change International:</strong> Public finance for energy database (Shift the Subsidies). Tracks bilateral and multilateral development finance for fossil fuels.</li>
+                <li><strong>Urgewald Global Coal Exit List:</strong> Identifies financial institutions and their coal-related exposures across the value chain.</li>
+                <li><strong>IEA World Energy Investment:</strong> Annual investment data by fuel type and region, including estimated cross-border flows.</li>
+                <li><strong>IEEFA (Institute for Energy Economics and Financial Analysis):</strong> Reports on individual country and project-level coal finance trends.</li>
+            </ul>
+
+            <h3>Methodology Notes</h3>
+            <ul>
+                <li><strong>Scope:</strong> Cross-border finance only. Domestic investment (e.g., Indian banks financing Indian coal plants) is excluded. Includes equity investment, debt (loans and bonds), export credit guarantees, and development finance grants.</li>
+                <li><strong>Valuation:</strong> Project values are based on total committed finance at the time of financial close or announcement, not disbursed amounts. Values are nominal USD. Some projects have multiple foreign investors; total is allocated proportionally where breakdown is available, otherwise attributed to the lead financier.</li>
+                <li><strong>Time period:</strong> Trend data covers 2015&ndash;2024. Cumulative figures cover 2013&ndash;2023 to capture the full post-World Bank restriction period.</li>
+                <li><strong>Headline annual figure:</strong> The ~$17B figure for 2023 reflects new commitments entering the GEM tracker, down from ~$35B in 2015. Some variation across sources due to different scope definitions (e.g., BU GDP Center includes Chinese policy bank loans only).</li>
+                <li><strong>Limitations:</strong> Private-sector commercial bank lending is undercounted as syndicated loan data is often confidential. Chinese investment data relies on public announcements and may miss smaller transactions. Project cancellations/suspensions are tracked but may lag actual status.</li>
+            </ul>
+        </div>
+    </div>
+
 </div>
+
 <div class="footer">
     <p>Global Fossil Fuel Market Value Dashboard</p>
     <p>Built with <a href="https://claude.ai">Claude</a></p>
 </div>
+
+<script src="colors.js"></script>
 <script src="nav.js"></script>
+<script>
+// ==========================================
+//  DATA
+// ==========================================
+
+// Destination countries: cumulative foreign coal finance received 2013-2023 ($B)
+const destinationData = [
+    { country: 'Indonesia', value: 22.5 },
+    { country: 'Vietnam', value: 15.8 },
+    { country: 'Bangladesh', value: 12.3 },
+    { country: 'Pakistan', value: 10.7 },
+    { country: 'South Africa', value: 8.4 },
+    { country: 'Australia', value: 7.9 },
+    { country: 'Mozambique', value: 6.5 },
+    { country: 'Philippines', value: 5.8 },
+    { country: 'Mongolia', value: 4.2 },
+    { country: 'India', value: 3.9 },
+    { country: 'Turkey', value: 3.1 },
+    { country: 'Cambodia', value: 2.4 },
+    { country: 'Laos', value: 2.1 },
+    { country: 'Zimbabwe', value: 1.8 },
+    { country: 'Tanzania', value: 1.5 },
+];
+
+// Source countries: cumulative outflows 2013-2023 ($B)
+const sourceData = [
+    { country: 'China', value: 50.2 },
+    { country: 'Japan', value: 28.7 },
+    { country: 'South Korea', value: 12.4 },
+    { country: 'India', value: 4.8 },
+    { country: 'United Kingdom', value: 3.6 },
+    { country: 'Germany', value: 2.9 },
+    { country: 'United States', value: 2.5 },
+    { country: 'Australia', value: 2.1 },
+    { country: 'France', value: 1.4 },
+    { country: 'Canada', value: 1.2 },
+    { country: 'Russia', value: 0.9 },
+    { country: 'South Africa', value: 0.7 },
+];
+
+// Annual trend data ($B), 2015-2024
+const trendYears = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
+const trendValues = [35.2, 32.8, 29.5, 27.1, 25.4, 18.6, 22.3, 19.1, 16.8, 13.5];
+// Breakdown: China vs Japan/Korea vs Other
+const trendChina =    [18.5, 17.2, 15.8, 15.0, 14.2, 10.8, 13.5, 11.2, 10.5, 8.2];
+const trendJpnKor =   [12.0, 11.5, 10.2, 9.0,  8.2,  5.4,  5.8,  3.8,  2.5,  1.5];
+const trendOther =     [4.7,  4.1,  3.5,  3.1,  3.0,  2.4,  3.0,  4.1,  3.8,  3.8];
+
+// Investment by type (for doughnut chart)
+const typeLabels = ['Coal Power Plants', 'Coal Mining', 'Port & Rail Infrastructure', 'Coal-to-Chemicals/Liquids'];
+const typeValues = [68, 35, 15, 6];
+const typeColors = [PALETTE.coal, PALETTE.coalLight, '#7f8c8d', '#95a5a6'];
+
+// Major projects table data
+const projects = [
+    { investor: 'China', recipient: 'Pakistan', project: 'Sahiwal Coal Power Plant (CPEC)', type: 'Power', value: 1.8, status: 'completed', year: 2017, source: 'GEM GCFT' },
+    { investor: 'China', recipient: 'Pakistan', project: 'Port Qasim Coal Plant (CPEC)', type: 'Power', value: 2.1, status: 'completed', year: 2018, source: 'GEM GCFT' },
+    { investor: 'China', recipient: 'Pakistan', project: 'Thar Block-II Mine + Power (CPEC)', type: 'Mining + Power', value: 3.8, status: 'completed', year: 2019, source: 'BU GDP Center' },
+    { investor: 'China', recipient: 'Bangladesh', project: 'Payra 1,320 MW Coal Plant', type: 'Power', value: 2.4, status: 'completed', year: 2020, source: 'GEM GCFT' },
+    { investor: 'China', recipient: 'Bangladesh', project: 'Rampal 1,320 MW (Maitree)', type: 'Power', value: 1.5, status: 'active', year: 2022, source: 'GEM GCFT' },
+    { investor: 'Japan', recipient: 'Indonesia', project: 'Cirebon 2 Coal Plant (JBIC)', type: 'Power', value: 1.7, status: 'completed', year: 2019, source: 'GEM GCFT' },
+    { investor: 'Japan', recipient: 'Vietnam', project: 'Nghi Son 2 (1,200 MW)', type: 'Power', value: 2.3, status: 'completed', year: 2021, source: 'JBIC / GEM' },
+    { investor: 'Japan', recipient: 'Vietnam', project: 'Vung Ang 2 (1,200 MW)', type: 'Power', value: 2.2, status: 'active', year: 2023, source: 'GEM GCFT' },
+    { investor: 'South Korea', recipient: 'Vietnam', project: 'Vung Ang 1 Expansion (KEXIM)', type: 'Power', value: 1.2, status: 'completed', year: 2018, source: 'GEM GCFT' },
+    { investor: 'South Korea', recipient: 'Indonesia', project: 'Jawa 9 & 10 (KEXIM/KOGAS)', type: 'Power', value: 3.4, status: 'active', year: 2021, source: 'GEM GCFT' },
+    { investor: 'China', recipient: 'Indonesia', project: 'PLTU Java-1 (Suralaya expansion)', type: 'Power', value: 1.8, status: 'completed', year: 2020, source: 'BU GDP Center' },
+    { investor: 'China', recipient: 'Vietnam', project: 'Quang Trach 1 (1,200 MW)', type: 'Power', value: 1.6, status: 'suspended', year: 2019, source: 'GEM GCFT' },
+    { investor: 'China', recipient: 'Mongolia', project: 'Tavan Tolgoi Mine Development', type: 'Mining', value: 1.4, status: 'active', year: 2018, source: 'GEM / IEEFA' },
+    { investor: 'China', recipient: 'Mozambique', project: 'Moatize Coal Mine (via Vale JV)', type: 'Mining', value: 2.5, status: 'active', year: 2016, source: 'GEM GCFT' },
+    { investor: 'Australia', recipient: 'Mozambique', project: 'Nacala Rail Corridor (coal export)', type: 'Infrastructure', value: 4.0, status: 'completed', year: 2017, source: 'GEM / OECD' },
+    { investor: 'China', recipient: 'South Africa', project: 'Musina-Makhado Coal & Power SEZ', type: 'Mining + Power', value: 3.5, status: 'proposed', year: 2020, source: 'GEM GCFT' },
+    { investor: 'Japan', recipient: 'Bangladesh', project: 'Matarbari 1,200 MW (JICA)', type: 'Power', value: 4.6, status: 'active', year: 2018, source: 'JICA / GEM' },
+    { investor: 'China', recipient: 'Philippines', project: 'Mariveles 600 MW (PowerChina)', type: 'Power', value: 1.1, status: 'completed', year: 2019, source: 'GEM GCFT' },
+    { investor: 'China', recipient: 'Cambodia', project: 'Sihanoukville 700 MW CFPP', type: 'Power', value: 1.2, status: 'completed', year: 2020, source: 'BU GDP Center' },
+    { investor: 'China', recipient: 'Zimbabwe', project: 'Hwange 600 MW Expansion', type: 'Power', value: 1.5, status: 'active', year: 2021, source: 'GEM GCFT' },
+    { investor: 'India', recipient: 'Bangladesh', project: 'Rampal JV (NTPC + BPDB)', type: 'Power', value: 1.8, status: 'active', year: 2022, source: 'GEM / IEEFA' },
+    { investor: 'China', recipient: 'Laos', project: 'Hongsa Lignite 1,878 MW', type: 'Power', value: 3.2, status: 'completed', year: 2016, source: 'GEM GCFT' },
+    { investor: 'United Kingdom', recipient: 'South Africa', project: 'Khanyisa 306 MW IPP (Pele/Acwa)', type: 'Power', value: 0.8, status: 'shelved', year: 2019, source: 'GEM GCFT' },
+    { investor: 'China', recipient: 'Turkey', project: 'Emba Hunutlu 1,320 MW CFPP', type: 'Power', value: 1.7, status: 'completed', year: 2022, source: 'GEM GCFT' },
+];
+
+
+// ==========================================
+//  CHARTS
+// ==========================================
+
+// --- Chart: Destination Countries (horizontal bar) ---
+new Chart(document.getElementById('chartDestination'), {
+    type: 'bar',
+    data: {
+        labels: destinationData.map(d => d.country),
+        datasets: [{
+            label: 'Foreign Coal Finance Received ($B)',
+            data: destinationData.map(d => d.value),
+            backgroundColor: destinationData.map(d => getCountryColor(d.country)),
+            borderRadius: 4,
+            barThickness: 22,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => '$' + fmt(ctx.parsed.x, 1) + 'B cumulative (2013\u20132023)'
+                }
+            }
+        },
+        scales: {
+            x: {
+                title: { display: true, text: 'Cumulative Foreign Finance ($B)', font: { size: 11 } },
+                grid: { color: '#f0f0f0' },
+                ticks: { callback: v => '$' + v + 'B', font: { size: 10 } }
+            },
+            y: {
+                grid: { display: false },
+                ticks: { font: { size: 11 } }
+            }
+        }
+    }
+});
+
+// --- Chart: Source Countries (horizontal bar) ---
+new Chart(document.getElementById('chartSource'), {
+    type: 'bar',
+    data: {
+        labels: sourceData.map(d => d.country),
+        datasets: [{
+            label: 'Coal Finance Outflows ($B)',
+            data: sourceData.map(d => d.value),
+            backgroundColor: sourceData.map(d => getCountryColor(d.country)),
+            borderRadius: 4,
+            barThickness: 22,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => '$' + fmt(ctx.parsed.x, 1) + 'B outflows (2013\u20132023)'
+                }
+            }
+        },
+        scales: {
+            x: {
+                title: { display: true, text: 'Cumulative Finance Outflows ($B)', font: { size: 11 } },
+                grid: { color: '#f0f0f0' },
+                ticks: { callback: v => '$' + v + 'B', font: { size: 10 } }
+            },
+            y: {
+                grid: { display: false },
+                ticks: { font: { size: 11 } }
+            }
+        }
+    }
+});
+
+// --- Chart: Trend Over Time (stacked area) ---
+new Chart(document.getElementById('chartTrend'), {
+    type: 'line',
+    data: {
+        labels: trendYears,
+        datasets: [
+            {
+                label: 'China (BRI + policy banks)',
+                data: trendChina,
+                backgroundColor: 'rgba(230, 57, 70, 0.25)',
+                borderColor: '#e63946',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+            },
+            {
+                label: 'Japan & South Korea (ECAs)',
+                data: trendJpnKor,
+                backgroundColor: 'rgba(255, 123, 0, 0.2)',
+                borderColor: '#ff7b00',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+            },
+            {
+                label: 'Other (Western, multilateral, etc.)',
+                data: trendOther,
+                backgroundColor: 'rgba(149, 165, 166, 0.2)',
+                borderColor: '#95a5a6',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top', labels: { font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' } },
+            tooltip: {
+                callbacks: {
+                    afterBody: function(items) {
+                        const total = items.reduce((s, i) => s + i.parsed.y, 0);
+                        return '\nTotal: $' + fmt(total, 1) + 'B';
+                    },
+                    label: ctx => ctx.dataset.label + ': $' + fmt(ctx.parsed.y, 1) + 'B'
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: { color: '#f0f0f0' },
+                ticks: { font: { size: 11 } }
+            },
+            y: {
+                stacked: true,
+                title: { display: true, text: 'Annual Commitments ($B)', font: { size: 11 } },
+                grid: { color: '#f0f0f0' },
+                ticks: { callback: v => '$' + v + 'B', font: { size: 10 } },
+                beginAtZero: true,
+            }
+        },
+        // Annotation-like: add vertical lines for key events via plugin
+    },
+    plugins: [{
+        id: 'eventLines',
+        afterDraw: function(chart) {
+            const ctx = chart.ctx;
+            const xScale = chart.scales.x;
+            const yScale = chart.scales.y;
+
+            const events = [
+                { year: 2015, label: 'Paris Agreement', color: '#3498db' },
+                { year: 2021, label: 'China/Japan/Korea pledges', color: '#e74c3c' },
+            ];
+
+            events.forEach(ev => {
+                const idx = trendYears.indexOf(ev.year);
+                if (idx === -1) return;
+                const x = xScale.getPixelForValue(idx);
+                const yTop = yScale.top;
+                const yBottom = yScale.bottom;
+
+                ctx.save();
+                ctx.strokeStyle = ev.color;
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(x, yTop);
+                ctx.lineTo(x, yBottom);
+                ctx.stroke();
+
+                ctx.fillStyle = ev.color;
+                ctx.font = '600 10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(ev.label, x, yTop - 5);
+                ctx.restore();
+            });
+        }
+    }]
+});
+
+// --- Chart: Investment by Type (doughnut) ---
+new Chart(document.getElementById('chartType'), {
+    type: 'doughnut',
+    data: {
+        labels: typeLabels,
+        datasets: [{
+            data: typeValues,
+            backgroundColor: typeColors,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '55%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { font: { size: 11 }, padding: 15, usePointStyle: true, pointStyle: 'circle' }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const pct = ((ctx.parsed / total) * 100).toFixed(0);
+                        return ctx.label + ': $' + ctx.parsed + 'B (' + pct + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+
+// ==========================================
+//  DATA TABLE
+// ==========================================
+
+function statusBadge(status) {
+    return '<span class="status-badge ' + status + '">' + status + '</span>';
+}
+
+function renderTable() {
+    const tbody = document.getElementById('projectTableBody');
+    // Sort by value descending
+    const sorted = [...projects].sort((a, b) => b.value - a.value);
+    tbody.innerHTML = sorted.map(p => {
+        const investorDot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + getCountryColor(p.investor) + ';margin-right:5px;"></span>';
+        const recipientDot = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + getCountryColor(p.recipient) + ';margin-right:5px;"></span>';
+        return '<tr>' +
+            '<td>' + investorDot + p.investor + '</td>' +
+            '<td>' + recipientDot + p.recipient + '</td>' +
+            '<td>' + p.project + '</td>' +
+            '<td>' + p.type + '</td>' +
+            '<td class="num">$' + fmt(p.value, 1) + 'B</td>' +
+            '<td>' + statusBadge(p.status) + '</td>' +
+            '<td>' + p.year + '</td>' +
+            '<td><span class="source-tag">' + p.source + '</span></td>' +
+            '</tr>';
+    }).join('');
+}
+
+renderTable();
+
+</script>
 </body>
 </html>

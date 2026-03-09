@@ -73,7 +73,7 @@
 
 <div class="header">
     <h1>Import Exposure by Commodity</h1>
-    <div class="subtitle">Task 7: Share of domestic consumption met by imports &mdash; coal, oil &amp; gas (2023&ndash;2024 data)</div>
+    <div class="subtitle">Share of domestic consumption met by imports &mdash; coal, oil &amp; gas (2023&ndash;2024 data)</div>
 </div>
 
 <div class="container">
@@ -305,11 +305,12 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard &middot; Task 7 of 10 Analysis Verticals</p>
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Section 9: Import Exposure</p>
     <p>Data: 2023&ndash;2024 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
 <script src="nav.js"></script>
+<script src="colors.js"></script>
 <script>
 // ============================================================
 // DATA
@@ -479,13 +480,13 @@ const gasTrends = {
 // CHART HELPERS
 // ============================================================
 
-const coalColor = '#3d3d3d';
-const coalColorLight = '#6b6b6b';
-const oilColor = '#c0392b';
-const oilColorLight = '#e74c3c';
-const gasColor = '#2980b9';
-const gasColorLight = '#3498db';
-const accentColor = '#16a085';
+const coalColor = PALETTE.coal;
+const coalColorLight = PALETTE.coalLight;
+const oilColor = PALETTE.oil;
+const oilColorLight = PALETTE.oilLight;
+const gasColor = PALETTE.gas;
+const gasColorLight = PALETTE.gasLight;
+const accentColor = PALETTE.accent;
 
 function depColor(val, baseColor) {
     return val >= 0 ? baseColor : accentColor;
@@ -741,18 +742,11 @@ const gasSourceChart = makeSourceChart('chartGasSources', gasSources, gasColor);
 // Trend charts
 function makeTrendChart(canvasId, trendsObj, baseColor) {
     const ctx = document.getElementById(canvasId).getContext('2d');
-    const lineColors = {
-        'China': '#e74c3c',
-        'India': '#e67e22',
-        'Japan': '#8e44ad',
-        'EU-27': '#2980b9',
-        'USA': '#16a085',
-    };
     const datasets = Object.entries(trendsObj).map(([country, values]) => ({
         label: country,
         data: values,
-        borderColor: lineColors[country] || '#999',
-        backgroundColor: (lineColors[country] || '#999') + '20',
+        borderColor: getCountryColor(country),
+        backgroundColor: getCountryColor(country) + '20',
         fill: false,
         tension: 0.3,
         pointRadius: 4,

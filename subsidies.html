@@ -81,13 +81,46 @@
         .comparison-bar .bar-label { width: 140px; text-align: right; flex-shrink: 0; }
         .comparison-bar .bar-track { flex: 1; height: 22px; background: var(--bg); border-radius: 4px; overflow: hidden; position: relative; }
         .comparison-bar .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; font-size: 0.72rem; color: white; font-weight: 600; }
+
+        .case-study-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+        @media (max-width: 800px) { .case-study-grid { grid-template-columns: 1fr; } }
+
+        .case-study-card {
+            background: var(--card-bg); border-radius: 10px; padding: 1.4rem;
+            border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: transform 0.2s;
+        }
+        .case-study-card:hover { transform: translateY(-2px); }
+        .case-study-card .cs-header {
+            display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.8rem;
+        }
+        .case-study-card .cs-flag {
+            flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 700; font-size: 0.7rem;
+        }
+        .case-study-card .cs-title { font-weight: 600; font-size: 0.95rem; }
+        .case-study-card .cs-subtitle { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.1rem; }
+        .case-study-card .cs-body { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+        .case-study-card .cs-body ul { padding-left: 1.2rem; margin: 0.4rem 0 0; }
+        .case-study-card .cs-body ul li { margin-bottom: 0.3rem; }
+        .case-study-card .cs-cost-highlight {
+            display: inline-block; margin-top: 0.6rem; padding: 0.3rem 0.8rem;
+            border-radius: 6px; font-weight: 700; font-size: 1.1rem;
+        }
+        .case-study-card .cs-source {
+            margin-top: 0.6rem; font-size: 0.72rem; color: var(--text-secondary);
+            font-style: italic; border-top: 1px solid var(--border); padding-top: 0.5rem;
+        }
+
+        .chart-container-case-study { position: relative; width: 100%; height: 300px; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>Global Fossil Fuel Subsidies</h1>
-    <div class="subtitle">Task 6: Implicit Subsidy Costs per Worker by Geography &middot; IMF/IEA/OECD data (2022&ndash;2023)</div>
+    <div class="subtitle">Section 6: Implicit Subsidy Costs per Worker by Geography &middot; IMF/IEA/OECD data (2022&ndash;2023)</div>
 </div>
 
 <div class="container">
@@ -170,7 +203,7 @@
                 </div>
                 <div class="comparison-bar">
                     <div class="bar-label">Climate / GHG</div>
-                    <div class="bar-track"><div class="bar-fill" style="width:26%;background:#2980b9;">$1.8T</div></div>
+                    <div class="bar-track"><div class="bar-fill" style="width:26%;background:#3498db;">$1.8T</div></div>
                 </div>
                 <div class="comparison-bar">
                     <div class="bar-label">Direct subsidies</div>
@@ -412,6 +445,202 @@
         </div>
     </div>
 
+    <!-- Cost of Saving Jobs: Case Studies -->
+    <div class="section">
+        <h2>The Cost of Saving Jobs &mdash; Case Studies</h2>
+        <p class="section-subtitle">Bottom-up analysis of specific situations where the cost of preserving fossil fuel jobs can be calculated from publicly available data. These are not top-down IMF estimates &mdash; each figure is traced to specific plant economics, price premiums, or government programmes.</p>
+
+        <div class="case-study-grid">
+            <!-- Case Study 1: JH Campbell -->
+            <div class="case-study-card" style="border-top: 3px solid #457b9d;">
+                <div class="cs-header">
+                    <div class="cs-flag" style="background:#457b9d;">US</div>
+                    <div>
+                        <div class="cs-title">JH Campbell Power Plant</div>
+                        <div class="cs-subtitle">West Olive, Michigan, USA</div>
+                    </div>
+                </div>
+                <div class="cs-body">
+                    <p>Consumers Energy's JH Campbell coal plant employed ~200 workers directly. As coal became uncompetitive against renewables, Michigan ratepayers were paying an estimated <strong>$40&ndash;60M/year above market rates</strong> to keep the plant running.</p>
+                    <ul>
+                        <li>Above-market cost: $40&ndash;60M/year</li>
+                        <li>Direct jobs: ~200</li>
+                        <li>Cost per job: ~$200,000&ndash;$300,000/year</li>
+                        <li>Plant retired units 2023&ndash;2025, replaced with solar + storage</li>
+                    </ul>
+                    <div class="cs-cost-highlight" style="background:#457b9d22;color:#457b9d;">~$250k / job / year</div>
+                </div>
+                <div class="cs-source">Source: Michigan Public Service Commission filings, Consumers Energy Integrated Resource Plan</div>
+            </div>
+
+            <!-- Case Study 2: Polish Coal -->
+            <div class="case-study-card" style="border-top: 3px solid #9d4edd;">
+                <div class="cs-header">
+                    <div class="cs-flag" style="background:#9d4edd;">PL</div>
+                    <div>
+                        <div class="cs-title">Domestic Coal vs Imports</div>
+                        <div class="cs-subtitle">Poland</div>
+                    </div>
+                </div>
+                <div class="cs-body">
+                    <p>Poland produces ~100Mt of hard coal domestically at ~$80&ndash;120/t from high-cost underground mines, while imported seaborne thermal coal is available at ~$60&ndash;80/t. The price premium on ~50Mt consumed domestically costs consumers ~$1&ndash;2B/year.</p>
+                    <ul>
+                        <li>Price premium: ~$20&ndash;40/t on ~50Mt = ~$1&ndash;2B/year</li>
+                        <li>Coal mining jobs: ~80,000</li>
+                        <li>Implicit subsidy per worker: ~$12,500&ndash;25,000/year (price premium only)</li>
+                        <li>Additional direct budget subsidies: ~$1B/year</li>
+                    </ul>
+                    <div class="cs-cost-highlight" style="background:#9d4edd22;color:#9d4edd;">~$19k / job / year</div>
+                </div>
+                <div class="cs-source">Source: Polish Ministry of State Assets, EU Commission state aid reports</div>
+            </div>
+
+            <!-- Case Study 3: German Lignite -->
+            <div class="case-study-card" style="border-top: 3px solid #495057;">
+                <div class="cs-header">
+                    <div class="cs-flag" style="background:#495057;">DE</div>
+                    <div>
+                        <div class="cs-title">Lignite Regions Transition</div>
+                        <div class="cs-subtitle">Lausitz &amp; Rhineland, Germany</div>
+                    </div>
+                </div>
+                <div class="cs-body">
+                    <p>Germany's lignite mines employ ~20,000 workers. The Kohleausstiegsgesetz (Coal Exit Law) allocated a structural adjustment package of <strong>&euro;40B over 20 years</strong> (&euro;2B/year) for affected regions.</p>
+                    <ul>
+                        <li>Transition fund: &euro;40B over 20 years (&euro;2B/year)</li>
+                        <li>Lignite workers: ~20,000</li>
+                        <li>Cost per worker: ~&euro;100,000/year in transition support</li>
+                        <li>Plus above-market electricity costs before phaseout</li>
+                    </ul>
+                    <div class="cs-cost-highlight" style="background:#49505722;color:#495057;">&euro;100k / job / year</div>
+                </div>
+                <div class="cs-source">Source: Kohleausstiegsgesetz (Coal Exit Law), German Federal Government</div>
+            </div>
+
+            <!-- Case Study 4: South African Eskom -->
+            <div class="case-study-card" style="border-top: 3px solid #e9c46a;">
+                <div class="cs-header">
+                    <div class="cs-flag" style="background:#c9a44a;color:#fff;">ZA</div>
+                    <div>
+                        <div class="cs-title">Eskom Coal Fleet</div>
+                        <div class="cs-subtitle">South Africa</div>
+                    </div>
+                </div>
+                <div class="cs-body">
+                    <p>Eskom's ~44 GW coal fleet is increasingly unreliable, causing costly load shedding. The Just Energy Transition Partnership (JETP) pledged <strong>$8.5B</strong>. Each year of delay in transitioning is estimated to cost $2&ndash;4B in excess generation costs.</p>
+                    <ul>
+                        <li>JETP funding: $8.5B pledged</li>
+                        <li>Eskom workforce: ~44,000 total (not all coal-specific)</li>
+                        <li>Annual excess generation cost from delay: $2&ndash;4B/year</li>
+                        <li>Implicit cost per worker from generation inefficiency: ~$45,000&ndash;$90,000/year</li>
+                    </ul>
+                    <div class="cs-cost-highlight" style="background:#e9c46a33;color:#8a7430;">~$68k / job / year</div>
+                </div>
+                <div class="cs-source">Source: Presidential Climate Commission, Eskom Annual Reports, JETP Investment Plan</div>
+            </div>
+
+            <!-- Case Study 5: Australian Coal -->
+            <div class="case-study-card" style="border-top: 3px solid #7209b7;">
+                <div class="cs-header">
+                    <div class="cs-flag" style="background:#7209b7;">AU</div>
+                    <div>
+                        <div class="cs-title">Coal Export Tax Concessions</div>
+                        <div class="cs-subtitle">Hunter Valley &amp; Bowen Basin, Australia</div>
+                    </div>
+                </div>
+                <div class="cs-body">
+                    <p>Australia's coal mining sector employs ~50,000 workers directly (Hunter Valley &amp; Bowen Basin). Tax concessions and diesel fuel rebates for mining amount to ~$5&ndash;7B/year for the mining sector.</p>
+                    <ul>
+                        <li>Tax concessions + diesel fuel rebate: ~$5&ndash;7B/year (mining sector)</li>
+                        <li>Direct coal jobs: ~50,000</li>
+                        <li>Per-worker subsidy through tax concessions: ~$100,000&ndash;140,000/year</li>
+                        <li>Workers themselves are well-paid (~$120k avg salary)</li>
+                    </ul>
+                    <div class="cs-cost-highlight" style="background:#7209b722;color:#7209b7;">~$120k / job / year</div>
+                </div>
+                <div class="cs-source">Source: The Australia Institute, Australian Treasury data</div>
+            </div>
+        </div>
+
+        <!-- Cost per job comparison chart -->
+        <div class="section" style="margin-top: 1.5rem; padding: 0;">
+            <h3>Cost per Job Comparison</h3>
+            <p class="section-subtitle">Midpoint estimates of annual cost per fossil fuel job across case studies. Different types of cost: price premiums paid by consumers, direct budget subsidies, or transition funding.</p>
+            <div class="chart-container-case-study"><canvas id="chartCaseStudyCost"></canvas></div>
+        </div>
+
+        <!-- Summary table -->
+        <div style="margin-top: 1.5rem;">
+            <h3>Summary</h3>
+            <div class="data-table-wrapper">
+                <table id="caseStudyTable">
+                    <thead>
+                        <tr>
+                            <th>Case Study</th>
+                            <th>Location</th>
+                            <th class="num">Jobs</th>
+                            <th class="num">Annual Cost</th>
+                            <th class="num">Cost per Job</th>
+                            <th>Type</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>JH Campbell Plant</td>
+                            <td>Michigan, USA</td>
+                            <td class="num">200</td>
+                            <td class="num">$40&ndash;60M</td>
+                            <td class="num"><strong>$200&ndash;300k</strong></td>
+                            <td>Price premium (above-market generation)</td>
+                            <td style="font-size:0.75rem">MI PSC filings, Consumers Energy IRP</td>
+                        </tr>
+                        <tr>
+                            <td>Domestic Coal vs Imports</td>
+                            <td>Poland</td>
+                            <td class="num">80,000</td>
+                            <td class="num">$1&ndash;2B</td>
+                            <td class="num"><strong>$12.5&ndash;25k</strong></td>
+                            <td>Price premium (domestic vs import)</td>
+                            <td style="font-size:0.75rem">Polish Min. of State Assets, EU Commission</td>
+                        </tr>
+                        <tr>
+                            <td>Lignite Transition</td>
+                            <td>Lausitz &amp; Rhineland, Germany</td>
+                            <td class="num">20,000</td>
+                            <td class="num">&euro;2B</td>
+                            <td class="num"><strong>&euro;100k</strong></td>
+                            <td>Transition fund (direct budget)</td>
+                            <td style="font-size:0.75rem">Coal Exit Law, German Federal Govt</td>
+                        </tr>
+                        <tr>
+                            <td>Eskom Coal Fleet</td>
+                            <td>South Africa</td>
+                            <td class="num">44,000</td>
+                            <td class="num">$2&ndash;4B</td>
+                            <td class="num"><strong>$45&ndash;90k</strong></td>
+                            <td>Excess generation cost (delay penalty)</td>
+                            <td style="font-size:0.75rem">Presidential Climate Comm., Eskom AR</td>
+                        </tr>
+                        <tr>
+                            <td>Coal Tax Concessions</td>
+                            <td>Hunter Valley &amp; Bowen Basin, Australia</td>
+                            <td class="num">50,000</td>
+                            <td class="num">$5&ndash;7B</td>
+                            <td class="num"><strong>$100&ndash;140k</strong></td>
+                            <td>Direct subsidy (tax concessions)</td>
+                            <td style="font-size:0.75rem">Australia Institute, Treasury data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="info-callout" style="margin-top: 1rem;">
+            <strong>Reading these numbers:</strong> The cost per job varies enormously depending on the type of support and the country context. Poland's low per-worker figure reflects that 80,000 jobs spread the price premium thinly, while JH Campbell's high figure reflects a small workforce at a single uneconomic plant. Germany's &euro;100k figure is a transition payment (temporary, designed to end the industry), while Australia's tax concessions are ongoing structural support for a profitable export industry. These are not directly comparable &mdash; but together they illustrate the range of costs societies pay to sustain fossil fuel employment.
+        </div>
+    </div>
+
     <!-- Methodology -->
     <div class="section">
         <h2>Methodology & Sources</h2>
@@ -438,10 +667,11 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Subsidies Dashboard &middot; Task 6 of 10 Analysis Verticals</p>
+    <p>Global Fossil Fuel Dashboard &middot; Section 8: Subsidies</p>
     <p>Data: 2022&ndash;2023 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
+<script src="colors.js"></script>
 <script>
 // ===== DATA =====
 
@@ -619,7 +849,7 @@ new Chart(document.getElementById('chartSubsidyType').getContext('2d'), {
         labels: ['Local Air Pollution ($2.8T)', 'Climate / GHG ($1.8T)', 'Direct Subsidies ($1.3T)', 'Congestion & Roads ($0.6T)', 'Foregone Tax Revenue ($0.5T)'],
         datasets: [{
             data: [2800, 1800, 1300, 600, 500],
-            backgroundColor: ['#8e44ad', '#2980b9', '#e67e22', '#27ae60', '#95a5a6'],
+            backgroundColor: ['#8e44ad', '#3498db', '#e67e22', '#27ae60', '#95a5a6'],
             borderWidth: 2,
             borderColor: '#fff'
         }]
@@ -694,7 +924,7 @@ new Chart(document.getElementById('chartPerWorker').getContext('2d'), {
             backgroundColor: pwData.map(d => {
                 if (d.perWorker > 1000) return '#c0392b';
                 if (d.perWorker > 500) return '#e67e22';
-                return '#2980b9';
+                return '#95a5a6';
             }),
         }]
     },
@@ -819,6 +1049,74 @@ new Chart(document.getElementById('chartComparison').getContext('2d'), {
         scales: {
             y: { title: { display: true, text: '$B', font: { size: 11 } }, grid: { color: '#f0f0f0' } },
             x: { grid: { color: '#f0f0f0' } }
+        }
+    }
+});
+
+
+// ===== CASE STUDY CHART =====
+const caseStudyData = [
+    { label: 'JH Campbell Plant (USA)',   costLow: 200, costHigh: 300, country: 'United States', type: 'Price premium' },
+    { label: 'Coal Tax Concessions (Australia)', costLow: 100, costHigh: 140, country: 'Australia', type: 'Direct subsidy' },
+    { label: 'Lignite Transition (Germany)', costLow: 100, costHigh: 100, country: 'Germany', type: 'Transition fund' },
+    { label: 'Eskom Coal Fleet (South Africa)', costLow: 45, costHigh: 90, country: 'South Africa', type: 'Excess generation cost' },
+    { label: 'Domestic Coal (Poland)',    costLow: 12.5, costHigh: 25, country: 'Poland', type: 'Price premium' },
+];
+
+// Sort by midpoint descending
+caseStudyData.sort((a, b) => ((b.costLow + b.costHigh) / 2) - ((a.costLow + a.costHigh) / 2));
+
+new Chart(document.getElementById('chartCaseStudyCost').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: caseStudyData.map(d => d.label),
+        datasets: [
+            {
+                label: 'Low estimate ($k/job/year)',
+                data: caseStudyData.map(d => d.costLow),
+                backgroundColor: caseStudyData.map(d => getCountryColor(d.country) + 'aa'),
+                borderColor: caseStudyData.map(d => getCountryColor(d.country)),
+                borderWidth: 1,
+            },
+            {
+                label: 'Additional range ($k/job/year)',
+                data: caseStudyData.map(d => d.costHigh - d.costLow),
+                backgroundColor: caseStudyData.map(d => getCountryColor(d.country) + '44'),
+                borderColor: caseStudyData.map(d => getCountryColor(d.country) + '88'),
+                borderWidth: 1,
+            }
+        ]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const idx = ctx.dataIndex;
+                        const d = caseStudyData[idx];
+                        if (d.costLow === d.costHigh) {
+                            return '$' + fmt(d.costLow) + 'k per job per year (' + d.type + ')';
+                        }
+                        return '$' + fmt(d.costLow) + 'k – $' + fmt(d.costHigh) + 'k per job per year (' + d.type + ')';
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                stacked: true,
+                title: { display: true, text: 'Cost per job ($k / year)', font: { size: 11 } },
+                grid: { color: '#f0f0f0' },
+            },
+            y: {
+                stacked: true,
+                grid: { display: false },
+                ticks: { font: { size: 11 } }
+            }
         }
     }
 });

@@ -226,6 +226,28 @@
         </div>
     </div>
 
+    <!-- Section 7: CO2 Intensity per kWh -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>CO2 Intensity per kWh of Electricity by Fuel</h2>
+            <p class="section-subtitle">Accounting for thermal efficiency: coal plants (~33% efficient) emit ~1,000 gCO2/kWh despite coal itself producing ~95 kgCO2/GJ. Gas CCGT at ~55% efficiency emits only ~370 gCO2/kWh.</p>
+            <div class="chart-container-tall"><canvas id="chartCO2PerKwh"></canvas></div>
+            <div style="margin-top:0.5rem;">
+                <span class="source-tag">IPCC AR6 WG3</span>
+                <span class="source-tag">IEA</span>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Tonnes of Coal per MWh of Electricity by Country</h2>
+            <p class="section-subtitle">Coal consumption per unit of electricity varies widely by coal quality (kcal/kg) and plant efficiency. Countries with low-grade coal and older plants need significantly more fuel.</p>
+            <div class="chart-container-tall"><canvas id="chartCoalPerMwh"></canvas></div>
+            <div style="margin-top:0.5rem;">
+                <span class="source-tag">IEA</span>
+                <span class="source-tag">National statistics</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Country detail table -->
     <div class="section">
         <h2>Coal in Electricity: Country Detail</h2>
@@ -260,6 +282,8 @@
             <p><strong>CO2 emissions:</strong> Energy-related CO2 emissions from fossil fuel combustion and industrial processes. 2024 estimate: 37.6 Gt CO2 (IEA). Coal: ~15.5 Gt (41%), oil: ~11.1 Gt (30%), gas: ~7.9 Gt (21%), industrial processes: ~3.1 Gt (8%).</p>
             <p><strong>CO2 intensity factors:</strong> IPCC AR6 default emission factors. Coal (anthracite/bituminous): ~95 kg CO2/GJ; oil: ~73 kg CO2/GJ; natural gas: ~56 kg CO2/GJ.</p>
             <p><strong>Country coal shares:</strong> Ember country-level electricity data (2024). Change vs 2019 calculated from same source. Some small countries with very high coal shares (e.g., Kosovo, North Macedonia) omitted from top-20 chart due to small absolute generation.</p>
+            <p><strong>CO2 intensity per kWh:</strong> Accounts for thermal efficiency of power plants, not just fuel carbon content. Coal plants operate at ~33% efficiency (lignite) to ~40% (supercritical), meaning only a third to two-fifths of coal's energy becomes electricity. Gas CCGT plants reach ~55% efficiency. Lifecycle emissions for renewables and nuclear include manufacturing, construction, and decommissioning. Sources: IPCC AR6 WG3, IEA.</p>
+            <p><strong>Coal tonnes per MWh:</strong> Varies by coal quality (calorific value in kcal/kg) and plant age/technology. India's predominantly sub-bituminous domestic coal (~3,500&ndash;4,500 kcal/kg) and older subcritical plants require ~0.72 tonnes/MWh, while Japan's ultra-supercritical plants burning high-grade imported coal (~6,000+ kcal/kg) need only ~0.40 tonnes/MWh. Sources: IEA, national statistics.</p>
             <div style="margin-top: 1rem;">
                 <span class="source-tag">Energy Institute Statistical Review 2025</span>
                 <span class="source-tag">IEA World Energy Outlook 2024</span>
@@ -279,23 +303,24 @@
     <p>Data: 2024 estimates &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
+<script src="colors.js"></script>
 <script>
 // ============================================================
 // DATA
 // ============================================================
 
-// Color palette
+// Color palette — uses PALETTE from colors.js
 const COLORS = {
-    coal: '#3d3d3d',
-    oil: '#c0392b',
-    gas: '#2980b9',
-    nuclear: '#8e44ad',
-    hydro: '#2ecc71',
-    wind: '#1abc9c',
-    solar: '#f1c40f',
-    bioOther: '#e67e22',
-    otherRenew: '#27ae60',
-    accent: '#16a085',
+    coal: PALETTE.techCoal,
+    oil: PALETTE.techOil,
+    gas: PALETTE.techGas,
+    nuclear: PALETTE.nuclear,
+    hydro: PALETTE.hydro,
+    wind: PALETTE.wind,
+    solar: PALETTE.solar,
+    bioOther: PALETTE.biomass,
+    otherRenew: PALETTE.otherRenew,
+    accent: PALETTE.accent,
     industry: '#95a5a6',
 };
 
@@ -436,10 +461,7 @@ Chart.defaults.plugins.legend.labels.usePointStyle = true;
 Chart.defaults.plugins.legend.labels.pointStyleWidth = 10;
 
 
-// ============================================================
-// HELPER: format number with commas
-// ============================================================
-function fmt(n) { return n.toLocaleString(); }
+// fmt() is provided by colors.js
 
 
 // ============================================================
@@ -830,6 +852,115 @@ new Chart(document.getElementById('chartCoalGeneration'), {
         },
         scales: {
             x: { title: { display: true, text: 'TWh' }, beginAtZero: true },
+            y: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 11: CO2 Intensity per kWh of Electricity by Fuel
+// ============================================================
+const co2PerKwhData = {
+    labels: ['Lignite', 'Hard Coal', 'Oil', 'Gas (OCGT)', 'Gas (CCGT)', 'Biomass', 'Solar PV', 'Wind', 'Nuclear', 'Hydro'],
+    values: [1100, 950, 700, 550, 370, 50, 40, 12, 12, 4],
+    colors: [
+        '#2d2d2d',           // Lignite — darkest
+        PALETTE.techCoal,    // Hard Coal
+        PALETTE.techOil,     // Oil
+        '#c0c0c0',           // Gas OCGT — lighter grey
+        PALETTE.techGas,     // Gas CCGT
+        PALETTE.biomass,     // Biomass
+        PALETTE.solar,       // Solar PV
+        PALETTE.wind,        // Wind
+        PALETTE.nuclear,     // Nuclear
+        PALETTE.hydro,       // Hydro
+    ],
+};
+
+new Chart(document.getElementById('chartCO2PerKwh'), {
+    type: 'bar',
+    data: {
+        labels: co2PerKwhData.labels,
+        datasets: [{
+            data: co2PerKwhData.values,
+            backgroundColor: co2PerKwhData.colors,
+            borderRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const label = ctx.label;
+                        const val = ctx.raw;
+                        if (val >= 100) return val + ' gCO2/kWh (combustion)';
+                        return val + ' gCO2/kWh (lifecycle)';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: { title: { display: true, text: 'gCO2 per kWh of electricity' }, beginAtZero: true },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+
+// ============================================================
+// CHART 12: Tonnes of Coal per MWh of Electricity by Country
+// ============================================================
+const coalPerMwhData = [
+    { country: 'India', value: 0.72, note: 'Low-quality domestic, ~33% eff.' },
+    { country: 'South Africa', value: 0.67, note: 'Low-grade, older plants ~33%' },
+    { country: 'Turkey', value: 0.65, note: 'Lignite-heavy, ~33% eff.' },
+    { country: 'Kazakhstan', value: 0.63, note: 'Low-grade, older plants' },
+    { country: 'Indonesia', value: 0.62, note: 'Sub-bituminous, ~35% eff.' },
+    { country: 'Vietnam', value: 0.60, note: 'Imported + domestic mix' },
+    { country: 'China', value: 0.58, note: 'Mix of quality, ~40% eff.' },
+    { country: 'Czech Republic', value: 0.58, note: 'Lignite, ~35% eff.' },
+    { country: 'Philippines', value: 0.55, note: 'Imported coal, newer plants' },
+    { country: 'Poland', value: 0.55, note: 'Hard coal + lignite, ~36%' },
+    { country: 'Germany', value: 0.52, note: 'Lignite mix, ~36% eff.' },
+    { country: 'Russia', value: 0.50, note: 'Mix of quality, ~35% eff.' },
+    { country: 'USA', value: 0.45, note: 'High-quality, ~38% eff.' },
+    { country: 'Australia', value: 0.42, note: 'High-quality bituminous, ~38%' },
+    { country: 'Japan', value: 0.40, note: 'Ultra-supercritical, ~42% eff.' },
+].sort((a, b) => b.value - a.value);
+
+new Chart(document.getElementById('chartCoalPerMwh'), {
+    type: 'bar',
+    data: {
+        labels: coalPerMwhData.map(d => d.country),
+        datasets: [{
+            label: 'Tonnes of coal per MWh',
+            data: coalPerMwhData.map(d => d.value),
+            backgroundColor: coalPerMwhData.map(d => getCountryColor(d.country)),
+            borderRadius: 3,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        const d = coalPerMwhData[ctx.dataIndex];
+                        return d.value + ' t/MWh — ' + d.note;
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { title: { display: true, text: 'Tonnes of coal per MWh' }, beginAtZero: true, max: 0.8 },
             y: { grid: { display: false } }
         }
     }

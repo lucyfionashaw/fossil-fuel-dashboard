@@ -2,10 +2,7 @@
 // CHARTS.JS — Chart rendering, toggles, popups, and table population
 // =====================================================================
 
-function fmt(n, decimals = 0) {
-    if (n == null) return '—';
-    return Number(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-}
+// fmt, COUNTRY_COLORS, getCountryColor now provided by colors.js
 
 function aggregateByCountry(data, valueKey) {
     const map = {};
@@ -17,71 +14,12 @@ function aggregateByCountry(data, valueKey) {
     return Object.values(map);
 }
 
-// =====================================================================
-// CONSISTENT COUNTRY COLORS — same color for each country everywhere
-// =====================================================================
-const COUNTRY_COLORS = {
-    "China": "#e63946",
-    "United States": "#457b9d",
-    "Russia": "#2a9d8f",
-    "Saudi Arabia": "#264653",
-    "India": "#f4a261",
-    "Indonesia": "#2d6a4f",
-    "Australia": "#7209b7",
-    "Canada": "#1d3557",
-    "Iran": "#606c38",
-    "Brazil": "#06d6a0",
-    "Iraq": "#bc6c25",
-    "UAE": "#8338ec",
-    "Qatar": "#ff006e",
-    "Norway": "#3a86ff",
-    "Kuwait": "#fb5607",
-    "South Africa": "#e9c46a",
-    "Kazakhstan": "#8ac926",
-    "Mongolia": "#6a040f",
-    "Germany": "#495057",
-    "Turkey": "#d62828",
-    "Poland": "#9d4edd",
-    "Colombia": "#007f5f",
-    "Mexico": "#d00000",
-    "Algeria": "#023e8a",
-    "Nigeria": "#005f73",
-    "Angola": "#bb3e03",
-    "Libya": "#0a9396",
-    "Venezuela": "#ca6702",
-    "Oman": "#ee9b00",
-    "Vietnam": "#9b2226",
-    "Turkmenistan": "#ae2012",
-    "Malaysia": "#48cae4",
-    "Egypt": "#00b4d8",
-    "Uzbekistan": "#118ab2",
-    "Argentina": "#073b4c",
-    "Thailand": "#ef476f",
-    "United Kingdom": "#ffc300",
-    "Pakistan": "#3d5a80",
-    "Azerbaijan": "#7b2cbf",
-    "Ecuador": "#c77dff",
-    "Guyana": "#80b918",
-    "Mozambique": "#5390d9",
-    "Philippines": "#b5179e",
-    "Ukraine": "#560bad",
-    "Czech Republic": "#480ca8",
-    "Botswana": "#e0aaff",
-    "Trinidad & Tobago": "#4cc9f0",
-    "Bangladesh": "#4895ef",
-    "Israel": "#4361ee",
-    "Rest of World": "#adb5bd",
-};
-
-function getCountryColor(country) {
-    return COUNTRY_COLORS[country] || '#adb5bd';
-}
-
+// Use shared PALETTE from colors.js
 const COLORS = {
-    coal: '#3d3d3d', coalLight: '#6b6b6b',
-    oil: '#c0392b', oilLight: '#e74c3c',
-    gas: '#2980b9', gasLight: '#3498db',
-    accent: '#16a085',
+    coal: PALETTE.coal, coalLight: PALETTE.coalLight,
+    oil: PALETTE.oil, oilLight: PALETTE.oilLight,
+    gas: PALETTE.gas, gasLight: PALETTE.gasLight,
+    accent: PALETTE.accent,
 };
 
 // =====================================================================

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Fossil Fuel Market Value Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        /* Page-specific styles */
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        .chart-container-tall { position: relative; width: 100%; height: 520px; }
+
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
+
+        .headline-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+        }
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.coal { border-top-color: var(--coal); }
+        .headline-card.oil { border-top-color: var(--oil); }
+        .headline-card.gas { border-top-color: var(--gas); }
+        .headline-card.total { border-top-color: var(--accent); }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        .transport-highlight { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 700px) { .transport-highlight { grid-template-columns: 1fr; } }
+        .transport-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+        .transport-card .pct { font-size: 1.5rem; font-weight: 700; }
+        .transport-card .desc { font-size: 0.78rem; color: var(--text-secondary); }
+
+        .category-legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+        .category-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-secondary); }
+        .category-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+        .india-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+        @media (max-width: 800px) { .india-detail-grid { grid-template-columns: 1fr; } }
+
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--gas); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout strong { color: var(--gas); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Global Fossil Fuel Market Value</h1>
+    <div class="subtitle">Coal vs Oil vs Gas — Production, Pricing & Transport Costs (2024 data, all petroleum liquids)</div>
+</div>
+
+<div class="container">
+
+    <!-- Headline cards -->
+    <div class="headline-grid">
+        <div class="headline-card coal">
+            <div class="label">Coal</div>
+            <div class="value" style="color:var(--coal)">~$750B</div>
+            <div class="detail">9,100 Mt production (2024 record)</div>
+        </div>
+        <div class="headline-card oil">
+            <div class="label">Oil (All Petroleum Liquids)</div>
+            <div class="value" style="color:var(--oil)">$2,670B</div>
+            <div class="detail">103 mb/d total &middot; Crude $2,340B + NGLs $185B + other $143B</div>
+        </div>
+        <div class="headline-card gas">
+            <div class="label">Natural Gas</div>
+            <div class="value" style="color:var(--gas)">~$680B</div>
+            <div class="detail">4,124 bcm &middot; IGU weighted avg $4.88/MMBtu</div>
+        </div>
+        <div class="headline-card total">
+            <div class="label">Total Fossil Fuels</div>
+            <div class="value" style="color:var(--accent)">~$4.1T</div>
+            <div class="detail">Central estimate (2024) &middot; $3.8&ndash;4.4T range</div>
+        </div>
+    </div>
+
+    <!-- Oil clarification -->
+    <div class="info-callout">
+        <strong>Oil: 103 mb/d total petroleum &amp; other liquids (2024).</strong> This includes crude oil + condensate (~82.5 mb/d, $2,340B), NGLs (~14 mb/d, $185B from petrochemical feedstocks), biofuels (~2.2 mb/d, $88B), other liquids (~2 mb/d, $55B), and processing gains (~2.3 mb/d, no revenue). Country table below shows crude + condensate priced by grade. EIA STEO: world supply averaged 103.08 mb/d in 2024, Brent averaged ~$80.50/bbl.
+        <a href="https://www.eia.gov/tools/faqs/faq.php?id=709&t=6" target="_blank" style="color:var(--accent)">EIA FAQ #709</a>
+    </div>
+
+    <!-- Charts row 1: Comparison -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Market Value Comparison</h2>
+            <div class="chart-container"><canvas id="chartComparison"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Share of Total Market Value</h2>
+            <div class="chart-container"><canvas id="chartShare"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Commodity Comparison -->
+    <div class="section">
+        <h2>How Fossil Fuels Compare to Other Global Commodities</h2>
+        <p class="section-subtitle">Annual market value of fossil fuels vs major mined commodities, critical minerals, and clean energy investment. Hover for details.</p>
+        <div class="chart-container-tall"><canvas id="chartCommodity"></canvas></div>
+        <div class="category-legend">
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#c0392b"></div> Fossil Fuels</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#27ae60"></div> Energy Investment (annual)</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#e67e22"></div> Metals &amp; Mining</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#8e44ad"></div> Critical Minerals</div>
+            <div class="category-legend-item"><div class="category-legend-dot" style="background:#f39c12"></div> Other Energy</div>
+        </div>
+    </div>
+
+    <!-- Country charts with toggles — click any bar for detail -->
+    <div class="section" style="background:none;box-shadow:none;padding:0;">
+        <p class="section-subtitle" style="text-align:center;margin-bottom:1rem;">Click any bar to see the underlying country data. Toggle between $ Value and Volume to see how rankings shift.</p>
+    </div>
+
+    <div class="chart-row">
+        <div class="section">
+            <div class="section-header">
+                <h2 id="coalChartTitle">Coal: Top Producers by Market Value</h2>
+                <div class="toggle-bar" id="coalToggle">
+                    <button class="toggle-btn active" data-mode="value" onclick="toggleCoal('value')">$ Value</button>
+                    <button class="toggle-btn" data-mode="volume" onclick="toggleCoal('volume')">Volume</button>
+                </div>
+            </div>
+            <div class="chart-container"><canvas id="chartCoalCountries"></canvas></div>
+        </div>
+        <div class="section">
+            <div class="section-header">
+                <h2 id="oilChartTitle">Oil: Top Producers by Market Value</h2>
+                <div class="toggle-bar" id="oilToggle">
+                    <button class="toggle-btn active" data-mode="value" onclick="toggleOil('value')">$ Value</button>
+                    <button class="toggle-btn" data-mode="volume" onclick="toggleOil('volume')">Volume</button>
+                </div>
+            </div>
+            <div class="chart-container"><canvas id="chartOilCountries"></canvas></div>
+        </div>
+    </div>
+
+    <div class="chart-row">
+        <div class="section">
+            <div class="section-header">
+                <h2 id="gasChartTitle">Gas: Top Producers by Market Value</h2>
+                <div class="toggle-bar" id="gasToggle">
+                    <button class="toggle-btn active" data-mode="value" onclick="toggleGas('value')">$ Value</button>
+                    <button class="toggle-btn" data-mode="volume" onclick="toggleGas('volume')">Volume</button>
+                </div>
+            </div>
+            <div class="chart-container"><canvas id="chartGasCountries"></canvas></div>
+        </div>
+        <div class="section">
+            <h2>Transport Cost as % of Commodity Value</h2>
+            <div class="chart-container"><canvas id="chartTransport"></canvas></div>
+        </div>
+    </div>
+
+    <!-- India Coal Mix -->
+    <div class="section">
+        <h2>India Coal: Sales Channel &amp; Pricing Breakdown (FY2024-25)</h2>
+        <p class="section-subtitle">Coal India (CIL) offtake: 763 Mt. Washed coal output: just 2.4 Mt (0.3%) despite 39 MTPA washery capacity. Statutory levies add ~28.5% to the all-in buyer price (post-Sep 2025 GST reform; was ~34% under old Rs 400/t cess regime).</p>
+        <div class="info-callout" style="border-left-color:var(--coal);">
+            <strong style="color:var(--coal)">Sept 2025 GST reform:</strong> The Rs 400/t flat GST Compensation Cess was abolished and replaced with 18% GST (up from 5%). The government's stated uniform tax incidence is now <strong style="color:var(--coal)">39.81% of base price = ~28.5% of all-in price</strong>.
+            <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2169438" target="_blank" style="color:var(--accent)">Source: PIB</a>
+        </div>
+
+        <div class="chart-row">
+            <div>
+                <h3>CIL Sales Volume by Channel</h3>
+                <div class="chart-container"><canvas id="chartIndiaMixVolume"></canvas></div>
+            </div>
+            <div>
+                <h3>Price: Base vs All-in (incl. levies)</h3>
+                <div class="chart-container"><canvas id="chartIndiaMixPrice"></canvas></div>
+            </div>
+        </div>
+
+        <div class="india-detail-grid">
+            <div>
+                <h3>Statutory Levies (post-Sep 2025, on FSA base Rs 1,547/t)</h3>
+                <div class="data-table-wrapper">
+                    <table class="levy-table" id="indiaLevyTable">
+                        <thead><tr><th>Levy</th><th>Rate</th><th class="num">Amount (Rs)</th><th class="num">Amount ($)</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">
+                    Sources: <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2169438" target="_blank" style="color:var(--accent)">PIB GST Reform</a> &middot;
+                    <a href="https://coal.gov.in/sites/default/files/2025-02/chap10AnnualReport2025en2.pdf" target="_blank" style="color:var(--accent)">MoC Ch.10 (PDF)</a> &middot;
+                    <a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2213723" target="_blank" style="color:var(--accent)">MoC Year End Review</a>
+                </p>
+            </div>
+            <div>
+                <h3>Non-CIL Coal Producers</h3>
+                <div class="data-table-wrapper">
+                    <table class="levy-table" id="nonCILTable">
+                        <thead><tr><th>Producer</th><th class="num">Volume (Mt)</th><th class="num">Price ($/t)</th><th>Notes</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transport highlights -->
+    <div class="section">
+        <h2>Transport Cost Highlights</h2>
+        <div class="transport-highlight">
+            <div class="transport-card">
+                <div class="pct" style="color:var(--oil)">2&ndash;7%</div>
+                <div class="desc">Oil (seaborne)<br>$1.50&ndash;5.00/bbl</div>
+            </div>
+            <div class="transport-card">
+                <div class="pct" style="color:var(--coal)">5&ndash;90%</div>
+                <div class="desc">Coal (seaborne + inland)<br>Extreme: Russia Kuzbass rail ~90%</div>
+            </div>
+            <div class="transport-card">
+                <div class="pct" style="color:var(--gas)">10&ndash;30%</div>
+                <div class="desc">LNG (full chain)<br>$3&ndash;7/MMBtu incl. liquefaction</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data tables -->
+    <div class="section">
+        <h2>Country-Level Data</h2>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showTab('coal')">Coal</button>
+            <button class="tab-btn" onclick="showTab('oil')">Oil</button>
+            <button class="tab-btn" onclick="showTab('gas')">Gas</button>
+            <button class="tab-btn" onclick="showTab('transport')">Transport</button>
+        </div>
+        <div class="tab-content active" id="tab-coal">
+            <div class="data-table-wrapper"><table id="coalTable"><thead><tr><th>#</th><th>Country</th><th>Coal Type</th><th class="num">Production (Mt)</th><th class="num">Price ($/t)</th><th>Benchmark</th><th class="num">Market Value ($M)</th><th>Notes</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="tab-content" id="tab-oil">
+            <div class="data-table-wrapper"><table id="oilTable"><thead><tr><th>#</th><th>Country</th><th class="num">Production (kb/d)</th><th>Primary Grade</th><th>Quality</th><th class="num">Price ($/bbl)</th><th class="num">Diff to Brent</th><th class="num">Market Value ($B)</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="tab-content" id="tab-gas">
+            <div class="data-table-wrapper"><table id="gasTable"><thead><tr><th>#</th><th>Country</th><th class="num">Production (bcm)</th><th>Pricing Region</th><th class="num">Benchmark ($/MMBtu)</th><th class="num">Domestic Price</th><th>Price Regime</th><th class="num">Market Value ($M)</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="tab-content" id="tab-transport">
+            <h3>Coal Seaborne Freight</h3>
+            <div class="data-table-wrapper"><table id="transportCoalTable"><thead><tr><th>Route</th><th>Origin</th><th>Destination</th><th>Vessel</th><th class="num">Cost ($/t)</th><th>Range</th></tr></thead><tbody></tbody></table></div>
+            <h3>Oil Tanker Rates</h3>
+            <div class="data-table-wrapper"><table id="transportOilTable"><thead><tr><th>Route</th><th>Origin</th><th>Destination</th><th>Vessel</th><th class="num">Cost ($/bbl)</th><th>Range</th></tr></thead><tbody></tbody></table></div>
+            <h3>LNG Value Chain Costs ($/MMBtu)</h3>
+            <div class="data-table-wrapper"><table id="transportLNGTable"><thead><tr><th>Corridor</th><th class="num">Wellhead</th><th class="num">Liquefaction</th><th class="num">Shipping</th><th class="num">Regas</th><th class="num">Total Landed</th></tr></thead><tbody></tbody></table></div>
+        </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="section">
+        <h2>Methodology & Sources</h2>
+        <div class="methodology">
+            <p><strong>Coal:</strong> Country-level production from IEA Coal 2025, NBS (China), Ministry of Coal India, ESDM (Indonesia), EIA (USA). Prices use country-specific benchmarks. India: CIL blended all-in price ~$31/t; post-Sep 2025 levy burden = 39.81% on base = ~28.5% of total (PIB). Washed coal just 0.3% of CIL output (2.4 Mt) despite 39 MTPA washery capacity.</p>
+            <p><strong>Oil:</strong> Total petroleum &amp; other liquids from EIA STEO: 103 mb/d (2024). Crude + condensate ~82.5 mb/d priced by country-specific benchmarks (WTI $76.55, Urals $70, WCS $61, Brent $80.50). NGLs ~14 mb/d ($185B, Global Market Insights). Biofuels, CTL/GTL, other liquids add ~$143B. Country table shows crude + condensate only; headline includes all liquids at $2,670B.</p>
+            <p><strong>Gas:</strong> 4,124 bcm marketed production (Energy Institute SR 2025, 74th ed). Market value uses IGU WGPS 2025 regional averages. ~31% consumed at &lt;$2/MMBtu (subsidized).</p>
+            <p><strong>Commodity Comparison:</strong> EIA/IEA (fossil fuels), BNEF/IEA WEI 2024 (clean energy), World Steel/Platts (iron ore), ICSG (copper), World Gold Council, USGS/Adamas (rare earths).</p>
+            <div style="margin-top: 1rem;">
+                <span class="source-tag">IEA Coal 2025</span>
+                <span class="source-tag">Energy Institute SR 2025</span>
+                <span class="source-tag">EIA</span>
+                <span class="source-tag">OPEC ASB 2024</span>
+                <span class="source-tag">IGU WGPS 2025</span>
+                <span class="source-tag">S&P Global Platts</span>
+                <span class="source-tag">BNEF</span>
+                <span class="source-tag">CIL Annual Report FY25</span>
+                <span class="source-tag">PIB (Gov. India)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Section 1: Market Value</p>
+    <p>Data: 2024 &middot; Built with <a href="https://claude.ai">Claude</a></p>
+</div>
+
+<script src="colors.js"></script>
+<script src="data.js"></script>
+<script src="charts.js"></script>
+<script src="nav.js"></script>
+
+</body>
+</html>
