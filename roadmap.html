@@ -98,8 +98,18 @@
 
 <script>
 const PLANNED = [
-    // Add your planned edits here. Format:
-    // { title: "Edit title", desc: "Description", section: "Section name", priority: "high|medium|low" },
+    { title: "Create Graveyard tab", desc: "New page to park removed charts/sections, organized by source tab so they can be brought back easily.", section: "New Page", priority: "medium" },
+    { title: "Move Energy Security Risk Index to Graveyard", desc: "Remove from Import Exposure page and archive in Graveyard.", section: "Import Exposure", priority: "medium" },
+    { title: "Move Import Dependency Trends to Graveyard", desc: "Time axis is misleading and chart isn't adding enough value yet. Archive in Graveyard.", section: "Import Exposure", priority: "medium" },
+    { title: "Country toggle chart for import exposure", desc: "Clickable chart showing % oil / % coal / % gas per country, similar to commodity comparison but toggled by country.", section: "Import Exposure", priority: "high" },
+    { title: "Energy demand growth comparison by country", desc: "Show how coal/oil/gas demand has grown over the same time period per country (e.g. China coal demand growth vs oil vs gas).", section: "Import Exposure", priority: "high" },
+    { title: "Rethink country-level import dependency presentation", desc: "Consider chart where bar width = volume of consumption and height = % imported. Current presentation unclear for small countries.", section: "Import Exposure", priority: "low" },
+    { title: "Add Australia political donation data", desc: "AEC / Market Forces data (~$2.5M/yr disclosed). Research completed, needs implementation.", section: "Political Donations", priority: "medium" },
+    { title: "Add UK political donation data", desc: "Electoral Commission / DeSmog data (~$2.5-6M/yr). Research completed, needs implementation.", section: "Political Donations", priority: "medium" },
+    { title: "Data integrity audit: FX Revenue", desc: "Flagged as having fabricated data. Needs full verification pass with cited sources.", section: "FX Revenue", priority: "high" },
+    { title: "Data integrity audit: Govt Revenue", desc: "Flagged as having fabricated data. Needs full verification pass with cited sources.", section: "Govt Revenue", priority: "high" },
+    { title: "Clickable source URLs across all tabs", desc: "Currently only Market Value and Coal Tax have clickable URLs. All source references should link to original publications.", section: "All", priority: "high" },
+    { title: "Rebuild Coal Phaseout with GEM methodology", desc: "Regional breakdown (China+HK, India, Rest of Asia, Americas, Europe, Africa), additions/retirements/stock by year, generation TWh overlay. Based on Lucy's PowerPoint analysis.", section: "Coal Phaseout", priority: "high" },
 ];
 
 const COMPLETED = [
@@ -109,6 +119,10 @@ const COMPLETED = [
     { title: "Job-saving cost case studies", desc: "Bottom-up analysis of cost per job saved: JH Campbell (USA), Polish domestic coal, German lignite transition, Eskom (South Africa), Australian mining concessions.", section: "Subsidies", date: "Mar 2026" },
     { title: "Existing coal vs new renewables", desc: "Operating cost comparison, crossover timeline (2015-2024), and share of global coal capacity now uneconomic.", section: "Electricity Costs", date: "Mar 2026" },
     { title: "All 12 analysis sections built", desc: "Market Value, Energy Context, Coal Phaseout, Jobs, Political Donations, FX Revenue, Govt Revenue, Subsidies, Import Exposure, Electricity Costs, Coal Tax, Foreign Investment.", section: "All", date: "Mar 2026" },
+    { title: "Coal Tax: complete rewrite with verified data", desc: "Replaced fabricated allocation chart with country-by-country breakdown of every levy. All sources have clickable URLs. Revenue tagged as REPORTED or CALC with methodology shown.", section: "Coal Tax", date: "Mar 2026" },
+    { title: "Republican color fix", desc: "Changed from orange (#d6604d) to proper red (#cc0000) in colors.js and shared.css.", section: "Political Donations", date: "Mar 2026" },
+    { title: "Jobs: remove fabricated data and unnecessary charts", desc: "Removed fabricated power generation data, share-by-commodity chart, and developed/developing country trend charts.", section: "Jobs", date: "Mar 2026" },
+    { title: "Jobs: flip labor intensity to productivity", desc: "Chart now shows tonnes per worker (highest productivity at top: USA, Australia, Canada) instead of jobs per Mt.", section: "Jobs", date: "Mar 2026" },
 ];
 
 function renderEdits(items, containerId, isDone) {
