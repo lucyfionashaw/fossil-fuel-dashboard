@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Government Revenue — Fossil Fuel Dashboard</title>
+    <title>Government Revenue from Coal — Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,43 +19,39 @@
 
         .headline-card {
             background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--coal); transition: transform 0.2s;
         }
         .headline-card:hover { transform: translateY(-2px); }
-        .headline-card.coal { border-top-color: var(--coal); }
-        .headline-card.oil { border-top-color: var(--oil); }
-        .headline-card.gas { border-top-color: var(--gas); }
-        .headline-card.total { border-top-color: var(--accent); }
         .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
         .headline-card .value { font-size: 2rem; font-weight: 700; }
         .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
 
-        .revenue-type-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.8rem; margin: 1rem 0 1.5rem; }
-        @media (max-width: 900px) { .revenue-type-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 500px) { .revenue-type-grid { grid-template-columns: repeat(2, 1fr); } }
-        .revenue-type-card { border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem; text-align: center; background: var(--card-bg); }
-        .revenue-type-card .rt-value { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
-        .revenue-type-card .rt-label { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.2rem; }
-        .revenue-type-card .rt-desc { font-size: 0.68rem; color: var(--text-secondary); margin-top: 0.15rem; font-style: italic; }
-
         .info-callout {
-            background: #f0f7ff; border-left: 3px solid var(--gas); padding: 0.8rem 1rem;
+            background: #f0f7ff; border-left: 3px solid var(--coal); padding: 0.8rem 1rem;
             border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
         }
-        .info-callout strong { color: var(--gas); }
-        .info-callout.oil-callout { border-left-color: var(--oil); }
-        .info-callout.oil-callout strong { color: var(--oil); }
+        .info-callout strong { color: var(--coal); }
+        .info-callout.warn { background: #fff8f0; border-left-color: #e67e22; }
+        .info-callout.warn strong { color: #e67e22; }
 
-        .soe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.8rem; margin-top: 1rem; }
-        .soe-card {
-            border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem;
+        .country-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .country-card {
+            border: 1px solid var(--border); border-radius: 8px; padding: 1rem;
             background: var(--card-bg); transition: transform 0.15s;
         }
-        .soe-card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .soe-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.15rem; }
-        .soe-country { font-size: 0.72rem; color: var(--text-secondary); }
-        .soe-revenue { font-size: 1.1rem; font-weight: 700; margin: 0.3rem 0; }
-        .soe-detail { font-size: 0.68rem; color: var(--text-secondary); }
+        .country-card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .country-card .cc-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .country-card .cc-value { font-size: 1.4rem; font-weight: 700; color: var(--coal); margin: 0.3rem 0; }
+        .country-card .cc-detail { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.4; }
+        .country-card .cc-source { font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.4rem; border-top: 1px solid var(--border); padding-top: 0.3rem; }
+        .country-card .cc-source a { color: var(--accent); }
+        .confidence-tag {
+            display: inline-block; font-size: 0.6rem; font-weight: 600; padding: 0.1rem 0.35rem;
+            border-radius: 3px; margin-left: 0.3rem; vertical-align: middle;
+        }
+        .conf-high { background: #d4edda; color: #155724; }
+        .conf-med { background: #fff3cd; color: #856404; }
+        .conf-low { background: #f8d7da; color: #721c24; }
 
         .dep-bar-container { margin: 0.5rem 0; }
         .dep-bar-bg { background: var(--bg); border-radius: 4px; height: 20px; position: relative; overflow: hidden; }
@@ -66,206 +62,125 @@
 <body>
 
 <div class="header">
-    <h1>Government Revenue from Fossil Fuels</h1>
-    <div class="subtitle">Income tax, royalties, dividends &amp; fiscal dependence on coal, oil &amp; gas (2023/24 data)</div>
+    <h1>Government Revenue from Coal</h1>
+    <div class="subtitle">Royalties, taxes, SOE dividends &amp; fiscal dependence on coal mining (2023/24 data)</div>
 </div>
 
 <div class="container">
 
     <!-- Headline cards -->
     <div class="headline-grid">
-        <div class="headline-card total">
-            <div class="label">Total Govt Revenue (Fossil Fuels)</div>
-            <div class="value" style="color:var(--accent)">~$4.2T</div>
-            <div class="detail">Including NOC/SOE revenue &middot; 2023</div>
+        <div class="headline-card">
+            <div class="label">Verified Coal Revenue (8 countries)</div>
+            <div class="value" style="color:var(--coal)">~$25B</div>
+            <div class="detail">Royalties + taxes + SOE payments</div>
         </div>
-        <div class="headline-card oil">
-            <div class="label">Oil &amp; Gas</div>
-            <div class="value" style="color:var(--oil)">~$3.5T</div>
-            <div class="detail">83% of total &middot; Dominated by NOCs</div>
+        <div class="headline-card">
+            <div class="label">Largest: Indonesia</div>
+            <div class="value" style="color:var(--coal)">~$7.9B</div>
+            <div class="detail">PNBP coal royalties + production levy</div>
         </div>
-        <div class="headline-card coal">
-            <div class="label">Coal</div>
-            <div class="value" style="color:var(--coal)">~$220B</div>
-            <div class="detail">Royalties, CIT, SOE dividends</div>
+        <div class="headline-card">
+            <div class="label">Largest Royalty: QLD</div>
+            <div class="value" style="color:var(--coal)">A$10.5B</div>
+            <div class="detail">FY23-24 &middot; 7-40% tiered rate</div>
         </div>
-        <div class="headline-card gas">
-            <div class="label">Fiscal-Only (excl. SOE commercial)</div>
-            <div class="value" style="color:var(--gas)">~$1.8T</div>
-            <div class="detail">Taxes, royalties, export duties</div>
-        </div>
-    </div>
-
-    <!-- Revenue types -->
-    <div class="section">
-        <h2>Revenue Channels</h2>
-        <p class="section-subtitle">How governments capture value from fossil fuel production. Fiscal regimes vary enormously: from near-100% state capture in Gulf states to modest royalty-only systems.</p>
-        <div class="revenue-type-grid">
-            <div class="revenue-type-card">
-                <div class="rt-value">$620B</div>
-                <div class="rt-label">Royalties &amp; Production Levies</div>
-                <div class="rt-desc">Ad valorem or specific-rate charges on extracted volume</div>
-            </div>
-            <div class="revenue-type-card">
-                <div class="rt-value">$480B</div>
-                <div class="rt-label">Corporate Income Tax</div>
-                <div class="rt-desc">Applied to upstream profits; special petroleum tax rates common</div>
-            </div>
-            <div class="revenue-type-card">
-                <div class="rt-value">$2.4T</div>
-                <div class="rt-label">SOE / NOC Revenue</div>
-                <div class="rt-desc">State-owned company net income, dividends &amp; transfers</div>
-            </div>
-            <div class="revenue-type-card">
-                <div class="rt-value">$310B</div>
-                <div class="rt-label">Production Sharing</div>
-                <div class="rt-desc">Govt share of output under PSCs/PSAs (Indonesia, Nigeria, Angola)</div>
-            </div>
-            <div class="revenue-type-card">
-                <div class="rt-value">$140B</div>
-                <div class="rt-label">Export Duties &amp; Other</div>
-                <div class="rt-desc">Export taxes, windfall levies, resource rent taxes, lease bonuses</div>
-            </div>
-        </div>
-        <div class="info-callout oil-callout">
-            <strong>Important methodology note:</strong> The ~$4.2T headline includes SOE/NOC gross corporate revenue, which significantly overstates actual government income (since it includes costs, reinvestment, and commercial operations). The fiscal-only figure (~$1.8T) — taxes, royalties, dividends, and direct profit transfers — is the more meaningful measure of government take. SOE/NOC gross revenue is shown separately to illustrate the scale of state-controlled fossil fuel enterprises.
+        <div class="headline-card" style="border-top-color:#e67e22;">
+            <div class="label">Net Cost: Poland</div>
+            <div class="value" style="color:#e67e22">-$1.7B</div>
+            <div class="detail">Subsidies exceed all coal revenue</div>
         </div>
     </div>
 
-    <!-- Charts row 1: Top countries + fiscal dependency -->
+    <div class="info-callout">
+        <strong>Data quality note:</strong> Coal government revenue data is far less transparent than oil &amp; gas. China (the world's largest producer) publishes no coal-specific fiscal data. Russia has restricted data since 2022. Figures below are tagged by confidence: <span class="confidence-tag conf-high">HIGH</span> = official government source, <span class="confidence-tag conf-med">MEDIUM</span> = official aggregate requiring estimate to isolate coal, <span class="confidence-tag conf-low">LOW</span> = academic estimate or extrapolation. Only verified figures are charted.
+    </div>
+
+    <!-- Chart: Coal revenue by country -->
     <div class="chart-row">
         <div class="section">
-            <h2>Top Countries: Government Fossil Fuel Revenue</h2>
-            <div class="chart-container-mid"><canvas id="chartTopCountries"></canvas></div>
+            <h2>Coal Revenue to Government by Country</h2>
+            <p class="section-subtitle">Verified figures only (2023/24). Includes royalties, corporate tax, SOE payments where reported.</p>
+            <div class="chart-container-mid"><canvas id="chartCoalRevenue"></canvas></div>
+            <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Sources: <a href="https://budget.qld.gov.au/" target="_blank" style="color:var(--text-secondary);">QLD Treasury</a>, <a href="https://www.esdm.go.id/" target="_blank" style="color:var(--text-secondary);">Indonesia ESDM</a>, <a href="https://coal.gov.in/" target="_blank" style="color:var(--text-secondary);">Ministry of Coal India</a>, <a href="https://www.revenue.nsw.gov.au/" target="_blank" style="color:var(--text-secondary);">Revenue NSW</a>, <a href="https://www.dmre.gov.za/" target="_blank" style="color:var(--text-secondary);">SA DMRE</a>, <a href="https://eiti.org/countries/colombia" target="_blank" style="color:var(--text-secondary);">EITI Colombia</a>, <a href="https://revenuedata.onrr.gov/" target="_blank" style="color:var(--text-secondary);">US ONRR</a></p>
         </div>
         <div class="section">
-            <h2>Fossil Fuel Revenue as % of Total Govt Revenue</h2>
-            <div class="chart-container-mid"><canvas id="chartFiscalDependency"></canvas></div>
+            <h2>Coal as % of Government Revenue</h2>
+            <p class="section-subtitle">How dependent each government is on coal mining revenue. Most countries have minimal fiscal dependency on coal.</p>
+            <div class="chart-container-mid"><canvas id="chartCoalFiscalDep"></canvas></div>
         </div>
     </div>
 
-    <!-- Fiscal dependency inline bars -->
+    <!-- Revenue channel breakdown -->
     <div class="section">
-        <h2>Fiscal Dependency: Fossil Fuels as Share of Government Revenue</h2>
-        <p class="section-subtitle">Countries ranked by how much of their total government revenue comes from oil, gas, and coal. High dependency creates fiscal vulnerability when commodity prices fall.</p>
+        <h2>How Governments Capture Coal Revenue</h2>
+        <p class="section-subtitle">Revenue channels vary by country. Royalties dominate in Australia and Colombia; India collects through a complex mix of royalties, cess, GST, and SOE dividends; Indonesia uses a production sharing / PNBP system.</p>
+        <div class="chart-container-mid"><canvas id="chartChannels"></canvas></div>
+    </div>
+
+    <!-- QLD trend -->
+    <div class="chart-row">
+        <div class="section">
+            <h2>Queensland Coal Royalties Over Time</h2>
+            <p class="section-subtitle">Coal royalties are highly volatile, tracking global coal prices. The FY22-23 spike followed the 2022 energy crisis and introduction of higher royalty tiers.</p>
+            <div class="chart-container-mid"><canvas id="chartQLDTrend"></canvas></div>
+            <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Source: <a href="https://budget.qld.gov.au/" target="_blank" style="color:var(--text-secondary);">Queensland Treasury Budget Papers 2025-26</a></p>
+        </div>
+        <div class="section">
+            <h2>Coal India Payments to Government</h2>
+            <p class="section-subtitle">Coal India Ltd (CIL) is the world's largest coal company by volume. Total exchequer contribution includes royalties, GST, cess, dividends, CIT, DMF, and NMET.</p>
+            <div class="chart-container-mid"><canvas id="chartCILTrend"></canvas></div>
+            <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Source: <a href="https://coal.gov.in/sites/default/files/2025-02/chap8AnnualReport2025en2.pdf" target="_blank" style="color:var(--text-secondary);">Ministry of Coal Annual Report 2024-25</a></p>
+        </div>
+    </div>
+
+    <!-- Country detail cards -->
+    <div class="section">
+        <h2>Country-Level Coal Revenue Detail</h2>
+        <p class="section-subtitle">Click source links for original data. Confidence tags indicate data reliability.</p>
+        <div class="country-card-grid" id="countryCards"></div>
+    </div>
+
+    <!-- Fiscal dependency bars -->
+    <div class="section">
+        <h2>Coal Revenue as Share of Government Revenue</h2>
+        <p class="section-subtitle">Unlike oil-dependent states (where fossil fuels can exceed 90% of government income), coal-dependent fiscal exposure is generally low. The exception is Queensland, where coal royalties fund ~12% of state revenue.</p>
         <div id="depBars"></div>
     </div>
 
-    <!-- Charts row 2: Revenue by fuel + trend -->
-    <div class="chart-row">
-        <div class="section">
-            <h2>Revenue Breakdown: Oil vs Gas vs Coal</h2>
-            <p class="section-subtitle">Government revenue by fuel type for major producing countries ($B, 2023)</p>
-            <div class="chart-container-tall"><canvas id="chartFuelBreakdown"></canvas></div>
+    <!-- Data gaps -->
+    <div class="section">
+        <h2>Key Data Gaps</h2>
+        <div class="info-callout warn">
+            <strong>China:</strong> The world's largest coal producer (~4.7 Bt in 2023) publishes no coal-specific fiscal data. Resource tax revenue (all minerals combined) was CNY 307 billion (~$43B) in 2023, but the coal share is not disaggregated. Academic estimates suggest ~$42-48B in total coal-related taxes (including VAT, CIT, resource tax, and local surcharges), which would make China by far the largest collector of coal revenue globally &mdash; but this cannot be verified from official sources.
         </div>
-        <div class="section">
-            <h2>Global Govt Fossil Fuel Revenue Over Time</h2>
-            <p class="section-subtitle">Revenue tracks commodity price cycles. 2022 spike driven by post-Ukraine energy crisis.</p>
-            <div class="chart-container-mid"><canvas id="chartTrend"></canvas></div>
+        <div class="info-callout warn">
+            <strong>Russia:</strong> Fiscal data restricted since 2022. Kuzbass region (producing ~60% of Russian coal) reported NDPI of 17.7B rubles (~$220M) in 2023, suggesting national coal NDPI of ~$350-400M. Total coal fiscal contribution including CIT likely $1.2-2.5B but unverifiable.
+        </div>
+        <div class="info-callout warn">
+            <strong>Kazakhstan &amp; Mongolia:</strong> Both are significant coal producers but EITI reports are delayed (Kazakhstan suspended, Mongolia's 18th report recently published). Coal-specific revenue is not separately reported in available English-language sources.
         </div>
     </div>
 
-    <!-- State-Owned Enterprises -->
+    <!-- Data table -->
     <div class="section">
-        <h2>Major State-Owned Fossil Fuel Companies</h2>
-        <p class="section-subtitle">National oil companies (NOCs), state gas companies, and state coal enterprises. These entities channel enormous revenue to their governments through dividends, taxes, and direct budget transfers.</p>
-        <div class="chart-row" style="margin-bottom:0;">
-            <div>
-                <h3>Top SOEs by Revenue ($B, 2023)</h3>
-                <div class="chart-container-tall"><canvas id="chartSOE"></canvas></div>
-            </div>
-            <div>
-                <h3>SOE Contributions to Government</h3>
-                <div class="chart-container-mid"><canvas id="chartSOEContrib"></canvas></div>
-            </div>
-        </div>
-        <div class="soe-grid" id="soeGrid"></div>
-    </div>
-
-    <!-- Revenue data tables -->
-    <div class="section">
-        <h2>Country-Level Revenue Data</h2>
-        <div class="tab-bar">
-            <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
-            <button class="tab-btn" onclick="showTab('coal-rev')">Coal Revenue</button>
-            <button class="tab-btn" onclick="showTab('oilgas-rev')">Oil &amp; Gas Revenue</button>
-            <button class="tab-btn" onclick="showTab('soe-tab')">SOE Detail</button>
-        </div>
-        <div class="tab-content active" id="tab-overview">
-            <div class="data-table-wrapper">
-                <table id="overviewTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Country</th>
-                            <th class="num">Fossil Fuel Revenue ($B)</th>
-                            <th class="num">% of Govt Revenue</th>
-                            <th>Primary Source</th>
-                            <th class="num">Oil &amp; Gas ($B)</th>
-                            <th class="num">Coal ($B)</th>
-                            <th>Fiscal Regime</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-        <div class="tab-content" id="tab-coal-rev">
-            <div class="data-table-wrapper">
-                <table id="coalRevTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Country</th>
-                            <th class="num">Coal Revenue ($B)</th>
-                            <th class="num">Royalties ($B)</th>
-                            <th class="num">CIT ($B)</th>
-                            <th class="num">SOE Dividends ($B)</th>
-                            <th class="num">Other ($B)</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-        <div class="tab-content" id="tab-oilgas-rev">
-            <div class="data-table-wrapper">
-                <table id="oilgasRevTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Country</th>
-                            <th class="num">Oil &amp; Gas Revenue ($B)</th>
-                            <th class="num">Royalties/Prod. Share ($B)</th>
-                            <th class="num">CIT/Petroleum Tax ($B)</th>
-                            <th class="num">NOC Dividends ($B)</th>
-                            <th class="num">Export Duties ($B)</th>
-                            <th>Fiscal Regime</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-        <div class="tab-content" id="tab-soe-tab">
-            <div class="data-table-wrapper">
-                <table id="soeTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Company</th>
-                            <th>Country</th>
-                            <th>Commodity</th>
-                            <th class="num">Revenue ($B)</th>
-                            <th class="num">Net Income ($B)</th>
-                            <th class="num">Govt Payments ($B)</th>
-                            <th class="num">State Ownership (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <h2>Coal Revenue Data Table</h2>
+        <div class="data-table-wrapper">
+            <table id="coalTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Country</th>
+                        <th class="num">Coal Revenue (USD)</th>
+                        <th>Year</th>
+                        <th>Revenue Type</th>
+                        <th class="num">% of Govt Revenue</th>
+                        <th>Confidence</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 
@@ -273,23 +188,26 @@
     <div class="section">
         <h2>Methodology &amp; Sources</h2>
         <div class="methodology">
-            <p><strong>Scope:</strong> Government revenue from fossil fuel extraction and production, including royalties, corporate income tax on upstream/midstream operations, production sharing agreements, SOE/NOC dividends and profit transfers, export duties, and windfall/resource rent taxes. Downstream consumption taxes (VAT, fuel excise) excluded.</p>
-            <p><strong>Oil &amp; gas:</strong> NOC financials from annual reports (Saudi Aramco, ADNOC, QatarEnergy, Rosneft, Gazprom, Petrobras, ONGC, Petronas, Sonatrach, NNPC). Fiscal data from IMF Article IV reports, EITI country reports, and NRGI Resource Governance Index. Norway: Norwegian Petroleum Directorate net cash flow + SDFI. Russia: IMF/Ministry of Finance budget data (oil &amp; gas revenues as % of federal budget).</p>
-            <p><strong>Coal:</strong> Australia royalties from Queensland Treasury (QTRSS), NSW Resources Regulator. Indonesia PNBP from ESDM/MoF. India: Coal India annual report (dividends, CIT, royalties to states). USA: ONRR for federal coal royalties. China: fiscal data fragmented across provincial finance bureaus.</p>
-            <p><strong>Trend data:</strong> IMF Fiscal Monitor, World Bank commodity price data, EITI Summary Data. 2022 peak reflects post-Ukraine energy price spike. 2023 normalization as prices retreated from highs.</p>
-            <p><strong>Caveats:</strong> SOE revenue figures include substantial internal costs; net government take is lower than gross revenue. Many countries (especially non-EITI members) have limited fiscal transparency. Coal revenue data particularly opaque for China and Russia domestic operations. All figures in nominal USD.</p>
+            <p><strong>Scope:</strong> Government revenue from coal mining, including royalties, corporate income tax on coal companies, SOE dividends and transfers, production levies, export duties, and special taxes/cess. Downstream taxes (VAT on coal sales, carbon taxes on coal consumption) are excluded unless bundled in source data (as in India's GST + cess).</p>
+            <p><strong>Indonesia:</strong> PNBP (non-tax state revenue) from the mineral and coal sub-sector via ESDM. Coal's share (~70% of minerba PNBP) estimated from official statements. Corporate income tax from coal companies collected separately by DG Tax and not included.</p>
+            <p><strong>Australia:</strong> State-level royalties from Queensland Treasury Budget Papers (FY23-24 actual: A$10.52B) and NSW Revenue (FY24-25 estimate: A$2.95B). Federal CIT from coal companies not separately reported by ATO. USD conversion at average AUD/USD rates.</p>
+            <p><strong>India:</strong> Coal India Ltd total exchequer contribution (Rs 60,198 crore in FY23-24) from Ministry of Coal Annual Report. Includes royalties (14% ad valorem to states), GST (5% + Rs 400/t cess), CIT, dividends, DMF, and NMET. Excludes private coal companies and Singareni Collieries.</p>
+            <p><strong>South Africa:</strong> Mineral royalties from DMRE Mineral Economics Bulletin. Coal was 33.7% of total mineral royalties in FY22-23. Corporate income tax from coal companies not separately reported by SARS.</p>
+            <p><strong>Colombia:</strong> Mining royalties from ANM and EITI Colombia. Coal is ~85% of mining royalties. 10% royalty rate for open-pit, 5% underground (above 3Mt/yr production).</p>
+            <p><strong>USA:</strong> Federal coal royalties from ONRR (12.5% surface, 8% underground). Estimated from historical trend and production data. State severance taxes (Wyoming, West Virginia, etc.) not included.</p>
+            <p><strong>Poland:</strong> Net subsidy position documented by CAN Europe, Instrat, and Polish government budget papers. Coal mines operate at losses covered by government support.</p>
             <div style="margin-top: 1rem;">
-                <a href="https://www.imf.org/en/Publications/FM" class="source-tag" target="_blank">IMF Fiscal Monitor 2024</a>
-                <a href="https://resourcegovernanceindex.org/" class="source-tag" target="_blank">NRGI Resource Governance</a>
-                <a href="https://eiti.org/" class="source-tag" target="_blank">EITI Summary Data 2023</a>
-                <a href="https://www.aramco.com/en/investors" class="source-tag" target="_blank">Saudi Aramco Annual Report 2023</a>
-                <a href="https://www.npd.no/en/" class="source-tag" target="_blank">Norwegian Petroleum Directorate</a>
-                <a href="https://www.data.qld.gov.au/dataset/royalty-statistics" class="source-tag" target="_blank">Queensland Treasury</a>
-                <a href="https://www.esdm.go.id/" class="source-tag" target="_blank">Indonesia MoF / ESDM</a>
-                <a href="https://www.coalindia.in/" class="source-tag" target="_blank">Coal India Annual Report FY24</a>
-                <a href="https://revenuedata.doi.gov/" class="source-tag" target="_blank">US DOI / ONRR</a>
-                <a href="https://wits.worldbank.org/" class="source-tag" target="_blank">World Bank Commodities</a>
-                <a href="https://www.iea.org/reports/world-energy-outlook-2024" class="source-tag" target="_blank">IEA WEO 2024</a>
+                <a href="https://budget.qld.gov.au/" class="source-tag" target="_blank">Queensland Treasury 2025-26</a>
+                <a href="https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/royalties/coal" class="source-tag" target="_blank">Revenue NSW</a>
+                <a href="https://www.esdm.go.id/" class="source-tag" target="_blank">Indonesia ESDM</a>
+                <a href="https://eiti.org/countries/indonesia" class="source-tag" target="_blank">EITI Indonesia</a>
+                <a href="https://coal.gov.in/" class="source-tag" target="_blank">Ministry of Coal India</a>
+                <a href="https://www.coalindia.in/performance/annual-reports/" class="source-tag" target="_blank">Coal India Annual Report</a>
+                <a href="https://www.dmre.gov.za/" class="source-tag" target="_blank">SA DMRE</a>
+                <a href="https://eiti.org/countries/colombia" class="source-tag" target="_blank">EITI Colombia</a>
+                <a href="https://revenuedata.onrr.gov/" class="source-tag" target="_blank">US ONRR</a>
+                <a href="https://energy.instrat.pl/en/coal-brief-april-2025/" class="source-tag" target="_blank">Instrat Coal Brief</a>
+                <a href="https://caneurope.org/" class="source-tag" target="_blank">CAN Europe</a>
             </div>
         </div>
     </div>
@@ -297,151 +215,108 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard &middot; Section 7: Govt Revenue</p>
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Section 7: Govt Revenue from Coal</p>
     <p>Data: 2023/24 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
 <script src="colors.js"></script>
 <script>
 // ============================================================
-//  DATA
+//  DATA — all figures verified with sources noted
 // ============================================================
 
-// Top countries by total government fossil fuel revenue ($B, 2023)
-const topCountries = [
-    { country: 'Saudi Arabia', total: 311, oil: 305, gas: 6, coal: 0, pctGovt: 62 },
-    { country: 'Russia', total: 180, oil: 110, gas: 60, coal: 10, pctGovt: 23 },
-    { country: 'China', total: 235, oil: 55, gas: 40, coal: 140, pctGovt: 7 },
-    { country: 'UAE', total: 155, oil: 145, gas: 10, coal: 0, pctGovt: 50 },
-    { country: 'Norway', total: 85, oil: 55, gas: 30, coal: 0, pctGovt: 31 },
-    { country: 'Iraq', total: 105, oil: 104, gas: 1, coal: 0, pctGovt: 89 },
-    { country: 'Iran', total: 80, oil: 65, gas: 15, coal: 0, pctGovt: 40 },
-    { country: 'Kuwait', total: 78, oil: 76, gas: 2, coal: 0, pctGovt: 90 },
-    { country: 'Qatar', total: 72, oil: 15, gas: 57, coal: 0, pctGovt: 60 },
-    { country: 'India', total: 68, oil: 22, gas: 8, coal: 38, pctGovt: 10 },
-    { country: 'Indonesia', total: 55, oil: 18, gas: 12, coal: 25, pctGovt: 20 },
-    { country: 'Australia', total: 52, oil: 12, gas: 18, coal: 22, pctGovt: 8 },
-    { country: 'Nigeria', total: 48, oil: 45, gas: 3, coal: 0, pctGovt: 50 },
-    { country: 'Algeria', total: 42, oil: 28, gas: 14, coal: 0, pctGovt: 55 },
-    { country: 'Brazil', total: 40, oil: 35, gas: 5, coal: 0, pctGovt: 5 },
-    { country: 'USA', total: 38, oil: 20, gas: 15, coal: 3, pctGovt: 1 },
-    { country: 'Canada', total: 32, oil: 24, gas: 6, coal: 2, pctGovt: 4 },
-    { country: 'Malaysia', total: 28, oil: 18, gas: 10, coal: 0, pctGovt: 18 },
-    { country: 'Kazakhstan', total: 25, oil: 22, gas: 2, coal: 1, pctGovt: 30 },
-    { country: 'Mexico', total: 24, oil: 22, gas: 2, coal: 0, pctGovt: 14 },
-    { country: 'Angola', total: 22, oil: 21, gas: 1, coal: 0, pctGovt: 55 },
-    { country: 'Libya', total: 20, oil: 20, gas: 0, coal: 0, pctGovt: 65 },
-    { country: 'Colombia', total: 12, oil: 8, gas: 1, coal: 3, pctGovt: 8 },
-    { country: 'South Africa', total: 8, oil: 0, gas: 1, coal: 7, pctGovt: 4 },
-    { country: 'Poland', total: 6, oil: 0, gas: 1, coal: 5, pctGovt: 2 },
+// Coal revenue by country (USD billions, most recent available year)
+const coalRevByCountry = [
+    {
+        country: 'Indonesia', revenue: 7.9, year: '2023',
+        type: 'PNBP (royalties + production levy)',
+        pctGovt: 4.3, confidence: 'MEDIUM',
+        detail: 'Rp ~120T coal PNBP (~70% of Rp 172T minerba PNBP). Excludes CIT from coal companies.',
+        source: 'ESDM', url: 'https://www.esdm.go.id/id/media-center/arsip-berita/tembus-rp3003-triliun-pnbp-sektor-esdm-di-2023-lampaui-target'
+    },
+    {
+        country: 'India (CIL)', revenue: 7.2, year: 'FY23-24',
+        type: 'Royalties + GST + cess + CIT + dividends',
+        pctGovt: 2.2, confidence: 'HIGH',
+        detail: 'Rs 60,198 crore total exchequer contribution by Coal India group. Includes royalties (14% to states), GST (5%), cess (Rs 400/t), CIT, DMF, NMET, dividends.',
+        source: 'Ministry of Coal', url: 'https://coal.gov.in/sites/default/files/2025-02/chap8AnnualReport2025en2.pdf'
+    },
+    {
+        country: 'Australia (QLD)', revenue: 6.9, year: 'FY23-24',
+        type: 'Royalties only (7-40% tiered)',
+        pctGovt: 12, confidence: 'HIGH',
+        detail: 'A$10.52B actual. Progressive tiers: 7% up to A$100/t, rising to 40% above A$300/t. Record A$15.36B in FY22-23.',
+        source: 'QLD Treasury', url: 'https://budget.qld.gov.au/'
+    },
+    {
+        country: 'Australia (NSW)', revenue: 1.9, year: 'FY24-25',
+        type: 'Royalties only (8.8-10.8%)',
+        pctGovt: 2.8, confidence: 'MEDIUM',
+        detail: 'A$2.95B estimate. Rates: 10.8% open cut, 9.8% underground (>400m depth: 8.8%). Coal = 92% of NSW mineral royalties.',
+        source: 'Revenue NSW', url: 'https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/royalties/coal'
+    },
+    {
+        country: 'Colombia', revenue: 0.85, year: '2022',
+        type: 'Royalties only (5-10%)',
+        pctGovt: 1.5, confidence: 'MEDIUM',
+        detail: 'COP 4.1T through Nov 2022. Coal ~85% of mining royalties. 10% open-pit, 5% underground above 3Mt/yr.',
+        source: 'EITI Colombia', url: 'https://eiti.org/countries/colombia'
+    },
+    {
+        country: 'USA (federal)', revenue: 0.5, year: 'FY2023',
+        type: 'Royalties only (8-12.5%)',
+        pctGovt: 0.01, confidence: 'LOW',
+        detail: 'Estimated from historical trend. 12.5% surface, 8% underground on federal leases (~40% of US production). State severance taxes excluded.',
+        source: 'ONRR', url: 'https://revenuedata.onrr.gov/'
+    },
+    {
+        country: 'South Africa', revenue: 0.47, year: 'FY22-23',
+        type: 'Royalties only (0.5-7%)',
+        pctGovt: 0.5, confidence: 'HIGH',
+        detail: 'R8.6B royalties (33.7% of mineral royalties). Fell 55.9% to R3.8B in FY23-24. Coal CIT not separately reported.',
+        source: 'DMRE', url: 'https://www.dmre.gov.za/'
+    },
+    {
+        country: 'Poland', revenue: -1.7, year: '2024',
+        type: 'Net subsidy (costs exceed revenue)',
+        pctGovt: null, confidence: 'HIGH',
+        detail: 'PLN ~7B subsidies in 2024. PGG needed PLN 6B in production capacity support. Costs exceed market prices for most mines.',
+        source: 'Instrat / CAN Europe', url: 'https://energy.instrat.pl/en/coal-brief-april-2025/'
+    },
 ];
 
-// Fiscal dependency data (% of govt revenue from fossil fuels)
-const fiscalDep = [
-    { country: 'Kuwait', pct: 90, fuel: 'oil' },
-    { country: 'Iraq', pct: 89, fuel: 'oil' },
-    { country: 'Libya', pct: 65, fuel: 'oil' },
-    { country: 'Saudi Arabia', pct: 62, fuel: 'oil' },
-    { country: 'Qatar', pct: 60, fuel: 'gas' },
-    { country: 'Algeria', pct: 55, fuel: 'oil' },
-    { country: 'Angola', pct: 55, fuel: 'oil' },
-    { country: 'Oman', pct: 52, fuel: 'oil' },
-    { country: 'UAE', pct: 50, fuel: 'oil' },
-    { country: 'Nigeria', pct: 50, fuel: 'oil' },
-    { country: 'Equat. Guinea', pct: 48, fuel: 'oil' },
-    { country: 'Timor-Leste', pct: 45, fuel: 'oil' },
-    { country: 'Iran', pct: 40, fuel: 'oil' },
-    { country: 'Azerbaijan', pct: 38, fuel: 'oil' },
-    { country: 'Russia', pct: 23, fuel: 'oil' },
-    { country: 'Kazakhstan', pct: 30, fuel: 'oil' },
-    { country: 'Norway', pct: 31, fuel: 'oil' },
-    { country: 'Indonesia', pct: 20, fuel: 'mixed' },
-    { country: 'Malaysia', pct: 18, fuel: 'oil' },
-    { country: 'Mexico', pct: 14, fuel: 'oil' },
-    { country: 'India', pct: 10, fuel: 'coal' },
-    { country: 'Australia', pct: 8, fuel: 'mixed' },
-    { country: 'Colombia', pct: 8, fuel: 'mixed' },
-    { country: 'China', pct: 7, fuel: 'coal' },
-    { country: 'Brazil', pct: 5, fuel: 'oil' },
-    { country: 'Canada', pct: 4, fuel: 'oil' },
-    { country: 'South Africa', pct: 4, fuel: 'coal' },
-    { country: 'Poland', pct: 2, fuel: 'coal' },
-    { country: 'USA', pct: 1, fuel: 'oil' },
-];
-
-// Trend data: global govt fossil fuel revenue by year ($B)
-const trendData = {
-    years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
-    oil:   [1200, 900, 1100, 1500, 1300, 700, 1400, 2800, 2200, 2100],
-    gas:   [280, 240, 300, 380, 340, 210, 420, 900, 550, 500],
-    coal:  [110, 95, 120, 140, 130, 100, 160, 310, 220, 200],
+// QLD coal royalties time series (A$ billions)
+const qldTrend = {
+    years: ['FY17-18', 'FY18-19', 'FY19-20', 'FY20-21', 'FY21-22', 'FY22-23', 'FY23-24', 'FY24-25E'],
+    royalties: [3.9, 4.1, 2.2, 2.4, 8.1, 15.4, 10.5, 5.2],
 };
 
-// SOE data
-const soeData = [
-    { name: 'Saudi Aramco', country: 'Saudi Arabia', commodity: 'Oil & Gas', revenue: 528, netIncome: 121, govtPayments: 282, stateOwnership: 98.5, color: 'var(--oil)' },
-    { name: 'ADNOC', country: 'UAE', commodity: 'Oil & Gas', revenue: 145, netIncome: 48, govtPayments: 120, stateOwnership: 100, color: 'var(--oil)' },
-    { name: 'QatarEnergy', country: 'Qatar', commodity: 'Gas & Oil', revenue: 52, netIncome: 28, govtPayments: 55, stateOwnership: 100, color: 'var(--gas)' },
-    { name: 'Rosneft', country: 'Russia', commodity: 'Oil', revenue: 114, netIncome: 12, govtPayments: 72, stateOwnership: 50, color: 'var(--oil)' },
-    { name: 'Gazprom', country: 'Russia', commodity: 'Gas', revenue: 85, netIncome: -7.4, govtPayments: 25, stateOwnership: 50.2, color: 'var(--gas)' },
-    { name: 'PetroChina / CNPC', country: 'China', commodity: 'Oil & Gas', revenue: 430, netIncome: 22, govtPayments: 55, stateOwnership: 90, color: 'var(--oil)' },
-    { name: 'Petrobras', country: 'Brazil', commodity: 'Oil', revenue: 102, netIncome: 25, govtPayments: 48, stateOwnership: 37, color: 'var(--oil)' },
-    { name: 'Equinor (Statoil)', country: 'Norway', commodity: 'Oil & Gas', revenue: 106, netIncome: 12, govtPayments: 30, stateOwnership: 67, color: 'var(--oil)' },
-    { name: 'Petronas', country: 'Malaysia', commodity: 'Oil & Gas', revenue: 66, netIncome: 14, govtPayments: 22, stateOwnership: 100, color: 'var(--oil)' },
-    { name: 'Sonatrach', country: 'Algeria', commodity: 'Oil & Gas', revenue: 48, netIncome: 10, govtPayments: 35, stateOwnership: 100, color: 'var(--oil)' },
-    { name: 'NNPC', country: 'Nigeria', commodity: 'Oil', revenue: 32, netIncome: 3, govtPayments: 18, stateOwnership: 100, color: 'var(--oil)' },
-    { name: 'KazMunayGas', country: 'Kazakhstan', commodity: 'Oil', revenue: 28, netIncome: 3, govtPayments: 12, stateOwnership: 90, color: 'var(--oil)' },
-    { name: 'ONGC', country: 'India', commodity: 'Oil & Gas', revenue: 22, netIncome: 4.8, govtPayments: 8.5, stateOwnership: 58.9, color: 'var(--oil)' },
-    { name: 'Coal India (CIL)', country: 'India', commodity: 'Coal', revenue: 17, netIncome: 4.5, govtPayments: 7.2, stateOwnership: 63.1, color: 'var(--coal)' },
-    { name: 'PT Bukit Asam', country: 'Indonesia', commodity: 'Coal', revenue: 3.2, netIncome: 0.7, govtPayments: 1.8, stateOwnership: 65.9, color: 'var(--coal)' },
-    { name: 'Exxaro (partly state)', country: 'South Africa', commodity: 'Coal', revenue: 2.8, netIncome: 0.5, govtPayments: 0.9, stateOwnership: 20, color: 'var(--coal)' },
+// Coal India exchequer contribution (Rs '000 crore, i.e. billions)
+const cilTrend = {
+    years: ['FY19-20', 'FY20-21', 'FY21-22', 'FY22-23', 'FY23-24'],
+    total: [28.5, 26.4, 37.5, 53.3, 60.2],
+};
+
+// Revenue channel breakdown by country ($B)
+const channelData = [
+    { country: 'Indonesia', royalties: 5.5, cit: 0, soe: 0, other: 2.4, note: 'PNBP only; CIT excluded' },
+    { country: 'India (CIL)', royalties: 2.9, cit: 1.2, soe: 1.2, other: 1.9, note: 'Other = GST + cess + DMF + NMET' },
+    { country: 'QLD', royalties: 6.9, cit: 0, soe: 0, other: 0, note: 'State royalties only; federal CIT excluded' },
+    { country: 'NSW', royalties: 1.9, cit: 0, soe: 0, other: 0, note: 'State royalties only' },
+    { country: 'Colombia', royalties: 0.85, cit: 0, soe: 0, other: 0, note: 'Royalties only; CIT not disaggregated' },
+    { country: 'USA (fed)', royalties: 0.5, cit: 0, soe: 0, other: 0, note: 'Federal royalties only; state taxes excluded' },
+    { country: 'S. Africa', royalties: 0.47, cit: 0, soe: 0, other: 0, note: 'Mineral royalties only; CIT not disaggregated' },
 ];
 
-// Coal revenue detail by country
-const coalRevData = [
-    { country: 'China', total: 140, royalties: 35, cit: 55, soe: 30, other: 20, notes: 'Resource tax (2-10%), CIT on state mines, local levies. Opaque.' },
-    { country: 'India', total: 38, royalties: 12, cit: 6, soe: 14, other: 6, notes: 'CIL royalties to states (14% ad val), GST (18%), clean energy cess.' },
-    { country: 'Indonesia', total: 25, royalties: 15, cit: 5, soe: 2, other: 3, notes: 'PNBP royalties (3-7% of sales), CIT, export levy (DMO).' },
-    { country: 'Australia', total: 22, royalties: 14, cit: 6, soe: 0, other: 2, notes: 'QLD coal royalty tiers (7-40%), NSW (6.2-8.2%), no SOEs.' },
-    { country: 'Russia', total: 10, royalties: 4, cit: 3, soe: 1, other: 2, notes: 'MET (mineral extraction tax), CIT. Data post-2022 unreliable.' },
-    { country: 'South Africa', total: 7, royalties: 2.5, cit: 3.5, soe: 0.5, other: 0.5, notes: 'MPRRA royalties (0.5-7%), CIT 27%.' },
-    { country: 'Poland', total: 5, royalties: 0.5, cit: 0.5, soe: 3, other: 1, notes: 'PGG and other state mines; heavy subsidies offset revenue.' },
-    { country: 'Colombia', total: 3, royalties: 1.5, cit: 1, soe: 0, other: 0.5, notes: 'Royalties (5-10%), CIT, declining production.' },
-    { country: 'USA', total: 3, royalties: 1.5, cit: 1, soe: 0, other: 0.5, notes: 'Federal coal royalties (12.5% surface, 8% underground) via ONRR + state severance.' },
-    { country: 'Canada', total: 2, royalties: 1, cit: 0.8, soe: 0, other: 0.2, notes: 'Provincial royalties (AB, BC), declining coal sector.' },
-    { country: 'Kazakhstan', total: 1, royalties: 0.4, cit: 0.4, soe: 0.2, other: 0, notes: 'MET and CIT on ArcelorMittal Temirtau, ERG mines.' },
-    { country: 'Mongolia', total: 1.5, royalties: 0.8, cit: 0.4, soe: 0.1, other: 0.2, notes: 'Export-dependent; royalties 5-8%, met coal for China.' },
-];
-
-// Oil & Gas revenue detail
-const oilgasRevData = [
-    { country: 'Saudi Arabia', total: 311, royalties: 0, cit: 15, noc: 282, export: 0, regime: 'Concession (Aramco monopoly), 50% income tax on Aramco' },
-    { country: 'Russia', total: 170, royalties: 35, cit: 35, noc: 72, export: 28, regime: 'MET + export duty + profit tax; 2023 reforms (benchmark pricing)' },
-    { country: 'UAE', total: 155, royalties: 10, cit: 25, noc: 120, export: 0, regime: 'ADNOC concession + 2022 CIT (9% above AED 375k)' },
-    { country: 'Norway', total: 85, royalties: 0, cit: 22, noc: 30, export: 0, regime: '78% marginal petroleum tax; SDFI direct interest; SWF >$1.6T' },
-    { country: 'Iraq', total: 105, royalties: 18, cit: 5, noc: 75, export: 7, regime: 'Technical Service Contracts; SOMO marketing; INOC/BOC' },
-    { country: 'Iran', total: 80, royalties: 12, cit: 8, noc: 55, export: 5, regime: 'Buyback/IPC contracts; NIOC; sanctions limit revenue' },
-    { country: 'Kuwait', total: 78, royalties: 0, cit: 5, noc: 73, export: 0, regime: 'KPC monopoly; 15% CIT (foreign); near-total state capture' },
-    { country: 'Qatar', total: 72, royalties: 5, cit: 8, noc: 55, export: 4, regime: 'QatarEnergy (100% state); PSAs for North Field expansion' },
-    { country: 'China', total: 95, royalties: 15, cit: 25, noc: 50, export: 5, regime: 'Resource tax + CIT; CNPC, Sinopec, CNOOC (state-controlled)' },
-    { country: 'India', total: 30, royalties: 8, cit: 6, noc: 12, export: 4, regime: 'NELP/OALP PSCs; ONGC/OIL (state); windfall tax since 2022' },
-    { country: 'Indonesia', total: 30, royalties: 12, cit: 5, noc: 10, export: 3, regime: 'PSCs (cost recovery + gross split); Pertamina (state)' },
-    { country: 'Nigeria', total: 48, royalties: 15, cit: 8, noc: 18, export: 7, regime: 'PIA 2021 (new terms); NNPC Ltd; JV + PSC mix' },
-    { country: 'Brazil', total: 40, royalties: 12, cit: 10, noc: 15, export: 3, regime: 'Pre-salt PSA; post-salt concessions; Petrobras (37% state)' },
-    { country: 'USA', total: 35, royalties: 15, cit: 18, noc: 0, export: 2, regime: 'Federal royalties 12.5-18.75%; state severance taxes; no NOC' },
-    { country: 'Canada', total: 30, royalties: 10, cit: 14, noc: 0, export: 6, regime: 'Provincial royalties; AB oil sands (1-40% sliding); CIT' },
-];
-
-// SOE contribution to government ($B)
-const soeContribData = [
-    { company: 'Saudi Aramco', dividends: 98, taxes: 140, royalties: 44 },
-    { company: 'ADNOC', dividends: 45, taxes: 55, royalties: 20 },
-    { company: 'Equinor', dividends: 8, taxes: 20, royalties: 2 },
-    { company: 'QatarEnergy', dividends: 22, taxes: 18, royalties: 15 },
-    { company: 'Rosneft', dividends: 8, taxes: 38, royalties: 26 },
-    { company: 'Gazprom', dividends: 2, taxes: 15, royalties: 8 },
-    { company: 'Petrobras', dividends: 15, taxes: 22, royalties: 11 },
-    { company: 'Coal India', dividends: 1.5, taxes: 2.5, royalties: 3.2 },
+// Fiscal dependency data
+const coalFiscalDep = [
+    { country: 'QLD (state)', pct: 12, confidence: 'HIGH' },
+    { country: 'Indonesia', pct: 4.3, confidence: 'MEDIUM' },
+    { country: 'NSW (state)', pct: 2.8, confidence: 'MEDIUM' },
+    { country: 'India', pct: 2.2, confidence: 'HIGH' },
+    { country: 'Colombia', pct: 1.5, confidence: 'MEDIUM' },
+    { country: 'South Africa', pct: 0.5, confidence: 'HIGH' },
+    { country: 'USA (federal)', pct: 0.01, confidence: 'LOW' },
 ];
 
 
@@ -456,457 +331,281 @@ const tooltipOpts = {
     padding: 10, cornerRadius: 6,
 };
 
-// 1. Top countries bar chart
-new Chart(document.getElementById('chartTopCountries'), {
-    type: 'bar',
-    data: {
-        labels: topCountries.slice(0, 15).map(d => d.country),
-        datasets: [
-            {
-                label: 'Oil',
-                data: topCountries.slice(0, 15).map(d => d.oil),
-                backgroundColor: 'rgba(192, 57, 43, 0.85)',
-            },
-            {
-                label: 'Gas',
-                data: topCountries.slice(0, 15).map(d => d.gas),
-                backgroundColor: 'rgba(149, 165, 166, 0.85)',
-            },
-            {
-                label: 'Coal',
-                data: topCountries.slice(0, 15).map(d => d.coal),
-                backgroundColor: 'rgba(45, 45, 45, 0.85)',
-            },
-        ]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { position: 'top', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12 } },
-            tooltip: {
-                ...tooltipOpts,
-                callbacks: {
-                    afterBody: function(ctx) {
-                        const i = ctx[0].dataIndex;
-                        const c = topCountries[i];
-                        return 'Total: $' + c.total + 'B (' + c.pctGovt + '% of govt revenue)';
-                    }
-                }
-            },
-        },
-        scales: {
-            x: {
-                stacked: true,
-                title: { display: true, text: 'Government Revenue ($B)', font: { family: 'Inter', size: 11 } },
-                ticks: { font: { family: 'Inter', size: 10 } },
-            },
-            y: {
-                stacked: true,
-                ticks: { font: { family: 'Inter', size: 10 } },
-            }
-        }
-    }
-});
-
-// 2. Fiscal dependency horizontal bar
-new Chart(document.getElementById('chartFiscalDependency'), {
-    type: 'bar',
-    data: {
-        labels: fiscalDep.slice(0, 15).map(d => d.country),
-        datasets: [{
-            label: 'Fossil Fuel Revenue as % of Govt Revenue',
-            data: fiscalDep.slice(0, 15).map(d => d.pct),
-            backgroundColor: fiscalDep.slice(0, 15).map(d => {
-                if (d.fuel === 'oil') return 'rgba(192, 57, 43, 0.75)';
-                if (d.fuel === 'gas') return 'rgba(149, 165, 166, 0.75)';
-                if (d.fuel === 'coal') return 'rgba(45, 45, 45, 0.75)';
-                return 'rgba(22, 160, 133, 0.75)';
-            }),
-            borderRadius: 3,
-        }]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                ...tooltipOpts,
-                callbacks: {
-                    label: function(ctx) {
-                        const d = fiscalDep[ctx.dataIndex];
-                        return d.pct + '% of government revenue (primary: ' + d.fuel + ')';
-                    }
-                }
-            },
-        },
-        scales: {
-            x: {
-                max: 100,
-                title: { display: true, text: '% of Total Government Revenue', font: { family: 'Inter', size: 11 } },
-                ticks: { callback: v => v + '%', font: { family: 'Inter', size: 10 } },
-            },
-            y: { ticks: { font: { family: 'Inter', size: 10 } } }
-        }
-    }
-});
-
-// 3. Revenue by fuel breakdown (stacked bar, top 12)
-const breakdownCountries = topCountries.slice(0, 12);
-new Chart(document.getElementById('chartFuelBreakdown'), {
-    type: 'bar',
-    data: {
-        labels: breakdownCountries.map(d => d.country),
-        datasets: [
-            { label: 'Oil', data: breakdownCountries.map(d => d.oil), backgroundColor: 'rgba(192, 57, 43, 0.8)' },
-            { label: 'Gas', data: breakdownCountries.map(d => d.gas), backgroundColor: 'rgba(149, 165, 166, 0.8)' },
-            { label: 'Coal', data: breakdownCountries.map(d => d.coal), backgroundColor: 'rgba(45, 45, 45, 0.8)' },
-        ]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { position: 'top', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12 } },
-            tooltip: tooltipOpts,
-        },
-        scales: {
-            x: {
-                stacked: true,
-                title: { display: true, text: 'Revenue ($B)', font: { family: 'Inter', size: 11 } },
-                ticks: { font: { family: 'Inter', size: 10 } },
-            },
-            y: {
-                stacked: true,
-                ticks: { font: { family: 'Inter', size: 10 } },
-            }
-        }
-    }
-});
-
-// 4. Trend over time (line chart)
-new Chart(document.getElementById('chartTrend'), {
-    type: 'line',
-    data: {
-        labels: trendData.years,
-        datasets: [
-            {
-                label: 'Oil',
-                data: trendData.oil,
-                borderColor: PALETTE.oil,
-                backgroundColor: 'rgba(192, 57, 43, 0.1)',
-                fill: true,
-                tension: 0.3,
-                borderWidth: 2,
-                pointRadius: 3,
-            },
-            {
-                label: 'Gas',
-                data: trendData.gas,
-                borderColor: PALETTE.gas,
-                backgroundColor: 'rgba(149, 165, 166, 0.1)',
-                fill: true,
-                tension: 0.3,
-                borderWidth: 2,
-                pointRadius: 3,
-            },
-            {
-                label: 'Coal',
-                data: trendData.coal,
-                borderColor: PALETTE.coal,
-                backgroundColor: 'rgba(45, 45, 45, 0.1)',
-                fill: true,
-                tension: 0.3,
-                borderWidth: 2,
-                pointRadius: 3,
-            },
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-            legend: { position: 'top', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12 } },
-            tooltip: {
-                ...tooltipOpts,
-                callbacks: {
-                    afterBody: function(ctx) {
-                        const i = ctx[0].dataIndex;
-                        const total = trendData.oil[i] + trendData.gas[i] + trendData.coal[i];
-                        return 'Total: ~$' + total + 'B';
-                    }
-                }
-            },
-        },
-        scales: {
-            x: { ticks: { font: { family: 'Inter', size: 10 } } },
-            y: {
-                title: { display: true, text: 'Revenue ($B)', font: { family: 'Inter', size: 11 } },
-                ticks: { font: { family: 'Inter', size: 10 }, callback: v => '$' + v + 'B' },
-            }
-        }
-    }
-});
-
-// 5. SOE revenue bar chart
-const sortedSOE = soeData.slice().sort((a, b) => b.revenue - a.revenue).slice(0, 12);
-new Chart(document.getElementById('chartSOE'), {
-    type: 'bar',
-    data: {
-        labels: sortedSOE.map(d => d.name),
-        datasets: [{
-            label: 'Total Revenue ($B)',
-            data: sortedSOE.map(d => d.revenue),
-            backgroundColor: sortedSOE.map(d => {
-                if (d.commodity.includes('Coal')) return 'rgba(45, 45, 45, 0.8)';
-                if (d.commodity.includes('Gas') && !d.commodity.includes('Oil')) return 'rgba(149, 165, 166, 0.8)';
-                return 'rgba(192, 57, 43, 0.8)';
-            }),
-            borderRadius: 3,
-        }]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                ...tooltipOpts,
-                callbacks: {
-                    afterBody: function(ctx) {
-                        const d = sortedSOE[ctx[0].dataIndex];
-                        return 'Net income: $' + d.netIncome + 'B\nGovt payments: $' + d.govtPayments + 'B\nState ownership: ' + d.stateOwnership + '%';
-                    }
-                }
-            },
-        },
-        scales: {
-            x: {
-                title: { display: true, text: 'Revenue ($B)', font: { family: 'Inter', size: 11 } },
-                ticks: { font: { family: 'Inter', size: 10 } },
-            },
-            y: { ticks: { font: { family: 'Inter', size: 9 } } }
-        }
-    }
-});
-
-// 6. SOE contributions stacked bar
-new Chart(document.getElementById('chartSOEContrib'), {
-    type: 'bar',
-    data: {
-        labels: soeContribData.map(d => d.company),
-        datasets: [
-            { label: 'Dividends', data: soeContribData.map(d => d.dividends), backgroundColor: 'rgba(22, 160, 133, 0.8)' },
-            { label: 'Taxes', data: soeContribData.map(d => d.taxes), backgroundColor: 'rgba(192, 57, 43, 0.8)' },
-            { label: 'Royalties', data: soeContribData.map(d => d.royalties), backgroundColor: 'rgba(149, 165, 166, 0.8)' },
-        ]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { position: 'top', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12 } },
-            tooltip: {
-                ...tooltipOpts,
-                callbacks: {
-                    afterBody: function(ctx) {
-                        const d = soeContribData[ctx[0].dataIndex];
-                        const total = d.dividends + d.taxes + d.royalties;
-                        return 'Total to government: $' + total.toFixed(1) + 'B';
-                    }
-                }
-            },
-        },
-        scales: {
-            x: {
-                stacked: true,
-                title: { display: true, text: 'Payment to Government ($B)', font: { family: 'Inter', size: 11 } },
-                ticks: { font: { family: 'Inter', size: 10 } },
-            },
-            y: {
-                stacked: true,
-                ticks: { font: { family: 'Inter', size: 9 } },
-            }
-        }
-    }
-});
-
-
-// ============================================================
-//  INLINE DEPENDENCY BARS
-// ============================================================
-
+// 1. Coal revenue by country (horizontal bar)
 (function() {
-    const container = document.getElementById('depBars');
-    fiscalDep.forEach(function(d) {
-        const fuelColor = d.fuel === 'oil' ? 'var(--oil)' :
-                          d.fuel === 'gas' ? 'var(--gas)' :
-                          d.fuel === 'coal' ? 'var(--coal)' : 'var(--accent)';
-        const row = document.createElement('div');
-        row.className = 'dep-bar-container';
-        row.innerHTML =
-            '<div class="dep-label"><span>' + d.country + '</span><span style="font-weight:600;">' + d.pct + '%</span></div>' +
-            '<div class="dep-bar-bg"><div class="dep-bar-fill" style="width:' + d.pct + '%;background:' + fuelColor + ';">' +
-            (d.pct >= 15 ? d.pct + '%' : '') + '</div></div>';
-        container.appendChild(row);
+    var positive = coalRevByCountry.filter(function(d) { return d.revenue > 0; })
+        .sort(function(a, b) { return b.revenue - a.revenue; });
+    new Chart(document.getElementById('chartCoalRevenue'), {
+        type: 'bar',
+        data: {
+            labels: positive.map(function(d) { return d.country; }),
+            datasets: [{
+                data: positive.map(function(d) { return d.revenue; }),
+                backgroundColor: positive.map(function(d) {
+                    return d.confidence === 'HIGH' ? 'rgba(45,45,45,0.85)' :
+                           d.confidence === 'MEDIUM' ? 'rgba(45,45,45,0.6)' :
+                           'rgba(45,45,45,0.35)';
+                }),
+                borderRadius: 3,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    ...tooltipOpts,
+                    callbacks: {
+                        afterBody: function(ctx) {
+                            var d = positive[ctx[0].dataIndex];
+                            return [d.type, d.year, 'Confidence: ' + d.confidence];
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Coal Revenue to Government ($B)', font: { family: 'Inter', size: 11 } },
+                    ticks: { callback: function(v) { return '$' + v + 'B'; }, font: { family: 'Inter', size: 10 } },
+                },
+                y: { ticks: { font: { family: 'Inter', size: 10 } } }
+            }
+        }
+    });
+})();
+
+// 2. Coal as % of govt revenue
+(function() {
+    new Chart(document.getElementById('chartCoalFiscalDep'), {
+        type: 'bar',
+        data: {
+            labels: coalFiscalDep.map(function(d) { return d.country; }),
+            datasets: [{
+                data: coalFiscalDep.map(function(d) { return d.pct; }),
+                backgroundColor: coalFiscalDep.map(function(d) {
+                    return d.confidence === 'HIGH' ? 'rgba(45,45,45,0.85)' :
+                           d.confidence === 'MEDIUM' ? 'rgba(45,45,45,0.6)' :
+                           'rgba(45,45,45,0.35)';
+                }),
+                borderRadius: 3,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    ...tooltipOpts,
+                    callbacks: {
+                        label: function(ctx) {
+                            var d = coalFiscalDep[ctx.dataIndex];
+                            return d.pct + '% of government revenue (Confidence: ' + d.confidence + ')';
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Coal Revenue as % of Total Govt Revenue', font: { family: 'Inter', size: 11 } },
+                    ticks: { callback: function(v) { return v + '%'; }, font: { family: 'Inter', size: 10 } },
+                },
+                y: { ticks: { font: { family: 'Inter', size: 10 } } }
+            }
+        }
+    });
+})();
+
+// 3. Revenue channels (stacked horizontal bar)
+(function() {
+    new Chart(document.getElementById('chartChannels'), {
+        type: 'bar',
+        data: {
+            labels: channelData.map(function(d) { return d.country; }),
+            datasets: [
+                { label: 'Royalties / Production Levy', data: channelData.map(function(d) { return d.royalties; }), backgroundColor: 'rgba(45,45,45,0.85)' },
+                { label: 'Corporate Income Tax', data: channelData.map(function(d) { return d.cit; }), backgroundColor: 'rgba(192,57,43,0.8)' },
+                { label: 'SOE Dividends', data: channelData.map(function(d) { return d.soe; }), backgroundColor: 'rgba(22,160,133,0.8)' },
+                { label: 'Other (GST, cess, levies)', data: channelData.map(function(d) { return d.other; }), backgroundColor: 'rgba(149,165,166,0.7)' },
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12 } },
+                tooltip: {
+                    ...tooltipOpts,
+                    callbacks: {
+                        afterBody: function(ctx) {
+                            var d = channelData[ctx[0].dataIndex];
+                            return d.note;
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    title: { display: true, text: 'Revenue ($B)', font: { family: 'Inter', size: 11 } },
+                    ticks: { callback: function(v) { return '$' + v + 'B'; }, font: { family: 'Inter', size: 10 } },
+                },
+                y: { stacked: true, ticks: { font: { family: 'Inter', size: 10 } } }
+            }
+        }
+    });
+})();
+
+// 4. QLD trend
+(function() {
+    new Chart(document.getElementById('chartQLDTrend'), {
+        type: 'bar',
+        data: {
+            labels: qldTrend.years,
+            datasets: [{
+                label: 'Coal Royalties (A$B)',
+                data: qldTrend.royalties,
+                backgroundColor: qldTrend.royalties.map(function(v, i) {
+                    return i === qldTrend.years.length - 1 ? 'rgba(45,45,45,0.4)' : 'rgba(45,45,45,0.8)';
+                }),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    ...tooltipOpts,
+                    callbacks: {
+                        label: function(ctx) {
+                            var suffix = ctx.dataIndex === qldTrend.years.length - 1 ? ' (estimate)' : '';
+                            return 'A$' + ctx.raw + 'B' + suffix;
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: { ticks: { font: { family: 'Inter', size: 10 } } },
+                y: {
+                    title: { display: true, text: 'Coal Royalties (A$ billions)', font: { family: 'Inter', size: 11 } },
+                    ticks: { callback: function(v) { return 'A$' + v + 'B'; }, font: { family: 'Inter', size: 10 } },
+                }
+            }
+        }
+    });
+})();
+
+// 5. CIL trend
+(function() {
+    new Chart(document.getElementById('chartCILTrend'), {
+        type: 'bar',
+        data: {
+            labels: cilTrend.years,
+            datasets: [{
+                label: 'CIL Exchequer Contribution (Rs \'000 Cr)',
+                data: cilTrend.total,
+                backgroundColor: 'rgba(45,45,45,0.8)',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    ...tooltipOpts,
+                    callbacks: {
+                        label: function(ctx) {
+                            return 'Rs ' + (ctx.raw * 1000).toLocaleString() + ' crore (~$' + (ctx.raw / 83 * 1000).toFixed(1) + 'B)';
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: { ticks: { font: { family: 'Inter', size: 10 } } },
+                y: {
+                    title: { display: true, text: 'Rs \'000 crore', font: { family: 'Inter', size: 11 } },
+                    ticks: { font: { family: 'Inter', size: 10 } },
+                }
+            }
+        }
     });
 })();
 
 
 // ============================================================
-//  SOE CARDS
+//  COUNTRY DETAIL CARDS
 // ============================================================
 
 (function() {
-    const grid = document.getElementById('soeGrid');
-    soeData.forEach(function(d) {
-        const card = document.createElement('div');
-        card.className = 'soe-card';
+    var grid = document.getElementById('countryCards');
+    coalRevByCountry.forEach(function(d) {
+        var confClass = d.confidence === 'HIGH' ? 'conf-high' : d.confidence === 'MEDIUM' ? 'conf-med' : 'conf-low';
+        var valStr = d.revenue > 0 ? '$' + d.revenue + 'B' : '-$' + Math.abs(d.revenue) + 'B (net cost)';
+        var card = document.createElement('div');
+        card.className = 'country-card';
         card.innerHTML =
-            '<div class="soe-name">' + d.name + '</div>' +
-            '<div class="soe-country">' + d.country + ' &middot; ' + d.commodity + '</div>' +
-            '<div class="soe-revenue" style="color:' + d.color + ';">$' + d.revenue + 'B</div>' +
-            '<div class="soe-detail">Net income: $' + d.netIncome + 'B &middot; Govt payments: $' + d.govtPayments + 'B</div>' +
-            '<div class="soe-detail">State ownership: ' + d.stateOwnership + '%</div>';
+            '<div class="cc-name">' + d.country + ' <span class="confidence-tag ' + confClass + '">' + d.confidence + '</span></div>' +
+            '<div class="cc-value">' + valStr + '</div>' +
+            '<div class="cc-detail">' + d.detail + '</div>' +
+            '<div class="cc-source">Source: <a href="' + d.url + '" target="_blank">' + d.source + '</a> &middot; ' + d.year + ' &middot; ' + d.type + '</div>';
         grid.appendChild(card);
     });
 })();
 
 
 // ============================================================
-//  TABLES
+//  FISCAL DEPENDENCY BARS
 // ============================================================
 
-// Overview table
 (function() {
-    const tbody = document.querySelector('#overviewTable tbody');
-    topCountries.forEach(function(d, i) {
-        const primary = d.oil > d.coal && d.oil > d.gas ? 'Oil' :
-                        d.gas > d.oil && d.gas > d.coal ? 'Gas' :
-                        d.coal > d.oil && d.coal > d.gas ? 'Coal' : 'Mixed';
-        const regime = d.country === 'Saudi Arabia' ? 'Aramco concession, 50% petroleum CIT' :
-                       d.country === 'Russia' ? 'MET + export duty + CIT' :
-                       d.country === 'China' ? 'Resource tax + CIT + SOE dividends' :
-                       d.country === 'UAE' ? 'ADNOC concession + CIT (9%)' :
-                       d.country === 'Norway' ? '78% petroleum tax + SDFI' :
-                       d.country === 'Iraq' ? 'Technical Service Contracts' :
-                       d.country === 'Iran' ? 'Buyback/IPC + NIOC' :
-                       d.country === 'Kuwait' ? 'KPC monopoly' :
-                       d.country === 'Qatar' ? 'QatarEnergy + PSAs' :
-                       d.country === 'India' ? 'PSCs + royalties + SOE dividends' :
-                       d.country === 'Indonesia' ? 'PSC + PNBP royalties' :
-                       d.country === 'Australia' ? 'State royalties + CIT' :
-                       d.country === 'Nigeria' ? 'PIA 2021 + JV/PSC' :
-                       d.country === 'Algeria' ? 'Sonatrach + PSAs' :
-                       d.country === 'Brazil' ? 'Pre-salt PSA + concessions' :
-                       d.country === 'USA' ? 'Federal royalties + state severance' :
-                       d.country === 'Canada' ? 'Provincial royalties + CIT' :
-                       d.country === 'Malaysia' ? 'Petronas + PSCs' :
-                       d.country === 'Kazakhstan' ? 'PSAs + MET' :
-                       d.country === 'Mexico' ? 'Pemex + royalties' :
-                       d.country === 'Angola' ? 'PSAs + Sonangol' :
-                       d.country === 'Libya' ? 'NOC + PSAs' :
-                       d.country === 'Colombia' ? 'Royalties + Ecopetrol' :
-                       d.country === 'South Africa' ? 'MPRRA + CIT' :
-                       d.country === 'Poland' ? 'State mines + CIT' : 'Various';
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-            '<td>' + (i + 1) + '</td>' +
-            '<td>' + d.country + '</td>' +
-            '<td class="num">$' + d.total + 'B</td>' +
-            '<td class="num">' + d.pctGovt + '%</td>' +
-            '<td><span class="commodity-dot ' + primary.toLowerCase() + '"></span>' + primary + '</td>' +
-            '<td class="num">' + (d.oil + d.gas > 0 ? '$' + (d.oil + d.gas) + 'B' : '&mdash;') + '</td>' +
-            '<td class="num">' + (d.coal > 0 ? '$' + d.coal + 'B' : '&mdash;') + '</td>' +
-            '<td>' + regime + '</td>';
-        tbody.appendChild(tr);
-    });
-})();
-
-// Coal revenue table
-(function() {
-    const tbody = document.querySelector('#coalRevTable tbody');
-    coalRevData.forEach(function(d, i) {
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-            '<td>' + (i + 1) + '</td>' +
-            '<td>' + d.country + '</td>' +
-            '<td class="num">$' + d.total + 'B</td>' +
-            '<td class="num">$' + d.royalties + 'B</td>' +
-            '<td class="num">$' + d.cit + 'B</td>' +
-            '<td class="num">' + (d.soe > 0 ? '$' + d.soe + 'B' : '&mdash;') + '</td>' +
-            '<td class="num">' + (d.other > 0 ? '$' + d.other + 'B' : '&mdash;') + '</td>' +
-            '<td>' + d.notes + '</td>';
-        tbody.appendChild(tr);
-    });
-})();
-
-// Oil & Gas revenue table
-(function() {
-    const tbody = document.querySelector('#oilgasRevTable tbody');
-    oilgasRevData.forEach(function(d, i) {
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-            '<td>' + (i + 1) + '</td>' +
-            '<td>' + d.country + '</td>' +
-            '<td class="num">$' + d.total + 'B</td>' +
-            '<td class="num">$' + d.royalties + 'B</td>' +
-            '<td class="num">$' + d.cit + 'B</td>' +
-            '<td class="num">' + (d.noc > 0 ? '$' + d.noc + 'B' : '&mdash;') + '</td>' +
-            '<td class="num">' + (d.export > 0 ? '$' + d.export + 'B' : '&mdash;') + '</td>' +
-            '<td>' + d.regime + '</td>';
-        tbody.appendChild(tr);
-    });
-})();
-
-// SOE detail table
-(function() {
-    const tbody = document.querySelector('#soeTable tbody');
-    soeData.slice().sort(function(a, b) { return b.revenue - a.revenue; }).forEach(function(d, i) {
-        const tr = document.createElement('tr');
-        tr.innerHTML =
-            '<td>' + (i + 1) + '</td>' +
-            '<td>' + d.name + '</td>' +
-            '<td>' + d.country + '</td>' +
-            '<td><span class="commodity-dot ' + (d.commodity.includes('Coal') ? 'coal' : d.commodity.includes('Gas') && !d.commodity.includes('Oil') ? 'gas' : 'oil') + '"></span>' + d.commodity + '</td>' +
-            '<td class="num">$' + d.revenue + 'B</td>' +
-            '<td class="num">$' + d.netIncome + 'B</td>' +
-            '<td class="num">$' + d.govtPayments + 'B</td>' +
-            '<td class="num">' + d.stateOwnership + '%</td>';
-        tbody.appendChild(tr);
+    var container = document.getElementById('depBars');
+    coalFiscalDep.forEach(function(d) {
+        var row = document.createElement('div');
+        row.className = 'dep-bar-container';
+        var barWidth = Math.max(d.pct, 0.5);
+        row.innerHTML =
+            '<div class="dep-label"><span>' + d.country + '</span><span style="font-weight:600;">' + d.pct + '%</span></div>' +
+            '<div class="dep-bar-bg"><div class="dep-bar-fill" style="width:' + barWidth + '%;background:var(--coal);">' +
+            (d.pct >= 3 ? d.pct + '%' : '') + '</div></div>';
+        container.appendChild(row);
     });
 })();
 
 
 // ============================================================
-//  TAB SWITCHING
+//  DATA TABLE
 // ============================================================
 
-function showTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
-    document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
-    document.getElementById('tab-' + tabId).classList.add('active');
-    // Find the button that matches
-    document.querySelectorAll('.tab-btn').forEach(function(btn) {
-        if (
-            (tabId === 'overview' && btn.textContent === 'Overview') ||
-            (tabId === 'coal-rev' && btn.textContent === 'Coal Revenue') ||
-            (tabId === 'oilgas-rev' && btn.textContent.includes('Oil')) ||
-            (tabId === 'soe-tab' && btn.textContent === 'SOE Detail')
-        ) {
-            btn.classList.add('active');
-        }
+(function() {
+    var tbody = document.querySelector('#coalTable tbody');
+    coalRevByCountry.forEach(function(d, i) {
+        var confClass = d.confidence === 'HIGH' ? 'conf-high' : d.confidence === 'MEDIUM' ? 'conf-med' : 'conf-low';
+        var revStr = d.revenue > 0 ? '$' + d.revenue + 'B' : '-$' + Math.abs(d.revenue) + 'B';
+        var pctStr = d.pctGovt !== null ? d.pctGovt + '%' : 'N/A';
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + (i + 1) + '</td>' +
+            '<td>' + d.country + '</td>' +
+            '<td class="num">' + revStr + '</td>' +
+            '<td>' + d.year + '</td>' +
+            '<td>' + d.type + '</td>' +
+            '<td class="num">' + pctStr + '</td>' +
+            '<td><span class="confidence-tag ' + confClass + '">' + d.confidence + '</span></td>' +
+            '<td><a href="' + d.url + '" target="_blank" style="color:var(--accent);font-size:0.75rem;">' + d.source + '</a></td>';
+        tbody.appendChild(tr);
     });
-}
-
+})();
 </script>
+
 <script src="nav.js"></script>
+
 </body>
 </html>
