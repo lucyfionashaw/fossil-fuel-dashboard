@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Political Donations &amp; Lobbying &mdash; Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
@@ -84,6 +85,17 @@
 
 <div class="container">
 
+    <div class="page-nav">
+        <span class="page-nav-label">Jump to:</span>
+        <a href="#us-contributions">US Contributions</a>
+        <a href="#lobbying">Lobbying</a>
+        <a href="#top-donors">Top Donors</a>
+        <a href="#australia">Australia</a>
+        <a href="#uk">UK</a>
+        <a href="#international">International</a>
+        <a href="#roi">Return on Investment</a>
+    </div>
+
     <!-- Headline cards -->
     <div class="headline-grid">
         <div class="headline-card oil">
@@ -110,12 +122,12 @@
 
     <!-- Context callout -->
     <div class="info-callout">
-        <strong>Context:</strong> US fossil fuel political spending (~$250M/cycle in contributions + lobbying) protects an industry receiving an estimated $7 trillion in global subsidies annually (IMF, including externalities). For every $1 spent on lobbying and contributions, the US fossil fuel industry receives an estimated $119 in federal subsidies and tax breaks.
+        <strong>Context:</strong> US fossil fuel political spending (~$250M/cycle in contributions + lobbying) protects an industry receiving an estimated $15&ndash;20B/year in direct federal subsidies. That works out to roughly <strong>80:1</strong> &mdash; for every $1 spent on political influence, the industry receives ~$80 in federal subsidies and tax breaks.
     </div>
 
     <!-- US Contributions Over Time -->
     <div class="chart-row">
-        <div class="section">
+        <div class="section" id="us-contributions">
             <h2>US Oil &amp; Gas Industry: Political Contributions by Cycle</h2>
             <p class="section-subtitle">Total PAC, individual, and soft money contributions per two-year election cycle. Source: OpenSecrets.</p>
             <div class="chart-container"><canvas id="chartOilGasContrib"></canvas></div>
@@ -136,7 +148,7 @@
     </div>
 
     <!-- Lobbying Spend -->
-    <div class="section">
+    <div class="section" id="lobbying">
         <h2>US Lobbying Expenditure: Fossil Fuels vs Clean Energy</h2>
         <p class="section-subtitle">Annual federal lobbying spend reported to the Senate. Fossil fuel lobbying has consistently outspent clean energy advocacy by 5&ndash;10x. Source: OpenSecrets.</p>
         <div class="chart-container-tall"><canvas id="chartLobbySpend"></canvas></div>
@@ -174,7 +186,7 @@
     </div>
 
     <!-- Top Corporate Donors -->
-    <div class="section">
+    <div class="section" id="top-donors">
         <h2>Top Fossil Fuel Corporate Donors (US, 2024 Cycle)</h2>
         <p class="section-subtitle">Largest corporate PAC + employee contributions. Source: OpenSecrets, FEC filings.</p>
         <div class="donor-grid">
@@ -245,6 +257,21 @@
         </div>
     </div>
 
+    <!-- US State-Level Political Contributions -->
+    <div class="section">
+        <h2>US Political Spending by State Context</h2>
+        <p class="section-subtitle">Top oil & gas contributing states include Texas, Oklahoma, and Louisiana (production states), while coal-region states like West Virginia contribute less in absolute terms but have higher per-capita political exposure.</p>
+        <button class="collapsible-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+            <span class="chevron">&#9654;</span> Show state-level contributions
+        </button>
+        <div class="collapsible-body">
+            <div style="height:400px;"><canvas id="chartStateContrib"></canvas></div>
+            <div class="info-callout" style="margin-top:1rem;">
+                <strong>Note:</strong> State-level data reflects contributions from companies headquartered or operating primarily in that state. Many major oil companies are headquartered in Texas (ExxonMobil, ConocoPhillips, Chevron) and Oklahoma (Devon Energy, Continental Resources), which inflates those states' totals.
+            </div>
+        </div>
+    </div>
+
     <!-- Lobbying Top Spenders -->
     <div class="section">
         <h2>Top Fossil Fuel Lobbying Spenders (US, 2023)</h2>
@@ -253,7 +280,7 @@
     </div>
 
     <!-- Australia Section -->
-    <div class="section">
+    <div class="section" id="australia">
         <h2>Australia: Fossil Fuel Political Donations</h2>
         <p class="section-subtitle">AEC disclosure data compiled by Market Forces / Climate Integrity. All figures are minimums &mdash; the disclosure threshold (A$16,900) and "dark money" (31% of all major party funding) mean true totals are higher.</p>
         <div class="chart-row">
@@ -328,7 +355,7 @@
     </div>
 
     <!-- UK Section -->
-    <div class="section">
+    <div class="section" id="uk">
         <h2>United Kingdom: Fossil Fuel Political Donations</h2>
         <p class="section-subtitle">Electoral Commission data analysed by DeSmog. UK donations come primarily from wealthy individuals with fossil fuel investments rather than direct corporate donations.</p>
         <div class="chart-row">
@@ -403,7 +430,7 @@
     </div>
 
     <!-- International Comparison -->
-    <div class="section">
+    <div class="section" id="international">
         <h2>International Comparison: Fossil Fuel Political Spending</h2>
         <p class="section-subtitle">Comparable data is limited outside the US due to varying disclosure rules. Available estimates below.</p>
         <div class="intl-grid">
@@ -456,7 +483,7 @@
     </div>
 
     <!-- Return on Investment -->
-    <div class="section">
+    <div class="section" id="roi">
         <h2>Return on Political Investment</h2>
         <p class="section-subtitle">Comparing fossil fuel political spending to the subsidies and policy benefits received.</p>
         <div class="stat-row">
@@ -1250,6 +1277,62 @@ new Chart(document.getElementById('chartUkParty'), {
 
 // ============================================================
 // TAB SWITCHING
+// --- US state-level political contributions chart ---
+// Top US states by fossil fuel political contributions (OpenSecrets, 2024 cycle, $M)
+const stateContribData = [
+    { state: 'Texas', amount: 52.3, dominant: 'Oil & Gas' },
+    { state: 'Oklahoma', amount: 14.8, dominant: 'Oil & Gas' },
+    { state: 'Louisiana', amount: 8.2, dominant: 'Oil & Gas' },
+    { state: 'California', amount: 7.5, dominant: 'Oil & Gas' },
+    { state: 'Colorado', amount: 5.1, dominant: 'Oil & Gas' },
+    { state: 'Pennsylvania', amount: 4.3, dominant: 'Mixed' },
+    { state: 'North Dakota', amount: 3.8, dominant: 'Oil & Gas' },
+    { state: 'West Virginia', amount: 2.9, dominant: 'Coal' },
+    { state: 'Wyoming', amount: 2.4, dominant: 'Coal + Oil' },
+    { state: 'New Mexico', amount: 2.1, dominant: 'Oil & Gas' },
+];
+
+(function() {
+    new Chart(document.getElementById('chartStateContrib'), {
+        type: 'bar',
+        data: {
+            labels: stateContribData.map(d => d.state),
+            datasets: [{
+                label: 'FF Political Contributions ($M)',
+                data: stateContribData.map(d => d.amount),
+                backgroundColor: stateContribData.map(d =>
+                    d.dominant === 'Coal' ? PALETTE.coal :
+                    d.dominant === 'Oil & Gas' ? PALETTE.oil : '#7f8c8d'
+                ),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(ctx) {
+                            return 'Dominant sector: ' + stateContribData[ctx[0].dataIndex].dominant;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: {
+                    title: { display: true, text: 'Contributions ($M, 2024 cycle)' },
+                    ticks: { callback: v => '$' + v + 'M' },
+                    grid: { color: '#f0f0f0' },
+                }
+            }
+        }
+    });
+})();
+
+
 // ============================================================
 function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));

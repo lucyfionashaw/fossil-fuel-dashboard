@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade & Energy Security — Fossil Fuel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        /* Chart containers */
+        .chart-container { position: relative; width: 100%; max-height: 400px; }
+        .chart-container-tall { position: relative; width: 100%; height: 520px; }
+        .chart-container-mid { position: relative; width: 100%; height: 440px; }
+        .chart-container-wide { position: relative; width: 100%; height: 450px; }
+
+        /* Headline cards */
+        .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .headline-grid { grid-template-columns: 1fr; } }
+
+        .headline-card {
+            background: var(--card-bg); border-radius: 12px; padding: 1.5rem; text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--border); transition: transform 0.2s;
+        }
+        .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.coal { border-top-color: var(--coal); }
+        .headline-card.oil { border-top-color: var(--oil); }
+        .headline-card.gas { border-top-color: var(--gas); }
+        .headline-card.total { border-top-color: var(--accent); }
+        .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .headline-card .value { font-size: 2rem; font-weight: 700; }
+        .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
+
+        /* Callouts */
+        .info-callout {
+            background: #f0f7ff; border-left: 3px solid var(--accent); padding: 0.8rem 1rem;
+            border-radius: 0 6px 6px 0; margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--text);
+        }
+        .info-callout strong { color: var(--accent); }
+
+        /* Dependency callout cards */
+        .dep-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 700px) { .dep-grid { grid-template-columns: 1fr; } }
+        .dep-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+        .dep-card .pct { font-size: 1.5rem; font-weight: 700; }
+        .dep-card .country-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .dep-card .desc { font-size: 0.78rem; color: var(--text-secondary); }
+
+        /* Import substitution grid */
+        .imp-sub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+        @media (max-width: 800px) { .imp-sub-grid { grid-template-columns: 1fr; } }
+
+        /* Trade balance bars */
+        .balance-bar {
+            display: flex; align-items: center; gap: 0.5rem; margin: 0.4rem 0; font-size: 0.82rem;
+        }
+        .balance-bar .bar-label { width: 110px; font-weight: 500; flex-shrink: 0; }
+        .balance-bar .bar-track {
+            flex: 1; height: 22px; background: var(--bg); border-radius: 4px; position: relative; overflow: hidden;
+        }
+        .balance-bar .bar-fill {
+            height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end;
+            padding: 0 6px; font-size: 0.7rem; font-weight: 600; color: white; min-width: 40px;
+        }
+        .bar-fill.export { background: var(--accent); }
+        .bar-fill.import { background: var(--oil); }
+
+        /* Country profile selector */
+        .country-selector { margin-bottom: 1rem; }
+        .country-selector select {
+            padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 6px;
+            font-family: inherit; font-size: 0.9rem; background: white; color: var(--text);
+            cursor: pointer; min-width: 200px;
+        }
+        .country-selector select:focus { outline: none; border-color: var(--accent); }
+
+        /* Profile metrics */
+        .profile-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; }
+        @media (max-width: 600px) { .profile-metrics { grid-template-columns: 1fr; } }
+        .profile-metric {
+            border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center;
+        }
+        .profile-metric .pm-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin-bottom: 0.2rem; }
+        .profile-metric .pm-value { font-size: 1.4rem; font-weight: 700; }
+        .profile-metric .pm-detail { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.15rem; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Trade &amp; Energy Security</h1>
+    <div class="subtitle">Export dependency, import exposure, supply diversification &amp; energy security risks</div>
+</div>
+
+<script src="colors.js"></script>
+<script src="nav.js"></script>
+
+<div class="container">
+
+    <!-- Page navigation -->
+    <div class="page-nav">
+        <span class="page-nav-label">Jump to:</span>
+        <a href="#exports">Export Revenue</a>
+        <a href="#export-dep">Export Dependency</a>
+        <a href="#imports">Import Exposure</a>
+        <a href="#demand">Demand Growth</a>
+        <a href="#supply">Supply Diversification</a>
+        <a href="#trade-balance">Trade Balance</a>
+    </div>
+
+    <!-- Headline cards (4 columns) -->
+    <div class="headline-grid">
+        <div class="headline-card total">
+            <div class="label">Global Fossil Fuel Exports</div>
+            <div class="value" style="color:var(--accent)">~$1.8T</div>
+            <div class="detail">Coal + Crude Oil + Gas (2023)</div>
+        </div>
+        <div class="headline-card coal">
+            <div class="label">Net Coal Importers</div>
+            <div class="value" style="color:var(--coal)">~40</div>
+            <div class="detail">1,200 Mt traded (18% of production)</div>
+        </div>
+        <div class="headline-card oil">
+            <div class="label">Top Export Dependent</div>
+            <div class="value" style="color:var(--oil)">Iraq 92%</div>
+            <div class="detail">Almost all export revenue is crude oil</div>
+        </div>
+        <div class="headline-card gas">
+            <div class="label">Fully Import-Dependent</div>
+            <div class="value" style="color:var(--gas)">~30</div>
+            <div class="detail">Countries with &gt;90% fossil fuel imports</div>
+        </div>
+    </div>
+
+    <!-- Framing callout -->
+    <div class="info-callout">
+        <strong>Fossil fuel trade creates mutual dependency:</strong> exporting nations depend on revenues (<a href="#export-dep">Export Dependency below</a>), while importing nations face energy security and FX risks (<a href="#imports">Import Exposure below</a>). This page examines both sides of the equation.
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 1: Export Revenue -->
+    <!-- ============================================================ -->
+    <div class="section" id="exports">
+        <h2>Export Revenue</h2>
+        <p class="section-subtitle">Global fossil fuel exports totalled ~$1.8 trillion in 2023. Oil dominates at 68%, followed by gas (20%) and coal (10%). Trade data from UN Comtrade, cross-referenced with EIA and Energy Institute Statistical Review.</p>
+
+        <div class="chart-row">
+            <div>
+                <h3>Global Fossil Fuel Export Value Split</h3>
+                <div class="chart-container"><canvas id="chartExportSplit"></canvas></div>
+            </div>
+            <div>
+                <h3>Top 12 Fossil Fuel Exporters (Total)</h3>
+                <div class="chart-container"><canvas id="chartTopExporters"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Coal exports value vs volume -->
+        <h3>Coal Exports: Top Exporters by Value &amp; Volume</h3>
+        <p class="section-subtitle">Only ~18% of global coal production is traded internationally (~1.45 Gt). Australia dominates by value due to premium met coal; Indonesia leads by volume in thermal coal.</p>
+        <div class="chart-row" style="margin-bottom:0;">
+            <div>
+                <div class="section-header" style="border-bottom:none;padding-bottom:0;">
+                    <h3>By Export Value ($B)</h3>
+                </div>
+                <div class="chart-container"><canvas id="chartCoalExportValue"></canvas></div>
+            </div>
+            <div>
+                <div class="section-header" style="border-bottom:none;padding-bottom:0;">
+                    <h3>By Volume (Mt exported)</h3>
+                </div>
+                <div class="chart-container"><canvas id="chartCoalExportVolume"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 2: Export Dependency -->
+    <!-- ============================================================ -->
+    <div class="section" id="export-dep">
+        <h2>Export Dependency</h2>
+        <p class="section-subtitle">Shows how dependent a country's export earnings are on fossil fuels. Countries above 50% are highly vulnerable to energy transition and commodity price swings.</p>
+
+        <!-- Dependency horizontal bar -->
+        <div class="chart-container-tall"><canvas id="chartDependency"></canvas></div>
+
+        <!-- Country callout cards -->
+        <div class="dep-grid" style="margin-top:1rem;">
+            <div class="dep-card">
+                <div class="country-name">Iraq</div>
+                <div class="pct" style="color:var(--oil)">92%</div>
+                <div class="desc">Highest dependency &mdash; almost all export revenue is crude oil</div>
+            </div>
+            <div class="dep-card">
+                <div class="country-name">Saudi Arabia</div>
+                <div class="pct" style="color:var(--oil)">73%</div>
+                <div class="desc">Despite Vision 2030 diversification, still heavily oil-dependent</div>
+            </div>
+            <div class="dep-card">
+                <div class="country-name">Australia</div>
+                <div class="pct" style="color:var(--coal)">27%</div>
+                <div class="desc">Coal is largest single commodity export, incl. LNG: ~35%</div>
+            </div>
+        </div>
+
+        <!-- Import Substitution (tabbed) -->
+        <h3>Import Substitution: Domestic Production vs Imports</h3>
+        <p class="section-subtitle">Countries that produce fossil fuels domestically save FX by avoiding imports. The bars show what share of consumption is met domestically vs imported.</p>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showFxImpTab('coal')">Coal</button>
+            <button class="tab-btn" onclick="showFxImpTab('oil')">Oil</button>
+            <button class="tab-btn" onclick="showFxImpTab('gas')">Gas</button>
+        </div>
+
+        <div class="tab-content active" id="fx-imp-tab-coal">
+            <div class="chart-container-mid"><canvas id="chartImpCoal"></canvas></div>
+        </div>
+        <div class="tab-content" id="fx-imp-tab-oil">
+            <div class="chart-container-mid"><canvas id="chartImpOil"></canvas></div>
+        </div>
+        <div class="tab-content" id="fx-imp-tab-gas">
+            <div class="chart-container-mid"><canvas id="chartImpGas"></canvas></div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 3: Import Exposure -->
+    <!-- ============================================================ -->
+    <div class="section" id="imports">
+        <h2>Import Exposure</h2>
+        <p class="section-subtitle">Net imports as % of domestic consumption (2023). Positive = net importer, negative = net exporter. 0% line marks self-sufficiency.</p>
+
+        <!-- Three-way comparison bar chart -->
+        <div style="position:relative;width:100%;height:720px;"><canvas id="chartThreeWay"></canvas></div>
+
+        <!-- Country import profile dropdown -->
+        <h3 style="margin-top:2rem;">Country Import Profile</h3>
+        <p class="section-subtitle">Select a country to compare its import dependency across coal, oil and gas.</p>
+        <div class="country-selector">
+            <select id="countrySelect" onchange="updateCountryProfile()"></select>
+        </div>
+        <div class="chart-row" style="margin-bottom:0;">
+            <div>
+                <div class="chart-container" style="max-height:300px;"><canvas id="chartCountryProfile"></canvas></div>
+            </div>
+            <div>
+                <div id="profileMetrics" class="profile-metrics"></div>
+            </div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Sources: <a href="https://www.energyinst.org/statistical-review" target="_blank" style="color:var(--text-secondary);">Energy Institute Statistical Review 2024</a>, <a href="https://www.iea.org/data-and-statistics" target="_blank" style="color:var(--text-secondary);">IEA World Energy Balances 2024</a>, <a href="https://www.eia.gov/international/data/world" target="_blank" style="color:var(--text-secondary);">US EIA International Energy Statistics</a></p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 4: Demand Growth -->
+    <!-- ============================================================ -->
+    <div class="section" id="demand">
+        <h2>Energy Demand Growth by Country</h2>
+        <p class="section-subtitle">How fossil fuel consumption has changed since 2015. Indexed: 2015 = 100. Rising lines indicate growing demand.</p>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showDemandTab('coal')">Coal</button>
+            <button class="tab-btn" onclick="showDemandTab('oil')">Oil</button>
+            <button class="tab-btn" onclick="showDemandTab('gas')">Gas</button>
+        </div>
+        <div class="tab-content active" id="demand-coal">
+            <div class="chart-container-tall"><canvas id="chartDemandCoal"></canvas></div>
+        </div>
+        <div class="tab-content" id="demand-oil">
+            <div class="chart-container-tall"><canvas id="chartDemandOil"></canvas></div>
+        </div>
+        <div class="tab-content" id="demand-gas">
+            <div class="chart-container-tall"><canvas id="chartDemandGas"></canvas></div>
+        </div>
+        <div style="margin-top:0.5rem;">
+            <a href="https://www.energyinst.org/statistical-review" class="source-tag" target="_blank">Energy Institute Statistical Review 2024</a>
+            <a href="https://www.iea.org/data-and-statistics" class="source-tag" target="_blank">IEA World Energy Balances</a>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 5: Supply Diversification -->
+    <!-- ============================================================ -->
+    <div class="section" id="supply">
+        <h2>Supply Source Diversification</h2>
+        <p class="section-subtitle">Where do major importers source their coal, oil and gas? Concentration risk measured by share of top supplier.</p>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showSupplyTab('coal')">Coal Sources</button>
+            <button class="tab-btn" onclick="showSupplyTab('oil')">Oil Sources</button>
+            <button class="tab-btn" onclick="showSupplyTab('gas')">Gas Sources</button>
+        </div>
+
+        <div class="tab-content active" id="supply-coal">
+            <div class="chart-container-wide"><canvas id="chartCoalSources"></canvas></div>
+            <div class="data-table-wrapper" style="margin-top:1rem;">
+                <table id="coalSourceTable">
+                    <thead><tr>
+                        <th>Importer</th><th>Top Supplier</th><th class="num">Share</th><th>2nd Supplier</th><th class="num">Share</th><th>3rd Supplier</th><th class="num">Share</th><th class="num">HHI</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="supply-oil">
+            <div class="chart-container-wide"><canvas id="chartOilSources"></canvas></div>
+            <div class="data-table-wrapper" style="margin-top:1rem;">
+                <table id="oilSourceTable">
+                    <thead><tr>
+                        <th>Importer</th><th>Top Supplier</th><th class="num">Share</th><th>2nd Supplier</th><th class="num">Share</th><th>3rd Supplier</th><th class="num">Share</th><th class="num">HHI</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="supply-gas">
+            <div class="chart-container-wide"><canvas id="chartGasSources"></canvas></div>
+            <div class="data-table-wrapper" style="margin-top:1rem;">
+                <table id="gasSourceTable">
+                    <thead><tr>
+                        <th>Importer</th><th>Top Supplier</th><th class="num">Share</th><th>2nd Supplier</th><th class="num">Share</th><th>3rd Supplier</th><th class="num">Share</th><th class="num">HHI</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 6: Trade Balance -->
+    <!-- ============================================================ -->
+    <div class="section" id="trade-balance">
+        <h2>Trade Balance Impact</h2>
+        <p class="section-subtitle">Fossil fuel imports represent a significant drain on foreign exchange reserves for these economies. Net import cost = imports minus any fossil fuel exports.</p>
+
+        <div class="chart-row">
+            <div>
+                <h3>Gross Fossil Fuel Import Cost ($B, 2023)</h3>
+                <div class="chart-container"><canvas id="chartImporterCost"></canvas></div>
+            </div>
+            <div>
+                <h3>Fossil Fuel Imports as % of Total Imports</h3>
+                <div class="chart-container"><canvas id="chartImporterPct"></canvas></div>
+            </div>
+        </div>
+
+        <div class="data-table-wrapper" style="margin-top:1rem;">
+            <table id="tradeBalanceTable">
+                <thead>
+                    <tr>
+                        <th>Country/Region</th>
+                        <th class="num">FF Imports ($B)</th>
+                        <th class="num">FF Exports ($B)</th>
+                        <th class="num">Net FF Import ($B)</th>
+                        <th class="num">FF % of Total Imports</th>
+                        <th>Key Fuels Imported</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Export data tables -->
+        <h3 style="margin-top:2rem;">Country-Level Export Data</h3>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showExpTab('coal-exp')">Coal Exporters</button>
+            <button class="tab-btn" onclick="showExpTab('oil-exp')">Oil Exporters</button>
+            <button class="tab-btn" onclick="showExpTab('gas-exp')">Gas Exporters</button>
+        </div>
+
+        <div class="tab-content active" id="exp-tab-coal-exp">
+            <div class="data-table-wrapper">
+                <table id="coalExportTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Export Volume (Mt)</th>
+                            <th class="num">Export Value ($B)</th>
+                            <th class="num">Avg Price ($/t)</th>
+                            <th class="num">Coal % of Total Exports</th>
+                            <th>Coal Types</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="exp-tab-oil-exp">
+            <div class="data-table-wrapper">
+                <table id="oilExportTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Export Volume (mb/d)</th>
+                            <th class="num">Export Value ($B)</th>
+                            <th class="num">Oil % of Total Exports</th>
+                            <th>Key Grades</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="exp-tab-gas-exp">
+            <div class="data-table-wrapper">
+                <table id="gasExportTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Country</th>
+                            <th class="num">Pipeline (bcm)</th>
+                            <th class="num">LNG (bcm)</th>
+                            <th class="num">Export Value ($B)</th>
+                            <th class="num">Gas % of Total Exports</th>
+                            <th>Primary Market</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Import data tables -->
+        <h3 style="margin-top:2rem;">Country-Level Import Dependency Data</h3>
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="showImpDataTab('imp-data-coal')">Coal</button>
+            <button class="tab-btn" onclick="showImpDataTab('imp-data-oil')">Oil</button>
+            <button class="tab-btn" onclick="showImpDataTab('imp-data-gas')">Gas</button>
+        </div>
+        <div class="tab-content active" id="imp-data-coal">
+            <div class="data-table-wrapper">
+                <table id="dataCoalTable">
+                    <thead><tr>
+                        <th>#</th><th>Country</th><th class="num">Production (Mt)</th><th class="num">Consumption (Mt)</th><th class="num">Net Imports (Mt)</th><th class="num">Import Dep. (%)</th><th>Status</th><th>Notes</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="imp-data-oil">
+            <div class="data-table-wrapper">
+                <table id="dataOilTable">
+                    <thead><tr>
+                        <th>#</th><th>Country</th><th class="num">Production (kb/d)</th><th class="num">Consumption (kb/d)</th><th class="num">Net Imports (kb/d)</th><th class="num">Import Dep. (%)</th><th>Status</th><th>Notes</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="imp-data-gas">
+            <div class="data-table-wrapper">
+                <table id="dataGasTable">
+                    <thead><tr>
+                        <th>#</th><th>Country</th><th class="num">Production (bcm)</th><th class="num">Consumption (bcm)</th><th class="num">Net Imports (bcm)</th><th class="num">Import Dep. (%)</th><th>Status</th><th>Notes</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology -->
+    <div class="section">
+        <h2>Methodology &amp; Sources</h2>
+        <div class="methodology">
+            <p><strong>Export values:</strong> Based on UN Comtrade 2023 data (HS codes 2701-2704 for coal, 2709-2710 for crude oil and petroleum products, 2711 for natural gas incl. LNG). Cross-referenced with national customs data and Energy Institute Statistical Review 2024 (73rd edition) trade flow tables.</p>
+            <p><strong>Coal exports:</strong> Volume data from IEA Coal 2024 and national sources. Australia values include significant met coal premium ($250-350/t vs $100-140/t thermal). Indonesia volumes adjusted for moisture content differences between Indonesian sub-bituminous and international grades.</p>
+            <p><strong>Oil exports:</strong> Crude and condensate export volumes from OPEC Annual Statistical Bulletin 2024 and EIA International Energy Statistics. Values use country-specific benchmark prices (Brent, WTI, Urals, Dubai/Oman, etc.) rather than uniform Brent pricing. 2023 average Brent: $82.49/bbl.</p>
+            <p><strong>Gas exports:</strong> Pipeline and LNG volumes from IGU World LNG Report 2024 and Energy Institute SR. LNG valued at destination market prices (JKM for Asia, TTF for Europe, Henry Hub + liquefaction for US exports). Pipeline gas valued at bilateral contract prices where available, regional benchmarks otherwise.</p>
+            <p><strong>Dependency ratios:</strong> Fossil fuel exports as % of total merchandise exports. Total merchandise export data from WTO Statistics Database and World Bank WITS. Some ratios may differ from IMF/World Bank figures due to different treatment of re-exports and product classifications.</p>
+            <p><strong>Import dependency</strong> is calculated as net imports (imports minus exports) divided by total primary energy consumption for each commodity. A negative figure indicates the country is a net exporter. Data is for 2023 unless otherwise noted.</p>
+            <p><strong>Import substitution:</strong> Domestic production valued at international benchmark prices to estimate "avoided import cost." Actual domestic prices are often lower (regulated markets in India, China, etc.), so this represents an upper bound on FX savings.</p>
+            <p><strong>Supply diversification:</strong> Bilateral trade flows from UN Comtrade (HS 2701 coal, 2709 crude oil), IEA gas trade data, and GIIGNL for LNG. HHI calculated as sum of squared market shares of suppliers.</p>
+            <div style="margin-top: 1rem;">
+                <a href="https://comtrade.un.org/" class="source-tag" target="_blank">UN Comtrade 2023</a>
+                <a href="https://www.energyinst.org/statistical-review" class="source-tag" target="_blank">Energy Institute SR 2024</a>
+                <a href="https://www.iea.org/reports/coal-2024" class="source-tag" target="_blank">IEA Coal 2024</a>
+                <a href="https://asb.opec.org/" class="source-tag" target="_blank">OPEC ASB 2024</a>
+                <a href="https://www.eia.gov/international/data/world" class="source-tag" target="_blank">EIA</a>
+                <a href="https://www.igu.org/resources/world-lng-report/" class="source-tag" target="_blank">IGU WLR 2024</a>
+                <a href="https://stats.wto.org/" class="source-tag" target="_blank">WTO Stats</a>
+                <a href="https://wits.worldbank.org/" class="source-tag" target="_blank">World Bank WITS</a>
+                <a href="https://www.iea.org/data-and-statistics" class="source-tag" target="_blank">IEA World Energy Balances 2024</a>
+                <a href="https://giignl.org/publications/" class="source-tag" target="_blank">GIIGNL 2024</a>
+                <a href="https://ec.europa.eu/eurostat" class="source-tag" target="_blank">Eurostat Energy Balances</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>Global Fossil Fuel Market Value Dashboard &middot; Trade &amp; Energy Security</p>
+    <p>Data: 2023&ndash;2024 &middot; Built with <a href="https://claude.ai">Claude</a></p>
+</div>
+
+<script>
+// ============================================================
+// PALETTE SHORTCUTS
+// ============================================================
+var COAL = PALETTE.coal;
+var OIL = PALETTE.oil;
+var GAS = PALETTE.gas;
+var ACCENT = PALETTE.accent;
+var TEXT_SEC = PALETTE.textSecondary;
+
+var coalColor = PALETTE.coal;
+var coalColorLight = PALETTE.coalLight;
+var oilColor = PALETTE.oil;
+var oilColorLight = PALETTE.oilLight;
+var gasColor = PALETTE.gas;
+var gasColorLight = PALETTE.gasLight;
+var accentColor = PALETTE.accent;
+
+// Neutral color for "imported" bars in import substitution charts
+var IMPORTED_NEUTRAL = '#6c757d';
+
+// ============================================================
+// TAB SWITCHING FUNCTIONS
+// ============================================================
+function showFxImpTab(tab) {
+    document.querySelectorAll('#fx-imp-tab-coal, #fx-imp-tab-oil, #fx-imp-tab-gas').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    document.getElementById('fx-imp-tab-' + tab).classList.add('active');
+    var btns = document.getElementById('fx-imp-tab-coal').parentElement.querySelectorAll('.tab-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    event.target.classList.add('active');
+}
+
+function showExpTab(tab) {
+    document.querySelectorAll('#exp-tab-coal-exp, #exp-tab-oil-exp, #exp-tab-gas-exp').forEach(function(el) {
+        el.classList.remove('active');
+    });
+    document.getElementById('exp-tab-' + tab).classList.add('active');
+    var btns = document.getElementById('exp-tab-coal-exp').parentElement.querySelectorAll('.tab-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    event.target.classList.add('active');
+}
+
+function showDemandTab(tab) {
+    document.querySelectorAll('#demand-coal,#demand-oil,#demand-gas').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('demand-' + tab).classList.add('active');
+    var btns = document.getElementById('demand-coal').parentElement.querySelectorAll('.tab-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    event.target.classList.add('active');
+}
+
+function showSupplyTab(tab) {
+    document.querySelectorAll('#supply-coal,#supply-oil,#supply-gas').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('supply-' + tab).classList.add('active');
+    var btns = document.getElementById('supply-' + tab).closest('.section').querySelectorAll('.tab-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    btns.forEach(function(b) {
+        if (b.textContent.toLowerCase().includes(tab)) b.classList.add('active');
+    });
+}
+
+function showImpDataTab(tab) {
+    document.querySelectorAll('#imp-data-coal,#imp-data-oil,#imp-data-gas').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById(tab).classList.add('active');
+    var section = document.getElementById(tab).parentElement;
+    var btns = section.querySelectorAll('.tab-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    var tabName = tab.replace('imp-data-', '');
+    btns.forEach(function(b) {
+        if (b.textContent.toLowerCase() === tabName) b.classList.add('active');
+    });
+}
+
+// ============================================================
+// ALL DATA (from fx.html)
+// ============================================================
+
+// Top 12 exporters
+var topExporters = {
+    labels: ['Saudi Arabia', 'Russia', 'USA', 'Australia', 'Canada', 'Qatar', 'Norway', 'UAE', 'Iraq', 'Kuwait', 'Nigeria', 'Kazakhstan'],
+    coal:   [0, 17, 8.0, 64, 4.5, 0, 0, 0, 0, 0, 0, 5.5],
+    oil:    [211, 105, 117, 7, 86, 14, 52, 73, 87, 55, 41, 29],
+    gas:    [0, 29, 26, 50, 10, 62, 33, 12, 0.5, 0.3, 17, 6]
+};
+
+// Coal exports by value and volume
+var coalExData = {
+    labels: ['Australia', 'Indonesia', 'Russia', 'USA', 'South Africa', 'Colombia', 'Canada', 'Mongolia', 'Mozambique', 'Kazakhstan'],
+    value:  [64, 35, 17, 8.0, 8.5, 5.8, 4.5, 4.0, 3.2, 5.5],
+    volume: [353, 521, 211, 62, 68, 55, 28, 45, 22, 44]
+};
+
+// Export dependency
+var depData = {
+    labels: [
+        'Iraq', 'Libya', 'Angola', 'Kuwait', 'Algeria',
+        'Saudi Arabia', 'Qatar', 'Nigeria', 'Kazakhstan', 'Oman',
+        'Azerbaijan', 'Russia', 'Norway', 'Colombia', 'Australia',
+        'Canada', 'USA', 'Indonesia', 'India', 'Brazil'
+    ],
+    pct: [92, 89, 85, 82, 80, 73, 70, 65, 58, 56, 55, 48, 42, 28, 27, 23, 10, 9, 5, 4],
+    dominant: ['oil','oil','oil','oil','oil+gas','oil','gas','oil','oil','oil','oil','oil+gas','oil+gas','oil+coal','coal+gas','oil','oil+gas','coal','oil','oil']
+};
+
+// Import substitution data
+var impCoalData = {
+    labels: ['China', 'India', 'USA', 'Indonesia', 'Germany', 'Japan', 'South Korea', 'Turkey', 'Poland', 'Vietnam'],
+    domestic: [92, 75, 96, 100, 5, 0, 1, 52, 88, 55],
+    imported: [8, 25, 4, 0, 95, 100, 99, 48, 12, 45]
+};
+
+var impOilData = {
+    labels: ['USA', 'Saudi Arabia', 'Russia', 'China', 'India', 'Japan', 'South Korea', 'Germany', 'Brazil', 'UK'],
+    domestic: [68, 100, 100, 30, 15, 0, 1, 3, 72, 45],
+    imported: [32, 0, 0, 70, 85, 100, 99, 97, 28, 55]
+};
+
+var impGasData = {
+    labels: ['USA', 'Russia', 'Qatar', 'China', 'India', 'Japan', 'South Korea', 'Germany', 'Italy', 'UK'],
+    domestic: [99, 100, 100, 56, 48, 2, 1, 5, 6, 42],
+    imported: [1, 0, 0, 44, 52, 98, 99, 95, 94, 58]
+};
+
+// Trade balance data
+var importerData = {
+    labels: ['China', 'EU-27', 'India', 'Japan', 'South Korea', 'Taiwan'],
+    grossImport: [475, 340, 175, 148, 110, 52],
+    pctOfImports: [17.6, 12.8, 24.8, 19.5, 16.8, 13.2]
+};
+
+var tradeBalanceRows = [
+    { country: 'China', imports: 475, exports: 10, net: 465, pct: 17.6, fuels: 'Crude oil (68%), LNG (15%), coal (12%), pipeline gas (5%)' },
+    { country: 'EU-27', imports: 340, exports: 65, net: 275, pct: 12.8, fuels: 'Crude oil (48%), pipeline gas (28%), LNG (12%), coal (5%), products (7%)' },
+    { country: 'India', imports: 175, exports: 38, net: 137, pct: 24.8, fuels: 'Crude oil (72%), coal (16%), LNG (10%), products re-export (~$35B)' },
+    { country: 'Japan', imports: 148, exports: 1, net: 147, pct: 19.5, fuels: 'Crude oil (41%), LNG (36%), coal (18%), products (5%)' },
+    { country: 'South Korea', imports: 110, exports: 7, net: 103, pct: 16.8, fuels: 'Crude oil (55%), LNG (24%), coal (15%), products (6%)' },
+    { country: 'Taiwan', imports: 52, exports: 2, net: 50, pct: 13.2, fuels: 'Crude oil (48%), LNG (30%), coal (18%), products (4%)' }
+];
+
+// Export tables data
+var coalExpRows = [
+    { rank: 1, country: 'Australia', vol: 353, val: 64, price: 181, pct: 17.2, types: 'Met (55%) + Thermal (45%)' },
+    { rank: 2, country: 'Indonesia', vol: 521, val: 35, price: 67, pct: 12.8, types: 'Thermal (sub-bituminous, 4,200-5,000 kcal)' },
+    { rank: 3, country: 'Russia', vol: 211, val: 17, price: 81, pct: 3.8, types: 'Thermal (70%) + Met (30%)' },
+    { rank: 4, country: 'South Africa', vol: 68, val: 8.5, price: 125, pct: 7.2, types: 'Thermal (Richards Bay benchmark)' },
+    { rank: 5, country: 'USA', vol: 62, val: 8.0, price: 129, pct: 0.5, types: 'Met (60%) + Thermal (40%)' },
+    { rank: 6, country: 'Colombia', vol: 55, val: 5.8, price: 105, pct: 11.5, types: 'Thermal (high quality 6,000+ kcal)' },
+    { rank: 7, country: 'Kazakhstan', vol: 44, val: 5.5, price: 125, pct: 7.1, types: 'Thermal + some met' },
+    { rank: 8, country: 'Canada', vol: 28, val: 4.5, price: 161, pct: 0.8, types: 'Met (70%) + Thermal (30%)' },
+    { rank: 9, country: 'Mongolia', vol: 45, val: 4.0, price: 89, pct: 28.0, types: 'Met (coking) to China' },
+    { rank: 10, country: 'Mozambique', vol: 22, val: 3.2, price: 145, pct: 38.5, types: 'Met (premium hard coking)' }
+];
+
+var oilExpRows = [
+    { rank: 1, country: 'Saudi Arabia', vol: 7.3, val: 211, pct: 62, grades: 'Arab Light, Arab Heavy, Arab Extra Light' },
+    { rank: 2, country: 'USA', vol: 4.1, val: 117, pct: 5.5, grades: 'WTI Midland, Mars, LLS, WCS (transited)' },
+    { rank: 3, country: 'Russia', vol: 4.6, val: 105, pct: 22, grades: 'Urals, ESPO, Sokol (discounted post-sanctions)' },
+    { rank: 4, country: 'Iraq', vol: 3.4, val: 87, pct: 92, grades: 'Basrah Medium, Basrah Heavy, Kirkuk' },
+    { rank: 5, country: 'Canada', vol: 3.8, val: 86, pct: 15, grades: 'WCS, Cold Lake, MSW, Syncrude' },
+    { rank: 6, country: 'UAE', vol: 2.9, val: 73, pct: 25, grades: 'Murban, Das, Upper Zakum' },
+    { rank: 7, country: 'Kuwait', vol: 2.0, val: 55, pct: 82, grades: 'Kuwait Export Crude (KEC)' },
+    { rank: 8, country: 'Norway', vol: 1.8, val: 52, pct: 25, grades: 'Johan Sverdrup, Ekofisk, Troll' },
+    { rank: 9, country: 'Nigeria', vol: 1.5, val: 41, pct: 65, grades: 'Bonny Light, Forcados, Qua Iboe' },
+    { rank: 10, country: 'Brazil', vol: 1.4, val: 38, pct: 3.5, grades: 'Lula, Buzios (pre-salt, high quality)' },
+    { rank: 11, country: 'Kazakhstan', vol: 1.3, val: 29, pct: 40, grades: 'CPC Blend, Tengiz' },
+    { rank: 12, country: 'Angola', vol: 1.1, val: 28, pct: 85, grades: 'Girassol, Dalia, Cabinda' }
+];
+
+var gasExpRows = [
+    { rank: 1, country: 'Qatar', pipe: 0, lng: 107, val: 62, pct: 70, market: 'Asia (Japan, S.Korea, China, India)' },
+    { rank: 2, country: 'Norway', pipe: 108, lng: 0, val: 33, pct: 17, market: 'Europe (UK, Germany, France, Belgium)' },
+    { rank: 3, country: 'Russia', pipe: 75, lng: 43, val: 29, pct: 6.5, market: 'China (pipeline), Europe (LNG), Asia' },
+    { rank: 4, country: 'Australia', pipe: 0, lng: 108, val: 50, pct: 13.0, market: 'Japan, China, S.Korea, Taiwan' },
+    { rank: 5, country: 'USA', pipe: 53, lng: 115, val: 26, pct: 1.3, market: 'Europe (LNG), Mexico (pipe), Asia (LNG)' },
+    { rank: 6, country: 'Nigeria', pipe: 0, lng: 29, val: 17, pct: 24, market: 'Europe, Asia' },
+    { rank: 7, country: 'Algeria', pipe: 33, lng: 15, val: 14, pct: 38, market: 'Italy, Spain (pipe + LNG)' },
+    { rank: 8, country: 'UAE', pipe: 0, lng: 8, val: 12, pct: 3.0, market: 'Japan, India, Thailand' },
+    { rank: 9, country: 'Malaysia', pipe: 2, lng: 36, val: 11, pct: 3.5, market: 'Japan, China, S.Korea, Taiwan' },
+    { rank: 10, country: 'Canada', pipe: 46, lng: 0, val: 10, pct: 1.7, market: 'USA (pipeline, growing LNG from 2025)' }
+];
+
+// ============================================================
+// ALL DATA (from imports.html)
+// ============================================================
+
+// Coal import dependency
+var coalImportData = [
+    { country: 'Japan', dep: 100, prod: 0, cons: 175, netImp: 175, status: 'Importer', notes: 'Zero domestic production; 100% seaborne imports' },
+    { country: 'South Korea', dep: 100, prod: 0, cons: 130, netImp: 130, status: 'Importer', notes: 'No domestic coal; imports from Australia, Indonesia, Russia' },
+    { country: 'Taiwan', dep: 100, prod: 0, cons: 66, netImp: 66, status: 'Importer', notes: 'No domestic production' },
+    { country: 'Germany', dep: 98, prod: 4, cons: 120, netImp: 118, status: 'Importer', notes: '~100% hard coal imported; only lignite domestic (phaseout by 2038)' },
+    { country: 'Turkey', dep: 62, prod: 70, cons: 115, netImp: 45, status: 'Importer', notes: 'Domestic lignite covers part; hard coal imported' },
+    { country: 'EU-27', dep: 57, prod: 278, cons: 418, netImp: 240, status: 'Importer', notes: 'Hard coal mostly imported; domestic lignite declining' },
+    { country: 'Pakistan', dep: 45, prod: 9, cons: 16, netImp: 7, status: 'Importer', notes: 'Growing thermal coal imports for power' },
+    { country: 'Philippines', dep: 68, prod: 15, cons: 35, netImp: 20, status: 'Importer', notes: 'Rising coal imports for power generation' },
+    { country: 'Vietnam', dep: 42, prod: 42, cons: 72, netImp: 30, status: 'Importer', notes: 'Shifted from exporter to net importer ~2015' },
+    { country: 'India', dep: 27, prod: 893, cons: 1050, netImp: 157, status: 'Importer', notes: 'Mostly met/coking coal; thermal imports declining w/ domestic push' },
+    { country: 'China', dep: 8, prod: 4710, cons: 4530, netImp: 380, status: 'Importer', notes: '~92% self-sufficient but worlds largest importer by volume' },
+    { country: 'USA', dep: -8, prod: 440, cons: 410, netImp: -30, status: 'Exporter', notes: 'Net exporter; thermal + met coal exports to Asia & Europe' },
+    { country: 'Canada', dep: -40, prod: 40, cons: 22, netImp: -18, status: 'Exporter', notes: 'Net exporter, mostly met coal to Asia' },
+    { country: 'Colombia', dep: -88, prod: 55, cons: 7, netImp: -48, status: 'Exporter', notes: 'Major thermal coal exporter (Cerrejon, Drummond)' },
+    { country: 'South Africa', dep: -32, prod: 230, cons: 170, netImp: -60, status: 'Exporter', notes: 'Exports via Richards Bay; declining rail capacity' },
+    { country: 'Russia', dep: -48, prod: 440, cons: 230, netImp: -210, status: 'Exporter', notes: 'Diverted from EU to Asia post-2022 sanctions' },
+    { country: 'Indonesia', dep: -70, prod: 775, cons: 200, netImp: -575, status: 'Exporter', notes: 'Worlds largest thermal coal exporter' },
+    { country: 'Australia', dep: -72, prod: 470, cons: 100, netImp: -370, status: 'Exporter', notes: '#1 met coal exporter, #2 thermal coal exporter' },
+    { country: 'Mongolia', dep: -75, prod: 60, cons: 10, netImp: -50, status: 'Exporter', notes: 'Exports to China via land border' },
+    { country: 'Mozambique', dep: -85, prod: 14, cons: 1, netImp: -13, status: 'Exporter', notes: 'Coking coal exports growing' }
+];
+
+// Oil import dependency
+var oilImportData = [
+    { country: 'Japan', dep: 99, prod: 8, cons: 3300, netImp: 3270, status: 'Importer', notes: 'Near-total dependency; Middle East ~90% of crude supply' },
+    { country: 'South Korea', dep: 98, prod: 40, cons: 2600, netImp: 2560, status: 'Importer', notes: 'Major refining hub; re-exports products' },
+    { country: 'EU-27', dep: 90, prod: 900, cons: 9900, netImp: 8900, status: 'Importer', notes: 'Norway (non-EU) is top supplier; reduced Russian crude' },
+    { country: 'India', dep: 85, prod: 780, cons: 5200, netImp: 4420, status: 'Importer', notes: 'Rising demand; increased Russian crude since 2022' },
+    { country: 'Germany', dep: 96, prod: 45, cons: 2100, netImp: 2020, status: 'Importer', notes: 'Minimal domestic; historically dependent on Russia pipeline' },
+    { country: 'Taiwan', dep: 99, prod: 1, cons: 1000, netImp: 990, status: 'Importer', notes: 'No significant production' },
+    { country: 'Turkey', dep: 89, prod: 70, cons: 950, netImp: 850, status: 'Importer', notes: 'Russia, Iraq, KSA main suppliers' },
+    { country: 'China', dep: 72, prod: 4200, cons: 15800, netImp: 11300, status: 'Importer', notes: 'Worlds largest crude importer; ~11 mb/d imports' },
+    { country: 'Thailand', dep: 63, prod: 370, cons: 1050, netImp: 660, status: 'Importer', notes: 'Some domestic condensate offsets' },
+    { country: 'Indonesia', dep: 30, prod: 640, cons: 1700, netImp: 510, status: 'Importer', notes: 'Left OPEC; domestic production declining' },
+    { country: 'Pakistan', dep: 78, prod: 85, cons: 430, netImp: 335, status: 'Importer', notes: 'Imports from UAE, KSA' },
+    { country: 'USA', dep: -3, prod: 12900, cons: 20100, netImp: -600, status: 'Exporter', notes: 'Net petroleum exporter since 2020 (shale revolution)' },
+    { country: 'Canada', dep: -65, prod: 5700, cons: 2300, netImp: -3400, status: 'Exporter', notes: 'Oil sands; exports to US via pipeline' },
+    { country: 'Saudi Arabia', dep: -210, prod: 9500, cons: 3500, netImp: -6000, status: 'Exporter', notes: 'OPEC swing producer' },
+    { country: 'Russia', dep: -170, prod: 10700, cons: 3800, netImp: -6900, status: 'Exporter', notes: 'Diverted exports from EU to India/China' },
+    { country: 'Iraq', dep: -350, prod: 4400, cons: 800, netImp: -3600, status: 'Exporter', notes: 'Low domestic refining capacity' },
+    { country: 'UAE', dep: -180, prod: 3500, cons: 1000, netImp: -2500, status: 'Exporter', notes: 'Murban crude benchmark' },
+    { country: 'Norway', dep: -500, prod: 1800, cons: 200, netImp: -1600, status: 'Exporter', notes: 'Key EU supplier (non-EU)' },
+    { country: 'Brazil', dep: -30, prod: 3400, cons: 2900, netImp: -500, status: 'Exporter', notes: 'Pre-salt deepwater; recently turned net exporter' },
+    { country: 'Nigeria', dep: -120, prod: 1300, cons: 450, netImp: -850, status: 'Exporter', notes: 'Dangote refinery may cut product imports' }
+];
+
+// Gas import dependency
+var gasImportData = [
+    { country: 'Japan', dep: 97, prod: 2, cons: 90, netImp: 88, status: 'Importer', notes: '~97% LNG imports; Australia #1 supplier' },
+    { country: 'South Korea', dep: 98, prod: 0.4, cons: 57, netImp: 56, status: 'Importer', notes: 'Almost entirely LNG; KOGAS monopoly buyer' },
+    { country: 'Taiwan', dep: 98, prod: 0.2, cons: 24, netImp: 23.5, status: 'Importer', notes: 'All LNG; building new regas capacity' },
+    { country: 'EU-27', dep: 83, prod: 42, cons: 310, netImp: 258, status: 'Importer', notes: 'Rapid shift from Russian pipe to US/Qatar LNG post-2022' },
+    { country: 'Germany', dep: 95, prod: 4, cons: 75, netImp: 71, status: 'Importer', notes: 'Built 3 floating LNG terminals post-2022 Russia cutoff' },
+    { country: 'Italy', dep: 92, prod: 3, cons: 62, netImp: 57, status: 'Importer', notes: 'Algeria, Azerbaijan, LNG; reduced Russian' },
+    { country: 'India', dep: 48, prod: 34, cons: 60, netImp: 26, status: 'Importer', notes: 'Growing LNG imports + pipeline from Myanmar canceled' },
+    { country: 'China', dep: 40, prod: 230, cons: 385, netImp: 155, status: 'Importer', notes: '40% imported: pipeline (Central Asia, Russia) + LNG' },
+    { country: 'Turkey', dep: 98, prod: 0.5, cons: 50, netImp: 49, status: 'Importer', notes: 'Pipeline (Russia, Azerbaijan, Iran) + LNG' },
+    { country: 'Pakistan', dep: 22, prod: 30, cons: 38, netImp: 8, status: 'Importer', notes: 'Domestic declining; 2 FSRUs for LNG' },
+    { country: 'Thailand', dep: 28, prod: 32, cons: 48, netImp: 16, status: 'Importer', notes: 'Myanmar pipeline + LNG; domestic declining' },
+    { country: 'UK', dep: 55, prod: 34, cons: 71, netImp: 37, status: 'Importer', notes: 'North Sea declining; Norway pipeline + LNG' },
+    { country: 'USA', dep: -12, prod: 1035, cons: 880, netImp: -155, status: 'Exporter', notes: 'Worlds largest gas producer + LNG exporter' },
+    { country: 'Russia', dep: -37, prod: 587, cons: 420, netImp: -167, status: 'Exporter', notes: 'Pipeline to China growing; EU sales collapsed' },
+    { country: 'Qatar', dep: -270, prod: 177, cons: 40, netImp: -137, status: 'Exporter', notes: '#2 LNG exporter; North Field expansion underway' },
+    { country: 'Australia', dep: -85, prod: 152, cons: 45, netImp: -107, status: 'Exporter', notes: '#1 LNG exporter (2023); domestic reservation debate' },
+    { country: 'Norway', dep: -340, prod: 122, cons: 4, netImp: -118, status: 'Exporter', notes: 'Key EU pipeline supplier; Troll, Sleipner fields' },
+    { country: 'Canada', dep: -30, prod: 185, cons: 130, netImp: -55, status: 'Exporter', notes: 'LNG Canada terminal starting 2025' },
+    { country: 'Algeria', dep: -75, prod: 99, cons: 45, netImp: -54, status: 'Exporter', notes: 'Pipeline to Italy/Spain + LNG; rising domestic use' },
+    { country: 'Turkmenistan', dep: -80, prod: 80, cons: 30, netImp: -50, status: 'Exporter', notes: 'Pipeline exports to China (CNPC)' }
+];
+
+// Country profiles
+var countryProfiles = [
+    { country: 'Japan',        coal: 100, oil: 99,  gas: 97,  coalCons: 175, oilCons: 3300, gasCons: 90,  coalNote: 'Zero domestic production', oilNote: 'Near-total Middle East dependency', gasNote: '~97% LNG imports' },
+    { country: 'South Korea',  coal: 100, oil: 98,  gas: 98,  coalCons: 130, oilCons: 2600, gasCons: 57,  coalNote: 'No domestic coal', oilNote: 'Major refining hub', gasNote: 'Almost entirely LNG' },
+    { country: 'Taiwan',       coal: 100, oil: 99,  gas: 98,  coalCons: 66,  oilCons: 1000, gasCons: 24,  coalNote: 'No domestic production', oilNote: 'No significant production', gasNote: 'All LNG' },
+    { country: 'Germany',      coal: 98,  oil: 96,  gas: 95,  coalCons: 120, oilCons: 2100, gasCons: 75,  coalNote: 'Only lignite domestic', oilNote: 'Minimal domestic', gasNote: 'Built 3 floating LNG terminals' },
+    { country: 'EU-27',        coal: 57,  oil: 90,  gas: 83,  coalCons: 418, oilCons: 9900, gasCons: 310, coalNote: 'Hard coal mostly imported', oilNote: 'Norway is top supplier', gasNote: 'Shift from Russia to US/Qatar LNG' },
+    { country: 'Turkey',       coal: 62,  oil: 89,  gas: 98,  coalCons: 115, oilCons: 950,  gasCons: 50,  coalNote: 'Domestic lignite partial', oilNote: 'Russia, Iraq, KSA suppliers', gasNote: 'Pipeline + LNG' },
+    { country: 'India',        coal: 27,  oil: 85,  gas: 48,  coalCons: 1050,oilCons: 5200, gasCons: 60,  coalNote: 'Imports mostly coking coal', oilNote: 'Increased Russian crude since 2022', gasNote: 'Growing LNG imports' },
+    { country: 'China',        coal: 8,   oil: 72,  gas: 40,  coalCons: 4530,oilCons: 15800,gasCons: 385, coalNote: '~92% self-sufficient', oilNote: 'World\'s largest crude importer', gasNote: 'Pipeline + LNG' },
+    { country: 'Indonesia',    coal: -70, oil: 30,  gas: -5,  coalCons: 200, oilCons: 1700, gasCons: 40,  coalNote: 'World\'s largest thermal exporter', oilNote: 'Left OPEC, production declining', gasNote: 'Small net exporter' },
+    { country: 'USA',          coal: -8,  oil: -3,  gas: -12, coalCons: 410, oilCons: 20100,gasCons: 880, coalNote: 'Net exporter', oilNote: 'Net petroleum exporter since 2020', gasNote: 'World\'s largest producer' },
+    { country: 'Russia',       coal: -48, oil: -170,gas: -37, coalCons: 230, oilCons: 3800, gasCons: 420, coalNote: 'Major exporter to Asia', oilNote: 'Diverted from EU', gasNote: 'Pipeline to China growing' },
+    { country: 'Australia',    coal: -72, oil: 55,  gas: -85, coalCons: 100, oilCons: 1050, gasCons: 45,  coalNote: '#1 met, #2 thermal exporter', oilNote: 'Refinery closures increased dependency', gasNote: '#1 LNG exporter' },
+    { country: 'Brazil',       coal: 75,  oil: -3,  gas: 12,  coalCons: 22,  oilCons: 2900, gasCons: 35,  coalNote: 'Small consumer, imports met coal', oilNote: 'Pre-salt turned net exporter', gasNote: 'Bolivia pipeline + LNG' },
+    { country: 'UK',           coal: 95,  oil: 55,  gas: 55,  coalCons: 8,   oilCons: 1400, gasCons: 71,  coalNote: 'Near-zero coal power by 2024', oilNote: 'North Sea declining', gasNote: 'Norway pipeline + LNG' },
+    { country: 'Vietnam',      coal: 42,  oil: 20,  gas: -10, coalCons: 72,  oilCons: 500,  gasCons: 10,  coalNote: 'Shifted to net importer ~2015', oilNote: 'Some domestic production', gasNote: 'Small domestic producer' },
+    { country: 'Thailand',     coal: 50,  oil: 63,  gas: 28,  coalCons: 25,  oilCons: 1050, gasCons: 48,  coalNote: 'Imports from Indonesia', oilNote: 'Some condensate offsets', gasNote: 'Myanmar pipeline + LNG' },
+    { country: 'Pakistan',     coal: 45,  oil: 78,  gas: 22,  coalCons: 16,  oilCons: 430,  gasCons: 38,  coalNote: 'Growing thermal imports', oilNote: 'Imports from UAE, KSA', gasNote: 'Domestic declining' },
+    { country: 'Philippines',  coal: 68,  oil: 55,  gas: 0,   coalCons: 35,  oilCons: 400,  gasCons: 4,   coalNote: 'Rising imports for power', oilNote: 'Mostly imported', gasNote: 'Malampaya field nearly depleted' },
+    { country: 'South Africa', coal: -32, oil: 90,  gas: 0,   coalCons: 170, oilCons: 500,  gasCons: 4,   coalNote: 'Exports via Richards Bay', oilNote: 'Sasol CTL covers some demand', gasNote: 'Mozambique pipeline small' },
+    { country: 'Poland',       coal: 5,   oil: 96,  gas: 78,  coalCons: 100, oilCons: 600,  gasCons: 18,  coalNote: 'Domestic lignite + hard coal', oilNote: 'Russian pipeline + diversifying', gasNote: 'Baltic Pipe from Norway' }
+];
+
+// Recalculate dep from raw data
+[coalImportData, oilImportData, gasImportData].forEach(function(arr) {
+    arr.forEach(function(d) {
+        if (d.cons > 0) d.dep = Math.round((d.netImp / d.cons) * 100);
+    });
+});
+// Sync countryProfiles to corrected dep values
+countryProfiles.forEach(function(p) {
+    var c = coalImportData.find(function(d) { return d.country === p.country; });
+    if (c) p.coal = c.dep;
+    var o = oilImportData.find(function(d) { return d.country === p.country; });
+    if (o) p.oil = o.dep;
+    var g = gasImportData.find(function(d) { return d.country === p.country; });
+    if (g) p.gas = g.dep;
+});
+
+// Three-way comparison — derived from country profiles, sorted by average dependency
+var threeWayData = countryProfiles
+    .map(function(p) { return { country: p.country, coal: p.coal, oil: p.oil, gas: p.gas }; })
+    .sort(function(a, b) { return ((b.coal + b.oil + b.gas) / 3) - ((a.coal + a.oil + a.gas) / 3); });
+
+// Energy demand growth data (indexed, 2015=100)
+var demandYears = ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023'];
+var demandGrowth = {
+    coal: {
+        'China':     [100, 98, 101, 104, 105, 103, 108, 111, 116],
+        'India':     [100, 105, 111, 116, 117, 109, 119, 126, 130],
+        'USA':       [100, 91, 89, 86, 73, 59, 65, 64, 55],
+        'Indonesia': [100, 113, 125, 144, 163, 175, 200, 225, 250],
+        'Japan':     [100, 97, 100, 97, 95, 84, 89, 92, 92],
+        'Germany':   [100, 94, 94, 86, 75, 61, 72, 78, 67],
+        'Vietnam':   [100, 114, 131, 150, 163, 169, 181, 194, 200],
+        'Turkey':    [100, 106, 111, 111, 111, 111, 122, 128, 128]
+    },
+    oil: {
+        'China':     [100, 103, 107, 111, 118, 113, 124, 123, 133],
+        'India':     [100, 105, 110, 115, 117, 102, 115, 121, 127],
+        'USA':       [100, 101, 103, 105, 105, 93, 101, 103, 104],
+        'Japan':     [100, 98, 96, 95, 93, 83, 85, 84, 83],
+        'South Korea':[100,103, 106, 108, 106, 95, 100, 102, 103],
+        'Brazil':    [100, 97, 99, 101, 103, 93, 99, 103, 106],
+        'Indonesia': [100, 102, 106, 110, 113, 103, 108, 112, 113],
+        'EU-27':     [100, 102, 103, 104, 104, 88, 95, 97, 98]
+    },
+    gas: {
+        'China':     [100, 108, 123, 144, 159, 169, 192, 188, 197],
+        'India':     [100, 102, 110, 116, 120, 110, 116, 114, 120],
+        'USA':       [100, 101, 104, 108, 109, 106, 110, 111, 111],
+        'Japan':     [100, 95, 95, 90, 86, 81, 86, 84, 86],
+        'EU-27':     [100, 104, 107, 107, 107, 100, 103, 90, 85],
+        'South Korea':[100,102, 107, 112, 110, 105, 112, 108, 109],
+        'Australia': [100, 105, 110, 113, 115, 112, 118, 120, 118],
+        'Turkey':    [100, 96, 108, 104, 96, 98, 110, 104, 108]
+    }
+};
+
+// Supply sources for coal
+var coalSources = [
+    { importer: 'Japan', s1: 'Australia', s1p: 60, s2: 'Indonesia', s2p: 17, s3: 'Russia', s3p: 10, hhi: 4100 },
+    { importer: 'South Korea', s1: 'Australia', s1p: 42, s2: 'Indonesia', s2p: 22, s3: 'Russia', s3p: 17, hhi: 2700 },
+    { importer: 'India', s1: 'Indonesia', s1p: 42, s2: 'South Africa', s2p: 21, s3: 'Australia', s3p: 18, hhi: 2600 },
+    { importer: 'China', s1: 'Indonesia', s1p: 48, s2: 'Australia', s2p: 20, s3: 'Russia', s3p: 18, hhi: 3200 },
+    { importer: 'EU-27', s1: 'Colombia', s1p: 25, s2: 'Australia', s2p: 22, s3: 'South Africa', s3p: 20, hhi: 1700 },
+    { importer: 'Taiwan', s1: 'Australia', s1p: 55, s2: 'Indonesia', s2p: 25, s3: 'Russia', s3p: 8, hhi: 3800 },
+    { importer: 'Germany', s1: 'Colombia', s1p: 23, s2: 'Australia', s2p: 22, s3: 'South Africa', s3p: 20, hhi: 1600 },
+    { importer: 'Turkey', s1: 'Russia', s1p: 38, s2: 'Colombia', s2p: 28, s3: 'South Africa', s3p: 18, hhi: 2700 }
+];
+
+// Supply sources for oil
+var oilSources = [
+    { importer: 'China', s1: 'Russia', s1p: 19, s2: 'Saudi Arabia', s2p: 16, s3: 'Iraq', s3p: 12, hhi: 1100 },
+    { importer: 'India', s1: 'Russia', s1p: 36, s2: 'Iraq', s2p: 19, s3: 'Saudi Arabia', s3p: 15, hhi: 2000 },
+    { importer: 'Japan', s1: 'Saudi Arabia', s1p: 38, s2: 'UAE', s2p: 32, s3: 'Kuwait', s3p: 9, hhi: 2600 },
+    { importer: 'South Korea', s1: 'Saudi Arabia', s1p: 30, s2: 'USA', s2p: 14, s3: 'Kuwait', s3p: 13, hhi: 1500 },
+    { importer: 'EU-27', s1: 'Norway', s1p: 18, s2: 'USA', s2p: 14, s3: 'Kazakhstan', s3p: 10, hhi: 900 },
+    { importer: 'Germany', s1: 'Norway', s1p: 22, s2: 'Kazakhstan', s2p: 18, s3: 'USA', s3p: 14, hhi: 1200 },
+    { importer: 'Taiwan', s1: 'Saudi Arabia', s1p: 28, s2: 'Kuwait', s2p: 22, s3: 'USA', s3p: 12, hhi: 1600 },
+    { importer: 'Turkey', s1: 'Russia', s1p: 28, s2: 'Iraq', s2p: 25, s3: 'Libya', s3p: 12, hhi: 1700 }
+];
+
+// Supply sources for gas
+var gasSources = [
+    { importer: 'Japan', s1: 'Australia', s1p: 36, s2: 'Malaysia', s2p: 13, s3: 'USA', s3p: 11, hhi: 1700 },
+    { importer: 'South Korea', s1: 'Australia', s1p: 22, s2: 'Qatar', s2p: 20, s3: 'USA', s3p: 15, hhi: 1300 },
+    { importer: 'China', s1: 'Australia', s1p: 20, s2: 'Turkmenistan', s2p: 19, s3: 'Russia', s3p: 15, hhi: 1200 },
+    { importer: 'EU-27', s1: 'Norway', s1p: 32, s2: 'USA', s2p: 18, s3: 'Algeria', s3p: 12, hhi: 1600 },
+    { importer: 'India', s1: 'Qatar', s1p: 40, s2: 'USA', s2p: 15, s3: 'UAE', s3p: 10, hhi: 2100 },
+    { importer: 'Germany', s1: 'Norway', s1p: 45, s2: 'Netherlands', s2p: 20, s3: 'USA (LNG)', s3p: 15, hhi: 2800 },
+    { importer: 'Turkey', s1: 'Russia', s1p: 35, s2: 'Azerbaijan', s2p: 20, s3: 'Algeria', s3p: 12, hhi: 2000 },
+    { importer: 'Taiwan', s1: 'Australia', s1p: 30, s2: 'Qatar', s2p: 25, s3: 'USA', s3p: 15, hhi: 1800 }
+];
+
+// ============================================================
+// CHART 1: Export Value Split (Doughnut)
+// ============================================================
+new Chart(document.getElementById('chartExportSplit'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Crude Oil & Products', 'Natural Gas (Pipeline + LNG)', 'Coal'],
+        datasets: [{
+            data: [1250, 370, 185],
+            backgroundColor: [OIL, GAS, COAL],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { position: 'bottom', labels: { padding: 16 } },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                        var pct = ((ctx.raw / total) * 100).toFixed(1);
+                        return ctx.label + ': $' + ctx.raw + 'B (' + pct + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 2: Top 12 Fossil Fuel Exporters (Stacked Bar)
+// ============================================================
+new Chart(document.getElementById('chartTopExporters'), {
+    type: 'bar',
+    data: {
+        labels: topExporters.labels,
+        datasets: [
+            { label: 'Oil', data: topExporters.oil, backgroundColor: OIL },
+            { label: 'Gas', data: topExporters.gas, backgroundColor: GAS },
+            { label: 'Coal', data: topExporters.coal, backgroundColor: COAL }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: true,
+        indexAxis: 'y',
+        scales: {
+            x: { stacked: true, title: { display: true, text: 'Export Value ($B)', font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+            y: { stacked: true, grid: { display: false } }
+        },
+        plugins: {
+            legend: { position: 'top', labels: { padding: 12 } },
+            tooltip: {
+                callbacks: {
+                    afterBody: function(items) {
+                        var idx = items[0].dataIndex;
+                        var total = topExporters.coal[idx] + topExporters.oil[idx] + topExporters.gas[idx];
+                        return 'Total: $' + total.toFixed(1) + 'B';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 3 & 4: Coal Exports by Value and Volume
+// ============================================================
+new Chart(document.getElementById('chartCoalExportValue'), {
+    type: 'bar',
+    data: {
+        labels: coalExData.labels,
+        datasets: [{
+            label: 'Export Value ($B)',
+            data: coalExData.value,
+            backgroundColor: coalExData.labels.map(function(l, i) {
+                return i < 3 ? COAL : '#6b6b6b';
+            }),
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: true,
+        indexAxis: 'y',
+        scales: {
+            x: { title: { display: true, text: '$B', font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+            y: { grid: { display: false } }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return '$' + ctx.raw + 'B'; }
+                }
+            }
+        }
+    }
+});
+
+new Chart(document.getElementById('chartCoalExportVolume'), {
+    type: 'bar',
+    data: {
+        labels: coalExData.labels,
+        datasets: [{
+            label: 'Export Volume (Mt)',
+            data: coalExData.volume,
+            backgroundColor: coalExData.labels.map(function(l, i) {
+                return i < 3 ? COAL : '#6b6b6b';
+            }),
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: true,
+        indexAxis: 'y',
+        scales: {
+            x: { title: { display: true, text: 'Mt', font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+            y: { grid: { display: false } }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.raw + ' Mt'; }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHART 5: Fossil Fuel Export Dependency (% of total exports)
+// ============================================================
+new Chart(document.getElementById('chartDependency'), {
+    type: 'bar',
+    data: {
+        labels: depData.labels,
+        datasets: [{
+            label: 'FF Exports as % of Total Exports',
+            data: depData.pct,
+            backgroundColor: depData.dominant.map(function(d) {
+                if (d === 'oil') return OIL;
+                if (d === 'gas') return GAS;
+                if (d === 'coal+gas' || d === 'coal') return COAL;
+                if (d === 'oil+gas') return '#8e44ad';
+                if (d === 'oil+coal') return '#e67e22';
+                return ACCENT;
+            }),
+            borderRadius: 3
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        scales: {
+            x: {
+                max: 100,
+                title: { display: true, text: '% of Total Merchandise Exports', font: { size: 11 } },
+                grid: { color: '#f0f0f0' },
+                ticks: { callback: function(v) { return v + '%'; } }
+            },
+            y: { grid: { display: false } }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        return ctx.raw + '% of total exports (' + depData.dominant[ctx.dataIndex] + ')';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// CHARTS 6-8: Import Substitution (Coal, Oil, Gas)
+// Uses IMPORTED_NEUTRAL instead of OIL color for "imported" bars
+// ============================================================
+new Chart(document.getElementById('chartImpCoal'), {
+    type: 'bar',
+    data: {
+        labels: impCoalData.labels,
+        datasets: [
+            { label: 'Domestic Production', data: impCoalData.domestic, backgroundColor: ACCENT, borderRadius: 3 },
+            { label: 'Imported', data: impCoalData.imported, backgroundColor: IMPORTED_NEUTRAL, borderRadius: 3 }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: { stacked: true, max: 100, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } }
+        },
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw + '%'; }
+                }
+            }
+        }
+    }
+});
+
+new Chart(document.getElementById('chartImpOil'), {
+    type: 'bar',
+    data: {
+        labels: impOilData.labels,
+        datasets: [
+            { label: 'Domestic Production', data: impOilData.domestic, backgroundColor: ACCENT, borderRadius: 3 },
+            { label: 'Imported', data: impOilData.imported, backgroundColor: IMPORTED_NEUTRAL, borderRadius: 3 }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: { stacked: true, max: 100, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } }
+        },
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw + '%'; }
+                }
+            }
+        }
+    }
+});
+
+new Chart(document.getElementById('chartImpGas'), {
+    type: 'bar',
+    data: {
+        labels: impGasData.labels,
+        datasets: [
+            { label: 'Domestic Production', data: impGasData.domestic, backgroundColor: ACCENT, borderRadius: 3 },
+            { label: 'Imported', data: impGasData.imported, backgroundColor: IMPORTED_NEUTRAL, borderRadius: 3 }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: { stacked: true, max: 100, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } }
+        },
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw + '%'; }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// Three-way comparison (grouped bar) — Import Exposure
+// ============================================================
+(function() {
+    new Chart(document.getElementById('chartThreeWay'), {
+        type: 'bar',
+        data: {
+            labels: threeWayData.map(function(d) { return d.country; }),
+            datasets: [
+                {
+                    label: 'Coal',
+                    data: threeWayData.map(function(d) { return d.coal; }),
+                    backgroundColor: coalColor,
+                    borderRadius: 3
+                },
+                {
+                    label: 'Oil',
+                    data: threeWayData.map(function(d) { return d.oil; }),
+                    backgroundColor: oilColor,
+                    borderRadius: 3
+                },
+                {
+                    label: 'Gas',
+                    data: threeWayData.map(function(d) { return d.gas; }),
+                    backgroundColor: gasColor,
+                    borderRadius: 3
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { boxWidth: 14, font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': ' + ctx.raw + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: '#f0f0f0' },
+                    ticks: { callback: function(v) { return v + '%'; }, font: { size: 11 } },
+                    min: -100,
+                    max: 100,
+                    title: { display: true, text: '\u2190 Net exporter | Net importer \u2192', font: { size: 11, style: 'italic' } }
+                },
+                y: {
+                    ticks: { font: { size: 10 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+})();
+
+// ============================================================
+// Country Profile Selector
+// ============================================================
+(function() {
+    var select = document.getElementById('countrySelect');
+    countryProfiles.forEach(function(p, i) {
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = p.country;
+        select.appendChild(opt);
+    });
+
+    var ctx = document.getElementById('chartCountryProfile').getContext('2d');
+    window._profileChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Coal', 'Oil', 'Gas'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: [coalColor, oilColor, gasColor],
+                borderRadius: 6,
+                barThickness: 50
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var lines = [ctx.raw + '% import dependency'];
+                            var idx = parseInt(document.getElementById('countrySelect').value);
+                            var country = countryProfiles[idx].country;
+                            var commodity = ['coal', 'oil', 'gas'][ctx.dataIndex];
+                            var srcArr = commodity === 'coal' ? coalSources : commodity === 'oil' ? oilSources : gasSources;
+                            var src = srcArr.find(function(s) { return s.importer === country; });
+                            if (src) {
+                                lines.push('');
+                                lines.push('Top sources:');
+                                lines.push('  #1 ' + src.s1 + ' (' + src.s1p + '%)');
+                                lines.push('  #2 ' + src.s2 + ' (' + src.s2p + '%)');
+                                lines.push('  #3 ' + src.s3 + ' (' + src.s3p + '%)');
+                            }
+                            return lines;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: -100, max: 100,
+                    grid: { color: '#f0f0f0' },
+                    ticks: { callback: function(v) { return v + '%'; }, font: { size: 11 } },
+                    title: { display: true, text: '\u2190 Net exporter | Net importer \u2192', font: { size: 11, style: 'italic' } }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    // trigger initial
+    updateCountryProfile();
+})();
+
+function updateCountryProfile() {
+    var idx = parseInt(document.getElementById('countrySelect').value);
+    var p = countryProfiles[idx];
+    var chart = window._profileChart;
+    chart.data.datasets[0].data = [p.coal, p.oil, p.gas];
+    chart.options.scales.y.min = Math.min(-100, p.coal, p.oil, p.gas) - 20;
+    chart.update();
+
+    // Update metrics
+    var metricsDiv = document.getElementById('profileMetrics');
+    function depLabel(val) {
+        if (val > 80) return '<span style="color:var(--oil);font-weight:600">High dependency</span>';
+        if (val > 30) return '<span style="color:#e67e22;font-weight:600">Moderate</span>';
+        if (val >= 0) return '<span style="color:var(--accent);font-weight:600">Low</span>';
+        return '<span style="color:var(--accent);font-weight:600">Net exporter</span>';
+    }
+    metricsDiv.innerHTML =
+        '<div class="profile-metric" style="border-top:3px solid ' + coalColor + '">' +
+            '<div class="pm-label">Coal</div>' +
+            '<div class="pm-value" style="color:' + coalColor + '">' + p.coal + '%</div>' +
+            '<div class="pm-detail">' + depLabel(p.coal) + '</div>' +
+            '<div class="pm-detail">' + p.coalNote + '</div>' +
+        '</div>' +
+        '<div class="profile-metric" style="border-top:3px solid ' + oilColor + '">' +
+            '<div class="pm-label">Oil</div>' +
+            '<div class="pm-value" style="color:' + oilColor + '">' + p.oil + '%</div>' +
+            '<div class="pm-detail">' + depLabel(p.oil) + '</div>' +
+            '<div class="pm-detail">' + p.oilNote + '</div>' +
+        '</div>' +
+        '<div class="profile-metric" style="border-top:3px solid ' + gasColor + '">' +
+            '<div class="pm-label">Gas</div>' +
+            '<div class="pm-value" style="color:' + gasColor + '">' + p.gas + '%</div>' +
+            '<div class="pm-detail">' + depLabel(p.gas) + '</div>' +
+            '<div class="pm-detail">' + p.gasNote + '</div>' +
+        '</div>';
+}
+
+// ============================================================
+// Energy Demand Growth Charts
+// ============================================================
+function makeDemandChart(canvasId, commodityData) {
+    var countries = Object.keys(commodityData);
+    var datasets = countries.map(function(c) {
+        return {
+            label: c,
+            data: commodityData[c],
+            borderColor: getCountryColor(c),
+            backgroundColor: getCountryColor(c) + '20',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            tension: 0.3,
+            fill: false
+        };
+    });
+    return new Chart(document.getElementById(canvasId), {
+        type: 'line',
+        data: { labels: demandYears, datasets: datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { boxWidth: 14, font: { size: 11 }, padding: 12 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var change = ctx.raw - 100;
+                            var sign = change >= 0 ? '+' : '';
+                            return ctx.dataset.label + ': ' + ctx.raw + ' (' + sign + change + '%)';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    title: { display: true, text: 'Index (2015 = 100)', font: { size: 11 } },
+                    grid: { color: '#f0f0f0' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+makeDemandChart('chartDemandCoal', demandGrowth.coal);
+makeDemandChart('chartDemandOil', demandGrowth.oil);
+makeDemandChart('chartDemandGas', demandGrowth.gas);
+
+// ============================================================
+// Supply Source Charts (stacked bar)
+// ============================================================
+function makeSourceChart(canvasId, sourceData, baseColor) {
+    var colors = [baseColor, baseColor + '99', baseColor + '55', '#e0e0e0'];
+    return new Chart(document.getElementById(canvasId), {
+        type: 'bar',
+        data: {
+            labels: sourceData.map(function(d) { return d.importer; }),
+            datasets: [
+                {
+                    label: 'Top Supplier',
+                    data: sourceData.map(function(d) { return d.s1p; }),
+                    backgroundColor: colors[0],
+                    borderRadius: 0
+                },
+                {
+                    label: '2nd Supplier',
+                    data: sourceData.map(function(d) { return d.s2p; }),
+                    backgroundColor: colors[1],
+                    borderRadius: 0
+                },
+                {
+                    label: '3rd Supplier',
+                    data: sourceData.map(function(d) { return d.s3p; }),
+                    backgroundColor: colors[2],
+                    borderRadius: 0
+                },
+                {
+                    label: 'Others',
+                    data: sourceData.map(function(d) { return 100 - d.s1p - d.s2p - d.s3p; }),
+                    backgroundColor: colors[3],
+                    borderRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { boxWidth: 14, font: { size: 11 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        afterTitle: function(items) {
+                            var d = sourceData[items[0].dataIndex];
+                            return '#1: ' + d.s1 + ' | #2: ' + d.s2 + ' | #3: ' + d.s3;
+                        },
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': ' + ctx.raw + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
+                y: {
+                    stacked: true,
+                    max: 100,
+                    grid: { color: '#f0f0f0' },
+                    ticks: { callback: function(v) { return v + '%'; }, font: { size: 11 } },
+                    title: { display: true, text: 'Share of imports (%)', font: { size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+makeSourceChart('chartCoalSources', coalSources, coalColor);
+makeSourceChart('chartOilSources', oilSources, oilColor);
+makeSourceChart('chartGasSources', gasSources, gasColor);
+
+// ============================================================
+// Trade Balance Charts
+// ============================================================
+new Chart(document.getElementById('chartImporterCost'), {
+    type: 'bar',
+    data: {
+        labels: importerData.labels,
+        datasets: [{
+            label: 'Gross FF Import Cost ($B)',
+            data: importerData.grossImport,
+            backgroundColor: importerData.labels.map(function(c) { return getCountryColor(c); }),
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: true,
+        scales: {
+            y: { title: { display: true, text: '$B', font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+            x: { grid: { display: false } }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return '$' + ctx.raw + 'B in fossil fuel imports'; }
+                }
+            }
+        }
+    }
+});
+
+new Chart(document.getElementById('chartImporterPct'), {
+    type: 'bar',
+    data: {
+        labels: importerData.labels,
+        datasets: [{
+            label: 'FF Imports as % of Total Imports',
+            data: importerData.pctOfImports,
+            backgroundColor: importerData.labels.map(function(c) { return getCountryColor(c); }),
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: true,
+        scales: {
+            y: { title: { display: true, text: '% of Total Imports', font: { size: 11 } }, grid: { color: '#f0f0f0' }, ticks: { callback: function(v) { return v + '%'; } } },
+            x: { grid: { display: false } }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) { return ctx.raw + '% of total merchandise imports'; }
+                }
+            }
+        }
+    }
+});
+
+// ============================================================
+// POPULATE TABLES
+// ============================================================
+
+// Trade Balance Table
+var tbTbody = document.querySelector('#tradeBalanceTable tbody');
+tradeBalanceRows.forEach(function(r) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+        '<td>' + r.country + '</td>' +
+        '<td class="num">$' + r.imports + 'B</td>' +
+        '<td class="num">$' + r.exports + 'B</td>' +
+        '<td class="num" style="font-weight:600;color:' + OIL + '">-$' + r.net + 'B</td>' +
+        '<td class="num">' + r.pct + '%</td>' +
+        '<td>' + r.fuels + '</td>';
+    tbTbody.appendChild(tr);
+});
+
+// Coal Export Table
+var ceBody = document.querySelector('#coalExportTable tbody');
+coalExpRows.forEach(function(r) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+        '<td>' + r.rank + '</td>' +
+        '<td>' + r.country + '</td>' +
+        '<td class="num">' + r.vol + '</td>' +
+        '<td class="num">$' + r.val + 'B</td>' +
+        '<td class="num">$' + r.price + '</td>' +
+        '<td class="num">' + r.pct + '%</td>' +
+        '<td>' + r.types + '</td>';
+    ceBody.appendChild(tr);
+});
+
+// Oil Export Table
+var oeBody = document.querySelector('#oilExportTable tbody');
+oilExpRows.forEach(function(r) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+        '<td>' + r.rank + '</td>' +
+        '<td>' + r.country + '</td>' +
+        '<td class="num">' + r.vol.toFixed(1) + '</td>' +
+        '<td class="num">$' + r.val + 'B</td>' +
+        '<td class="num">' + r.pct + '%</td>' +
+        '<td>' + r.grades + '</td>';
+    oeBody.appendChild(tr);
+});
+
+// Gas Export Table
+var geBody = document.querySelector('#gasExportTable tbody');
+gasExpRows.forEach(function(r) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+        '<td>' + r.rank + '</td>' +
+        '<td>' + r.country + '</td>' +
+        '<td class="num">' + r.pipe + '</td>' +
+        '<td class="num">' + r.lng + '</td>' +
+        '<td class="num">$' + r.val + 'B</td>' +
+        '<td class="num">' + r.pct + '%</td>' +
+        '<td>' + r.market + '</td>';
+    geBody.appendChild(tr);
+});
+
+// Supply Source Tables
+function populateSourceTable(tableId, data) {
+    var tbody = document.getElementById(tableId).querySelector('tbody');
+    tbody.innerHTML = data.map(function(d) {
+        return '<tr><td>' + d.importer + '</td><td>' + d.s1 + '</td><td class="num">' + d.s1p + '%</td>' +
+            '<td>' + d.s2 + '</td><td class="num">' + d.s2p + '%</td>' +
+            '<td>' + d.s3 + '</td><td class="num">' + d.s3p + '%</td>' +
+            '<td class="num">' + d.hhi.toLocaleString() + '</td></tr>';
+    }).join('');
+}
+
+populateSourceTable('coalSourceTable', coalSources);
+populateSourceTable('oilSourceTable', oilSources);
+populateSourceTable('gasSourceTable', gasSources);
+
+// Import Dependency Data Tables
+function populateDataTable(tableId, data) {
+    var tbody = document.getElementById(tableId).querySelector('tbody');
+    var sorted = data.slice().sort(function(a, b) { return b.dep - a.dep; });
+    tbody.innerHTML = sorted.map(function(d, i) {
+        var statusClass = d.dep >= 50 ? 'color:var(--oil)' : (d.dep >= 0 ? 'color:#e67e22' : 'color:var(--accent)');
+        return '<tr><td>' + (i + 1) + '</td><td>' + d.country + '</td>' +
+            '<td class="num">' + (d.prod !== undefined ? d.prod.toLocaleString() : '') + '</td>' +
+            '<td class="num">' + (d.cons !== undefined ? d.cons.toLocaleString() : '') + '</td>' +
+            '<td class="num">' + (d.netImp !== undefined ? d.netImp.toLocaleString() : '') + '</td>' +
+            '<td class="num" style="font-weight:600;' + statusClass + '">' + d.dep + '%</td>' +
+            '<td style="' + statusClass + '">' + d.status + '</td>' +
+            '<td style="font-size:0.75rem;color:var(--text-secondary)">' + d.notes + '</td></tr>';
+    }).join('');
+}
+
+populateDataTable('dataCoalTable', coalImportData);
+populateDataTable('dataOilTable', oilImportData);
+populateDataTable('dataGasTable', gasImportData);
+
+</script>
+</body>
+</html>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foreign Investment in Coal — Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
@@ -142,19 +143,15 @@
         <div class="info-callout" style="margin-top:1rem;">
             <strong>Key inflection points:</strong> The Paris Agreement (2015) began a gradual decline. Japan and South Korea pledged to stop overseas coal financing in 2021. China's Xi Jinping announced an end to new overseas coal power in September 2021 at UNGA. These three countries represented ~95% of public coal finance abroad.
         </div>
+        <div class="info-callout" style="margin-top:1rem;">
+            <strong>China's Belt &amp; Road shift:</strong> BRI coal financing peaked at ~$9B/year (2015-2018) before Xi Jinping's September 2021 UNGA pledge to stop building coal plants abroad. Post-pledge commitments have dropped to near zero for new coal power, though pre-pledge projects (estimated $13B pipeline) continue to be built. The main loophole: ammonia co-firing projects in Japan and Indonesia are classified as "clean" under some definitions.
+        </div>
     </div>
 
-    <!-- ========== CHART: INVESTMENT BY TYPE ========== -->
-    <div class="chart-row">
-        <div class="section">
-            <h2>Investment by Project Type</h2>
-            <p class="section-subtitle">How foreign coal finance is allocated across project categories (cumulative 2013&ndash;2023).</p>
-            <div class="chart-container"><canvas id="chartType"></canvas></div>
-        </div>
-
-        <div class="section">
-            <h2>Project Type Breakdown</h2>
-            <p class="section-subtitle">Estimated share of cumulative foreign coal finance by project type.</p>
+    <!-- ========== INVESTMENT BY TYPE (progress bars) ========== -->
+    <div class="section">
+        <h2>Investment by Project Type</h2>
+        <p class="section-subtitle">How foreign coal finance is allocated across project categories (cumulative 2013&ndash;2023, $B).</p>
             <div style="margin-top: 1rem;">
                 <div class="type-bar-row">
                     <div style="display:flex;align-items:center;gap:0.8rem;margin:0.5rem 0;font-size:0.82rem;">
@@ -191,7 +188,6 @@
                     </div>
                 </div>
             </div>
-        </div>
     </div>
 
     <!-- ========== POLICY TIMELINE ========== -->
@@ -263,6 +259,30 @@
                 <div class="timeline-year">2023&ndash;2024</div>
                 <div class="timeline-title">Implementation and loopholes</div>
                 <div class="timeline-desc">Pledges translate into measurable decline. However, some Chinese-financed projects continue under pre-pledge commitments. Japan allows "ammonia co-firing" exceptions. Enforcement varies.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== DIVESTMENT & EXCLUSION POLICIES ========== -->
+    <div class="section">
+        <h2>Major Divestment &amp; Exclusion Policies</h2>
+        <p class="section-subtitle">A growing number of financial institutions have adopted coal exclusion policies, though loopholes and exceptions remain common.</p>
+        <div class="country-card-grid" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+            <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;border-left:4px solid var(--accent);">
+                <div style="font-weight:600;font-size:0.9rem;">Multilateral Development Banks</div>
+                <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:0.3rem;">World Bank stopped financing coal power in 2013. ADB adopted coal exclusion in 2021. AIIB has no explicit exclusion.</div>
+            </div>
+            <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;border-left:4px solid var(--accent);">
+                <div style="font-weight:600;font-size:0.9rem;">Export Credit Agencies</div>
+                <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:0.3rem;">OECD agreed to end export credits for coal power (2021). Exceptions for CCUS. Japan and Korea were last holdouts.</div>
+            </div>
+            <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;border-left:4px solid var(--accent);">
+                <div style="font-weight:600;font-size:0.9rem;">Commercial Banks</div>
+                <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:0.3rem;">150+ banks have coal exclusion policies (Urgewald GCEL). But top 10 banks still provided $82B to coal companies in 2019-2023 through corporate lending.</div>
+            </div>
+            <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;border-left:4px solid #e67e22;">
+                <div style="font-weight:600;font-size:0.9rem;">Remaining Financiers</div>
+                <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:0.3rem;">Chinese policy banks (CDB, EXIM), SBI (India), and several Japanese/Korean institutions continue to finance coal. ICBC is the single largest lender to coal globally.</div>
             </div>
         </div>
     </div>
@@ -373,11 +393,6 @@ const trendValues = [35.2, 32.8, 29.5, 27.1, 25.4, 18.6, 22.3, 19.1, 16.8, 13.5]
 const trendChina =    [18.5, 17.2, 15.8, 15.0, 14.2, 10.8, 13.5, 11.2, 10.5, 8.2];
 const trendJpnKor =   [12.0, 11.5, 10.2, 9.0,  8.2,  5.4,  5.8,  3.8,  2.5,  1.5];
 const trendOther =     [4.7,  4.1,  3.5,  3.1,  3.0,  2.4,  3.0,  4.1,  3.8,  3.8];
-
-// Investment by type (for doughnut chart)
-const typeLabels = ['Coal Power Plants', 'Coal Mining', 'Port & Rail Infrastructure', 'Coal-to-Chemicals/Liquids'];
-const typeValues = [68, 35, 15, 6];
-const typeColors = [PALETTE.coal, PALETTE.coalLight, '#7f8c8d', '#95a5a6'];
 
 // Major projects table data
 const projects = [
@@ -600,39 +615,6 @@ new Chart(document.getElementById('chartTrend'), {
     }]
 });
 
-// --- Chart: Investment by Type (doughnut) ---
-new Chart(document.getElementById('chartType'), {
-    type: 'doughnut',
-    data: {
-        labels: typeLabels,
-        datasets: [{
-            data: typeValues,
-            backgroundColor: typeColors,
-            borderWidth: 2,
-            borderColor: '#ffffff',
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        cutout: '55%',
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { font: { size: 11 }, padding: 15, usePointStyle: true, pointStyle: 'circle' }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(ctx) {
-                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                        const pct = ((ctx.parsed / total) * 100).toFixed(0);
-                        return ctx.label + ': $' + ctx.parsed + 'B (' + pct + '%)';
-                    }
-                }
-            }
-        }
-    }
-});
 
 
 // ==========================================

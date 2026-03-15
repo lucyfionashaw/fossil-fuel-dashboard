@@ -34,6 +34,11 @@ body {
     padding: 0 1.5rem; overflow-x: auto; white-space: nowrap;
     position: sticky; top: 0; z-index: 100;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    /* Fade edges to hint at scroll */
+    mask-image: linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent);
 }
 .nav-inner { max-width: 1400px; margin: 0 auto; display: flex; gap: 0; }
 .nav-link {
@@ -66,15 +71,15 @@ body {
 }
 .section-header h2 { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
 
-/* Toggle buttons */
-.toggle-bar { display: flex; gap: 0.3rem; }
+/* Toggle buttons — segmented control style */
+.toggle-bar { display: inline-flex; gap: 0; background: var(--bg); border-radius: 8px; padding: 3px; border: 1px solid var(--border); }
 .toggle-btn {
-    padding: 0.25rem 0.7rem; border: 1px solid var(--border); background: var(--bg);
-    border-radius: 4px; cursor: pointer; font-family: inherit;
-    font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); transition: all 0.15s;
+    padding: 0.3rem 0.85rem; border: none; background: transparent;
+    border-radius: 6px; cursor: pointer; font-family: inherit;
+    font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s ease;
 }
-.toggle-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-.toggle-btn:hover:not(.active) { background: #e0e0e0; }
+.toggle-btn.active { background: var(--accent); color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.toggle-btn:hover:not(.active) { color: var(--text); background: rgba(0,0,0,0.04); }
 
 /* Chart rows */
 .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
@@ -90,8 +95,8 @@ body {
 }
 .tab-btn:hover { color: var(--text); }
 .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+.tab-content { display: none; opacity: 0; transition: opacity 0.25s ease; }
+.tab-content.active { display: block; opacity: 1; }
 
 /* Tables */
 .data-table-wrapper { overflow-x: auto; margin-top: 0.5rem; }
@@ -156,3 +161,56 @@ a.source-tag:hover { background: #e0e0e0; }
 }
 .coming-soon h2 { font-size: 1.5rem; color: var(--text); margin-bottom: 1rem; }
 .coming-soon p { font-size: 1rem; max-width: 500px; margin: 0 auto; }
+
+/* ===== WITHIN-PAGE NAVIGATION (jump-to) ===== */
+.page-nav {
+    background: var(--card-bg); border-radius: 12px; padding: 0.8rem 1.2rem;
+    margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;
+}
+.page-nav-label {
+    font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-secondary); margin-right: 0.5rem;
+}
+.page-nav a {
+    display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px;
+    font-size: 0.75rem; font-weight: 500; color: var(--text-secondary);
+    text-decoration: none; transition: all 0.15s; background: var(--bg);
+}
+.page-nav a:hover { color: var(--text); background: #e0e0e0; }
+
+/* ===== COLLAPSIBLE SECTIONS ===== */
+.collapsible-toggle {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    cursor: pointer; background: none; border: none; font-family: inherit;
+    font-size: 0.82rem; font-weight: 500; color: var(--accent); padding: 0.3rem 0;
+    transition: color 0.15s;
+}
+.collapsible-toggle:hover { color: var(--text); }
+.collapsible-toggle .chevron {
+    display: inline-block; transition: transform 0.25s ease; font-size: 0.7rem;
+}
+.collapsible-toggle.open .chevron { transform: rotate(90deg); }
+.collapsible-body {
+    overflow: hidden; max-height: 0; opacity: 0;
+    transition: max-height 0.35s ease, opacity 0.25s ease;
+}
+.collapsible-body.open { max-height: 8000px; opacity: 1; }
+
+/* ===== RESPONSIVE TYPOGRAPHY ===== */
+@media (max-width: 600px) {
+    .header { padding: 1.5rem 1rem; }
+    .header h1 { font-size: 1.3rem; }
+    .header .subtitle { font-size: 0.82rem; }
+    .container { padding: 1rem; }
+    .section { padding: 1rem; }
+    .section h2 { font-size: 1.05rem; }
+    table { font-size: 0.75rem; }
+    th, td { padding: 0.35rem 0.5rem; }
+    .headline-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+    .headline-card .value { font-size: 1.4rem; }
+    .page-nav { padding: 0.6rem 0.8rem; }
+}
+@media (max-width: 400px) {
+    .headline-grid { grid-template-columns: 1fr; }
+}

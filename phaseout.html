@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coal Phaseout &mdash; Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
@@ -73,6 +74,16 @@
 
 <div class="container">
 
+    <div class="page-nav">
+        <span class="page-nav-label">Jump to:</span>
+        <a href="#regional">Regional Capacity</a>
+        <a href="#additions">Additions & Retirements</a>
+        <a href="#detail">Regional Detail</a>
+        <a href="#timeline">Phaseout Timeline</a>
+        <a href="#ppca">PPCA</a>
+        <a href="#utilisation">Utilisation</a>
+    </div>
+
     <!-- Headline cards -->
     <div class="headline-grid">
         <div class="headline-card coal">
@@ -102,7 +113,7 @@
     </div>
 
     <!-- Chart 1: Global Coal Capacity by Region (stacked area) -->
-    <div class="section">
+    <div class="section" id="regional">
         <h2>Global Installed Coal Power Capacity by Region (2000&ndash;2025)</h2>
         <p class="section-subtitle">Stacked area shows how China's dominance has grown from 19% to 56% of global capacity, while Americas and Europe contracted sharply.</p>
         <div class="chart-container-xl"><canvas id="chartRegionalCapacity"></canvas></div>
@@ -111,11 +122,20 @@
         </div>
     </div>
 
-    <!-- Chart 2: World Additions / Retirements / Stock -->
-    <div class="section">
-        <h2>Global Coal Capacity: Additions, Retirements &amp; Stock (2000&ndash;2025)</h2>
-        <p class="section-subtitle">Coal electricity generation grew 82% since 2000 while capacity doubled. Generation TWh overlaid as a line. Retirements are dwarfed by additions.</p>
-        <div class="chart-container-xl"><canvas id="chartWorldStock"></canvas></div>
+    <!-- Chart 2: World Net Additions + Generation Trend -->
+    <div class="section" id="additions">
+        <h2>Global Coal Capacity: Additions &amp; Retirements (2000&ndash;2025)</h2>
+        <p class="section-subtitle">Retirements are dwarfed by additions. Coal generation grew 82% since 2000 while capacity doubled.</p>
+        <div class="chart-row">
+            <div>
+                <h3 style="font-size:0.95rem;margin-bottom:0.5rem;">Net Additions &amp; Retirements (GW)</h3>
+                <div class="chart-container-tall"><canvas id="chartNetAdditions"></canvas></div>
+            </div>
+            <div>
+                <h3 style="font-size:0.95rem;margin-bottom:0.5rem;">Coal Generation (TWh)</h3>
+                <div class="chart-container-tall"><canvas id="chartGenTrend"></canvas></div>
+            </div>
+        </div>
         <div style="margin-top:0.5rem;">
             <span class="source-tag"><a href="https://globalenergymonitor.org/projects/global-coal-plant-tracker/" target="_blank">GEM GCPT (Jan 2026)</a></span>
             <span class="source-tag"><a href="https://ember-energy.org/data/data-tools/" target="_blank">Ember Annual Electricity Data (Jan 2026)</a></span>
@@ -123,7 +143,7 @@
     </div>
 
     <!-- Chart 3: Regional Detail (switchable) -->
-    <div class="section">
+    <div class="section" id="detail">
         <h2>Regional Detail: Capacity Stock by Year</h2>
         <p class="section-subtitle">Select a region to see its coal capacity trajectory, additions and retirements.</p>
         <div class="region-bar" id="regionBar">
@@ -143,7 +163,7 @@
     </div>
 
     <!-- Chart 4: Phaseout Timeline -->
-    <div class="section">
+    <div class="section" id="timeline">
         <h2>Coal Phaseout Commitments by Country</h2>
         <p class="section-subtitle">Committed or conditional phaseout dates for selected countries. Green = complete, amber = by 2035, red = after 2035 or conditional, grey = no date.</p>
         <div class="chart-container-tall"><canvas id="chartPhaseoutTimeline"></canvas></div>
@@ -154,7 +174,7 @@
     </div>
 
     <!-- Chart 5: PPCA Members vs Non-Members -->
-    <div class="section">
+    <div class="section" id="ppca">
         <h2>PPCA Members vs Non-Members</h2>
         <p class="section-subtitle">The Powering Past Coal Alliance has 56 national members, but they account for only ~5% of global coal capacity. The vast majority of coal is operated by non-members.</p>
         <div class="chart-row">
@@ -189,7 +209,7 @@
     </div>
 
     <!-- Chart 6: Utilisation by Region -->
-    <div class="section">
+    <div class="section" id="utilisation">
         <h2>Plant Utilisation by Region</h2>
         <p class="section-subtitle">Utilisation has fallen in all markets since 2000. Europe and Americas facilities have lower utilisation but still ~40%. Utilisation = generation (Ember) / average installed capacity (GEM).</p>
         <div class="chart-container-tall"><canvas id="chartUtilisation"></canvas></div>
@@ -465,50 +485,25 @@ const tableData = [
 
 
 // ============================================================
-// CHART 2: World Stock + Additions/Retirements + Gen Overlay
+// CHART 2a: Net Additions & Retirements (bar chart)
 // ============================================================
 (function() {
-    new Chart(document.getElementById('chartWorldStock'), {
+    new Chart(document.getElementById('chartNetAdditions'), {
         type: 'bar',
         data: {
             labels: YEARS,
             datasets: [
                 {
-                    label: 'Existing Stock',
-                    data: WORLD_STOCK.map(function(v, i) { return i === 0 ? v : WORLD_STOCK[i-1]; }),
-                    backgroundColor: PALETTE.techCoal + 'a0',
-                    borderWidth: 0,
-                    stack: 'cap',
-                    order: 3,
-                },
-                {
                     label: 'Additions',
                     data: WORLD_ADDITIONS,
-                    backgroundColor: '#c0392b',
+                    backgroundColor: PALETTE.techCoal + 'c0',
                     borderWidth: 0,
-                    stack: 'cap',
-                    order: 2,
                 },
                 {
                     label: 'Retirements',
                     data: WORLD_RETIREMENTS.map(function(v) { return -v; }),
-                    backgroundColor: '#27ae60',
+                    backgroundColor: '#c0392b',
                     borderWidth: 0,
-                    stack: 'cap',
-                    order: 1,
-                },
-                {
-                    label: 'Coal Generation (TWh)',
-                    data: GEN_WORLD,
-                    type: 'line',
-                    borderColor: '#e67e22',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2.5,
-                    tension: 0.3,
-                    pointRadius: 2,
-                    pointHoverRadius: 5,
-                    yAxisID: 'yGen',
-                    order: 0,
                 }
             ]
         },
@@ -522,25 +517,65 @@ const tableData = [
                     callbacks: {
                         label: function(ctx) {
                             var val = Math.abs(ctx.raw);
-                            if (val === 0 && ctx.datasetIndex > 0 && ctx.datasetIndex < 3) return null;
-                            if (ctx.datasetIndex === 3) return ctx.dataset.label + ': ' + fmt(val) + ' TWh';
+                            if (val === 0) return null;
                             return ctx.dataset.label + ': ' + fmt(val) + ' GW';
                         }
                     }
                 }
             },
             scales: {
-                x: { grid: { display: false } },
+                x: { grid: { display: false }, ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 13 } },
                 y: {
-                    title: { display: true, text: 'GW (capacity)' },
-                    stacked: true,
+                    title: { display: true, text: 'GW' },
                     grid: { color: 'rgba(0,0,0,0.05)' },
                     ticks: { callback: function(v) { return Math.abs(v); } }
-                },
-                yGen: {
-                    position: 'right',
-                    title: { display: true, text: 'TWh (generation)' },
-                    grid: { display: false },
+                }
+            }
+        }
+    });
+})();
+
+// ============================================================
+// CHART 2b: Coal Generation Trend (line chart)
+// ============================================================
+(function() {
+    new Chart(document.getElementById('chartGenTrend'), {
+        type: 'line',
+        data: {
+            labels: YEARS,
+            datasets: [
+                {
+                    label: 'Coal Generation',
+                    data: GEN_WORLD,
+                    borderColor: '#e67e22',
+                    backgroundColor: '#e67e22' + '20',
+                    borderWidth: 2.5,
+                    tension: 0.3,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    fill: true,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { font: { size: 11 }, padding: 15 } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': ' + fmt(ctx.raw) + ' TWh';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 13 } },
+                y: {
+                    title: { display: true, text: 'TWh' },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
                     beginAtZero: true,
                 }
             }

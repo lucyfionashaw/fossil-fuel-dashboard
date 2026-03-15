@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Graveyard — Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
@@ -129,6 +130,56 @@
             <h3>Gas Import Dependency</h3>
             <div class="chart-container-wide"><canvas id="chartGasDep"></canvas></div>
         </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FROM: Trade & Energy Security (Marimekko charts removed) -->
+    <!-- ============================================================ -->
+
+    <div class="section">
+        <span class="origin-tag">From: Import Exposure (now Trade &amp; Security)</span>
+        <h2>Marimekko Charts (Volume vs. Import Dependency)</h2>
+        <p class="section-subtitle">Custom canvas-rendered Marimekko charts showing consumption volume (column width) vs import dependency (column height) by country. Removed because custom canvas rendering was hard to maintain and non-standard tooltip behaviour. Consider reimplementing as a bubble chart (x=volume, y=dependency, size=import value) using standard Chart.js.</p>
+        <div class="info-callout warn">
+            <strong>Why removed:</strong> Custom canvas rendering bypassed Chart.js, making these charts inconsistent with the rest of the dashboard. The double-encoding (width=volume, height=dependency) was conceptually elegant but difficult for casual readers to parse. A bubble chart would convey the same information more intuitively.
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FROM: Government Revenue (now Revenue & Taxation) -->
+    <!-- ============================================================ -->
+
+    <div class="section">
+        <span class="origin-tag">From: Govt Revenue (now Revenue &amp; Tax)</span>
+        <h2>Fiscal Dependency Progress Bars</h2>
+        <p class="section-subtitle">HTML progress-bar styled visualisation of coal revenue as % of government revenue. Removed because this duplicated the Chart.js fiscal dependency bar chart on the same page.</p>
+        <div class="info-callout">
+            <strong>Why removed:</strong> The same data was shown as both a Chart.js horizontal bar chart AND these HTML progress bars. The chart version is more consistent with the rest of the dashboard.
+        </div>
+    </div>
+
+    <div class="section">
+        <span class="origin-tag">From: Govt Revenue (now Revenue &amp; Tax)</span>
+        <h2>Country Revenue Detail Cards</h2>
+        <p class="section-subtitle">Card grid showing each country's coal revenue with confidence tags (HIGH/MEDIUM/LOW), value, detail text, and source links. Removed because the Coal Tax page's levy-by-levy country blocks provide much more granular detail and now replace these.</p>
+        <div class="info-callout">
+            <strong>Why removed:</strong> Merged into the combined Revenue &amp; Taxation page, which uses the more detailed tax regime blocks (with individual levy tables, REPORTED/CALC tags, and calculation formulae) instead of these simpler summary cards.
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FROM: Separate pages (consolidated) -->
+    <!-- ============================================================ -->
+
+    <div class="section">
+        <span class="origin-tag">From: Dashboard restructure</span>
+        <h2>Old Separate Pages</h2>
+        <p class="section-subtitle">The following standalone pages were merged into combined pages:</p>
+        <ul style="font-size:0.85rem; padding-left:1.5rem; margin-top:0.5rem;">
+            <li><strong>coaltax.html</strong> &rarr; merged into <a href="revenue.html">Revenue &amp; Tax</a></li>
+            <li><strong>fx.html</strong> &rarr; merged into <a href="trade.html">Trade &amp; Security</a></li>
+            <li><strong>imports.html</strong> &rarr; merged into <a href="trade.html">Trade &amp; Security</a></li>
+        </ul>
     </div>
 
 </div>

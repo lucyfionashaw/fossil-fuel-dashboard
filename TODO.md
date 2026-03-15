@@ -9,6 +9,21 @@ Format: just write whatever you want — bullet points, paragraphs, whatever wor
 - [ ] Consider Canada data (Elections Canada, more limited)
 
 ## Completed
+- [x] Major restructure: 12 → 10 sections, narrative arc (Scale → Cost → Persistence → Transition)
+- [x] Merged Coal Tax + Revenue → revenue.html ("Revenue & Tax")
+- [x] Merged FX Revenue + Import Exposure → trade.html ("Trade & Security")
+- [x] Chart.js global defaults (chart-defaults.js) added to all pages
+- [x] CSS modernisation: segmented toggle buttons, tab transitions, nav scroll indicators, responsive typography
+- [x] Within-page navigation (jump-to) on 8 long pages
+- [x] Fixed confusing charts: context area→line, phaseout stock split into 2, donations ROI standardised to 80:1
+- [x] Removed duplicate visualisations (investment doughnut, revenue fiscal dependency bars)
+- [x] Sub-national data: US state coal employment (jobs), US state political contributions (donations), India CIL subsidiaries + state royalties (revenue)
+- [x] Jobs: "Just Transition Question" section with transition cost analysis
+- [x] Investment: divestment policies section + BRI callout
+- [x] Landing page rewritten with 4-act narrative structure
+- [x] Graveyard: archived Marimekko charts, fiscal dep bars, country cards, old page references
+- [x] Fixed colors.js: removed duplicate Bangladesh, changed Peru to avoid China collision
+- [x] Collapsible sections for heavy detail (tax types, country tax blocks, US state data)
 - [x] Consistent color scheme across all pages
 - [x] Cover/landing page instead of Task 1 as homepage
 - [x] Rename "tasks" to "sections"

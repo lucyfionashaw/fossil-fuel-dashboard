@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fossil Fuel Subsidies — Global Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
@@ -125,6 +126,16 @@
 
 <div class="container">
 
+    <div class="page-nav">
+        <span class="page-nav-label">Jump to:</span>
+        <a href="#overview">Overview</a>
+        <a href="#by-country">By Country</a>
+        <a href="#per-capita">Per Capita</a>
+        <a href="#trends">Trends</a>
+        <a href="#case-studies">Case Studies</a>
+        <a href="#reform">Reform Tracker</a>
+    </div>
+
     <!-- Headline cards -->
     <div class="headline-grid">
         <div class="headline-card subsidy">
@@ -150,7 +161,7 @@
     </div>
 
     <!-- Direct vs Indirect explainer -->
-    <div class="section">
+    <div class="section" id="overview">
         <h2>Direct vs Implicit Subsidies: What Counts?</h2>
         <p class="section-subtitle">The IMF's $7 trillion figure includes both fiscal support and the cost of unpriced environmental and health damage. These are fundamentally different policy mechanisms.</p>
         <div class="explainer-grid">
@@ -181,7 +192,7 @@
     </div>
 
     <!-- Top countries by total subsidy -->
-    <div class="chart-row">
+    <div class="chart-row" id="by-country">
         <div class="section">
             <div class="section-header">
                 <h2 id="countryChartTitle">Top Countries: Total Subsidy (IMF, incl. externalities)</h2>
@@ -222,7 +233,7 @@
     </div>
 
     <!-- Per capita and per worker -->
-    <div class="chart-row">
+    <div class="chart-row" id="per-capita">
         <div class="section">
             <h2>Subsidy per Capita by Country (Total, IMF)</h2>
             <p class="section-subtitle">Total implicit + explicit subsidies divided by population. Oil-producing states dominate due to consumer price subsidies.</p>
@@ -281,7 +292,7 @@
     </div>
 
     <!-- Trends over time -->
-    <div class="chart-row">
+    <div class="chart-row" id="trends">
         <div class="section">
             <h2>Fossil Fuel Subsidies Over Time</h2>
             <p class="section-subtitle">IMF total (implicit + explicit) and IEA direct subsidies, 2015&ndash;2023. The 2022 spike reflects energy crisis price support.</p>
@@ -317,7 +328,7 @@
     </div>
 
     <!-- Reform tracker -->
-    <div class="section">
+    <div class="section" id="reform">
         <h2>Subsidy Reform Tracker</h2>
         <p class="section-subtitle">G20 pledged to phase out "inefficient" fossil fuel subsidies in 2009. Status as of 2024.</p>
 
@@ -446,7 +457,7 @@
     </div>
 
     <!-- Cost of Saving Jobs: Case Studies -->
-    <div class="section">
+    <div class="section" id="case-studies">
         <h2>The Cost of Saving Jobs &mdash; Case Studies</h2>
         <p class="section-subtitle">Bottom-up analysis of specific situations where the cost of preserving fossil fuel jobs can be calculated from publicly available data. These are not top-down IMF estimates &mdash; each figure is traced to specific plant economics, price premiums, or government programmes.</p>
 

@@ -3,20 +3,24 @@
     let path = window.location.pathname.split('/').pop() || 'index.html';
     if (path === '' || path === '/') path = 'index.html';
 
+    // Narrative arc: Scale → Cost → Political Expedience → Transition
     const pages = [
         { href: 'index.html', label: 'Overview' },
-        { href: 'marketvalue.html', label: 'Market Value' },
+        // Act 1: The Scale of the Problem
         { href: 'context.html', label: 'Energy Context' },
-        { href: 'phaseout.html', label: 'Coal Phaseout' },
-        { href: 'jobs.html', label: 'Jobs' },
-        { href: 'donations.html', label: 'Political Donations' },
-        { href: 'fx.html', label: 'FX Revenue' },
-        { href: 'revenue.html', label: 'Govt Revenue' },
-        { href: 'subsidies.html', label: 'Subsidies' },
-        { href: 'imports.html', label: 'Import Exposure' },
+        { href: 'marketvalue.html', label: 'Market Value' },
+        // Act 2: Coal Isn't Cheap
         { href: 'electricity.html', label: 'Electricity Costs' },
-        { href: 'coaltax.html', label: 'Coal Tax' },
+        { href: 'subsidies.html', label: 'Subsidies' },
+        // Act 3: So Why Does It Persist?
+        { href: 'revenue.html', label: 'Revenue & Tax' },
+        { href: 'jobs.html', label: 'Jobs' },
+        { href: 'trade.html', label: 'Trade & Security' },
+        { href: 'donations.html', label: 'Political Donations' },
+        // Act 4: The Transition
+        { href: 'phaseout.html', label: 'Coal Phaseout' },
         { href: 'investment.html', label: 'Foreign Investment' },
+        // Meta
         { href: 'graveyard.html', label: 'Graveyard' },
         { href: 'roadmap.html', label: 'Roadmap' },
     ];

@@ -75,7 +75,7 @@
 
     <div class="intro-section">
         <h2>About This Dashboard</h2>
-        <p>This dashboard brings together disparate and underused datasets on global fossil fuel markets across 12 analysis sections. Each section covers a different dimension of the fossil fuel economy — from market value and employment to subsidies, political donations, and phaseout progress.</p>
+        <p>This dashboard brings together disparate and underused datasets on global fossil fuel markets across 10 analysis sections. The sections follow a narrative arc: coal provides a modest share of energy but outsized harm — yet it persists because it serves governments through revenue, jobs, energy security, and political support.</p>
         <p>All data is sourced from public datasets (IEA, EIA, Energy Institute, Ember, Global Energy Monitor, OpenSecrets, World Bank, and national statistics). Every data point is traceable to a specific source.</p>
 
         <div class="stat-row">
@@ -94,90 +94,92 @@
         </div>
     </div>
 
-    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Dashboard Sections</h2>
+    <!-- Act 1: The Scale of the Problem -->
+    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Act 1 &mdash; The Scale of the Problem</h2>
 
-    <div class="overview-grid">
-        <a href="marketvalue.html" class="section-card mixed">
-            <div class="section-num">Section 1</div>
-            <h3>Market Value</h3>
-            <p>Total global market value of coal vs oil vs gas, segmented by commodity type, country, and transport cost.</p>
-            <span class="status status-live">Live</span>
-        </a>
-
+    <div class="overview-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2.5rem;">
         <a href="context.html" class="section-card mixed">
-            <div class="section-num">Section 2</div>
+            <div class="section-num">Section 1</div>
             <h3>Energy Context</h3>
-            <p>Global energy mix, electricity generation, CO2 emissions intensity per kWh, coal dependence by country.</p>
+            <p>Coal provides 35% of electricity but 41% of CO2 emissions. Global energy mix, emissions intensity, and coal dependence by country.</p>
             <span class="status status-live">Live</span>
         </a>
 
-        <a href="phaseout.html" class="section-card coal">
+        <a href="marketvalue.html" class="section-card mixed">
+            <div class="section-num">Section 2</div>
+            <h3>Market Value</h3>
+            <p>A $4.1 trillion industry. Coal, oil and gas market value by commodity and country, with transport costs and India deep-dive.</p>
+            <span class="status status-live">Live</span>
+        </a>
+    </div>
+
+    <!-- Act 2: Coal Isn't Cheap -->
+    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Act 2 &mdash; Coal Isn't Cheap</h2>
+
+    <div class="overview-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2.5rem;">
+        <a href="electricity.html" class="section-card mixed">
             <div class="section-num">Section 3</div>
-            <h3>Coal Phaseout</h3>
-            <p>Coal plant retirements, new builds, phaseout timelines, PPCA membership, and generation trends.</p>
-            <span class="status status-live">Live</span>
-        </a>
-
-        <a href="jobs.html" class="section-card mixed">
-            <div class="section-num">Section 4</div>
-            <h3>Jobs</h3>
-            <p>Employment by commodity, country, and supply chain stage. Trends in fossil fuel workforce.</p>
-            <span class="status status-live">Live</span>
-        </a>
-
-        <a href="donations.html" class="section-card oil">
-            <div class="section-num">Section 5</div>
-            <h3>Political Donations</h3>
-            <p>Fossil fuel industry political contributions and lobbying spending, primarily US data from OpenSecrets.</p>
-            <span class="status status-live">Live</span>
-        </a>
-
-        <a href="fx.html" class="section-card mixed">
-            <div class="section-num">Section 6</div>
-            <h3>FX Revenue</h3>
-            <p>Foreign exchange earnings from fossil fuel exports and savings from import substitution, by country.</p>
-            <span class="status status-live">Live</span>
-        </a>
-
-        <a href="revenue.html" class="section-card mixed">
-            <div class="section-num">Section 7</div>
-            <h3>Government Revenue</h3>
-            <p>Income tax, royalties, and government revenue from fossil fuel asset ownership by country.</p>
+            <h3>Electricity Costs</h3>
+            <p>New coal is uncompetitive. Existing coal is becoming uneconomic. Add health and climate costs and coal is 2-4x more expensive than renewables.</p>
             <span class="status status-live">Live</span>
         </a>
 
         <a href="subsidies.html" class="section-card mixed">
-            <div class="section-num">Section 8</div>
+            <div class="section-num">Section 4</div>
             <h3>Subsidies</h3>
-            <p>Implicit and explicit subsidy costs per worker by geography, including cost of saving jobs.</p>
+            <p>$1.3T/year in direct subsidies, $7T including unpriced externalities. Real-world case studies of what it costs to save coal jobs.</p>
+            <span class="status status-live">Live</span>
+        </a>
+    </div>
+
+    <!-- Act 3: So Why Does It Persist? -->
+    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Act 3 &mdash; So Why Does Coal Persist?</h2>
+
+    <div class="overview-grid" style="margin-bottom: 2.5rem;">
+        <a href="revenue.html" class="section-card coal">
+            <div class="section-num">Section 5</div>
+            <h3>Revenue &amp; Tax</h3>
+            <p>~$25B in verified coal government revenue. Detailed levy-by-levy tax regimes for 11 countries. Less than you'd think.</p>
             <span class="status status-live">Live</span>
         </a>
 
-        <a href="imports.html" class="section-card mixed">
+        <a href="jobs.html" class="section-card mixed">
+            <div class="section-num">Section 6</div>
+            <h3>Jobs</h3>
+            <p>~7.7M coal mining jobs globally — but concentrated in a few regions, and renewables now employ more. What would transition cost?</p>
+            <span class="status status-live">Live</span>
+        </a>
+
+        <a href="trade.html" class="section-card mixed">
+            <div class="section-num">Section 7</div>
+            <h3>Trade &amp; Security</h3>
+            <p>Exporters depend on FF revenue, importers on FF supply — everyone is locked in. Export dependency, import exposure, and supply diversification.</p>
+            <span class="status status-live">Live</span>
+        </a>
+
+        <a href="donations.html" class="section-card oil">
+            <div class="section-num">Section 8</div>
+            <h3>Political Donations</h3>
+            <p>~$250M/cycle in US fossil fuel political spending yields ~80:1 return in subsidies. Plus Australia, UK, and international data.</p>
+            <span class="status status-live">Live</span>
+        </a>
+    </div>
+
+    <!-- Act 4: The Transition Is Happening Anyway -->
+    <h2 style="font-size:1.1rem; margin-bottom:1rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Act 4 &mdash; The Transition Is Happening Anyway</h2>
+
+    <div class="overview-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2rem;">
+        <a href="phaseout.html" class="section-card coal">
             <div class="section-num">Section 9</div>
-            <h3>Import Exposure</h3>
-            <p>Import dependence by commodity — what share of domestic consumption is met by imports.</p>
-            <span class="status status-live">Live</span>
-        </a>
-
-        <a href="electricity.html" class="section-card mixed">
-            <div class="section-num">Section 10</div>
-            <h3>Electricity Costs</h3>
-            <p>Cost of coal electricity vs alternatives, with and without carbon & health externalities, by country.</p>
-            <span class="status status-live">Live</span>
-        </a>
-
-        <a href="coaltax.html" class="section-card coal">
-            <div class="section-num">Section 11</div>
-            <h3>Coal Tax</h3>
-            <p>How coal tax revenue is spent — royalties, carbon taxes, resource levies and their allocation.</p>
+            <h3>Coal Phaseout</h3>
+            <p>Coal capacity has doubled since 2000, but the geography shifted entirely. Retirements lag additions 3:1 and the phaseout alliance covers only 5%.</p>
             <span class="status status-live">Live</span>
         </a>
 
         <a href="investment.html" class="section-card coal">
-            <div class="section-num">Section 12</div>
+            <div class="section-num">Section 10</div>
             <h3>Foreign Investment</h3>
-            <p>Cross-border coal finance — mining, power plants, and infrastructure investment trends.</p>
+            <p>Cross-border coal finance is down 52% since 2015. Major banks divesting, but Chinese and Indian institutions fill the gap.</p>
             <span class="status status-live">Live</span>
         </a>
     </div>
@@ -185,7 +187,7 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Dashboard &middot; 12 Analysis Sections</p>
+    <p>Global Fossil Fuel Dashboard &middot; 10 Analysis Sections</p>
     <p>Data: 2023/24 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 

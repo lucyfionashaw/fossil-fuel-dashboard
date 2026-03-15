@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Electricity Costs — Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
@@ -77,6 +78,16 @@
 
 <div class="container">
 
+    <div class="page-nav">
+        <span class="page-nav-label">Jump to:</span>
+        <a href="#lcoe">LCOE Comparison</a>
+        <a href="#trends">Historical Trends</a>
+        <a href="#true-cost">True Cost of Coal</a>
+        <a href="#existing-vs-new">Existing vs New</a>
+        <a href="#crossover">Crossover Timeline</a>
+        <a href="#uneconomic">Uneconomic Coal</a>
+    </div>
+
     <!-- Headline cards -->
     <div class="headline-grid">
         <div class="headline-card coal-card">
@@ -106,7 +117,7 @@
     </div>
 
     <!-- Section 1: Global LCOE Comparison -->
-    <div class="chart-row">
+    <div class="chart-row" id="lcoe">
         <div class="section">
             <h2>Global LCOE by Technology (2024)</h2>
             <p class="section-subtitle">Unsubsidised levelised cost of electricity, new-build. Range shows 25th&ndash;75th percentile. Source: Lazard LCOE v17, BNEF 2H 2024.</p>
@@ -143,7 +154,7 @@
     </div>
 
     <!-- Section 3: True Cost of Coal — Externalities -->
-    <div class="section">
+    <div class="section" id="true-cost">
         <h2>The True Cost of Coal Electricity</h2>
         <p class="section-subtitle">Adding carbon costs ($50&ndash;200/tCO2) and health/air pollution costs reveals coal's real price. Coal emits ~0.9 tCO2/MWh on average.</p>
 
@@ -221,7 +232,7 @@
     </div>
 
     <!-- Section 5: Historical LCOE Trends -->
-    <div class="section">
+    <div class="section" id="trends">
         <h2>Historical LCOE Trends (2010&ndash;2024)</h2>
         <p class="section-subtitle">Solar PV costs have fallen 90% since 2010; onshore wind down 70%. Coal and gas have remained flat or increased. Data: IRENA Renewable Power Generation Costs 2024, Lazard.</p>
         <div class="chart-container-wide"><canvas id="chartHistorical"></canvas></div>
@@ -291,7 +302,7 @@
     </div>
 
     <!-- Section 8: Existing Coal vs New Renewables -->
-    <div class="section">
+    <div class="section" id="existing-vs-new">
         <h2>Existing Coal vs New Renewables</h2>
         <p class="section-subtitle">Proponents of coal argue that existing plants &mdash; with capital costs already sunk &mdash; are cheaper to run than building new renewables. This was once true, but is increasingly not. Running costs (fuel + O&amp;M) of existing coal plants now exceed the full LCOE of new solar and wind in most markets.</p>
 
@@ -310,7 +321,7 @@
         </div>
 
         <!-- Chart: Crossover timeline -->
-        <h3>The Crossover Timeline: Existing Coal vs New Renewables (Global Average)</h3>
+        <h3 id="crossover">The Crossover Timeline: Existing Coal vs New Renewables (Global Average)</h3>
         <p class="section-subtitle">Global average existing coal running costs have risen (fuel, carbon, maintenance on aging fleet) while new renewable LCOE has fallen dramatically. The lines crossed around 2020&ndash;2021.</p>
         <div class="chart-container-wide"><canvas id="chartCrossover"></canvas></div>
 
@@ -330,7 +341,7 @@
         </div>
 
         <!-- Chart: Share uneconomic -->
-        <h3>Share of Existing Coal Capacity Now More Expensive to Run Than Building New Renewables (2024)</h3>
+        <h3 id="uneconomic">Share of Existing Coal Capacity Now More Expensive to Run Than Building New Renewables (2024)</h3>
         <p class="section-subtitle">Percentage of existing coal fleet where marginal running costs exceed the LCOE of new-build solar or wind. Source: Carbon Tracker, BNEF.</p>
         <div class="chart-container-wide"><canvas id="chartUneconomic"></canvas></div>
 

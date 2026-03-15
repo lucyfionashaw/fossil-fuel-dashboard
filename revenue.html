@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Government Revenue from Coal — Fossil Fuel Dashboard</title>
+    <title>Coal Revenue &amp; Taxation &mdash; Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
     <style>
         .chart-container { position: relative; width: 100%; max-height: 400px; }
-        .chart-container-tall { position: relative; width: 100%; height: 520px; }
+        .chart-container-tall { position: relative; width: 100%; height: 560px; }
         .chart-container-mid { position: relative; width: 100%; height: 420px; }
+        .chart-container-scatter { position: relative; width: 100%; height: 460px; }
 
         .headline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
         @media (max-width: 900px) { .headline-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -22,6 +24,8 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 4px solid var(--coal); transition: transform 0.2s;
         }
         .headline-card:hover { transform: translateY(-2px); }
+        .headline-card.rate { border-top-color: #e67e22; }
+        .headline-card.warn { border-top-color: #e67e22; }
         .headline-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
         .headline-card .value { font-size: 2rem; font-weight: 700; }
         .headline-card .detail { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem; }
@@ -33,18 +37,9 @@
         .info-callout strong { color: var(--coal); }
         .info-callout.warn { background: #fff8f0; border-left-color: #e67e22; }
         .info-callout.warn strong { color: #e67e22; }
+        .info-callout.estimate { background: #fff3cd; border-left-color: #f39c12; }
+        .info-callout.estimate strong { color: #d68910; }
 
-        .country-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
-        .country-card {
-            border: 1px solid var(--border); border-radius: 8px; padding: 1rem;
-            background: var(--card-bg); transition: transform 0.15s;
-        }
-        .country-card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .country-card .cc-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
-        .country-card .cc-value { font-size: 1.4rem; font-weight: 700; color: var(--coal); margin: 0.3rem 0; }
-        .country-card .cc-detail { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.4; }
-        .country-card .cc-source { font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.4rem; border-top: 1px solid var(--border); padding-top: 0.3rem; }
-        .country-card .cc-source a { color: var(--accent); }
         .confidence-tag {
             display: inline-block; font-size: 0.6rem; font-weight: 600; padding: 0.1rem 0.35rem;
             border-radius: 3px; margin-left: 0.3rem; vertical-align: middle;
@@ -53,103 +48,315 @@
         .conf-med { background: #fff3cd; color: #856404; }
         .conf-low { background: #f8d7da; color: #721c24; }
 
-        .dep-bar-container { margin: 0.5rem 0; }
-        .dep-bar-bg { background: var(--bg); border-radius: 4px; height: 20px; position: relative; overflow: hidden; }
-        .dep-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; font-size: 0.65rem; color: white; font-weight: 600; min-width: 30px; }
-        .dep-label { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 2px; }
+        .tax-type-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin: 1rem 0 1.5rem; }
+        @media (max-width: 900px) { .tax-type-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .tax-type-grid { grid-template-columns: 1fr; } }
+        .tax-type-card {
+            border: 1px solid var(--border); border-radius: 8px; padding: 1rem; background: var(--card-bg);
+        }
+        .tax-type-card h4 { font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .tax-type-card p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45; }
+        .tax-type-card .tt-examples { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.4rem; font-style: italic; }
+
+        .country-tax-block {
+            background: var(--card-bg); border-radius: 10px; padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--coal);
+        }
+        .country-tax-block h3 {
+            font-size: 1rem; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .country-tax-block .prod-info {
+            font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.6rem;
+        }
+        .levy-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .levy-table th {
+            text-align: left; padding: 0.4rem 0.6rem; border-bottom: 2px solid var(--border);
+            font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+            color: var(--text-secondary);
+        }
+        .levy-table td {
+            padding: 0.4rem 0.6rem; border-bottom: 1px solid #f0f0f0; vertical-align: top;
+        }
+        .levy-table .num { text-align: right; }
+        .levy-table a { color: var(--accent); text-decoration: none; font-size: 0.72rem; }
+        .levy-table a:hover { text-decoration: underline; }
+        .levy-table tr:last-child td { border-bottom: none; }
+        .levy-total td {
+            font-weight: 700; border-top: 2px solid var(--coal); border-bottom: none;
+            padding-top: 0.5rem;
+        }
+        .est-tag {
+            display: inline-block; font-size: 0.6rem; background: #fff3cd; color: #856404;
+            padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 600; vertical-align: middle;
+            margin-left: 0.3rem;
+        }
+        .reported-tag {
+            display: inline-block; font-size: 0.6rem; background: #d4edda; color: #155724;
+            padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 600; vertical-align: middle;
+            margin-left: 0.3rem;
+        }
+        .calc-note { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.3rem; font-style: italic; }
+
+        .soe-card {
+            background: var(--card-bg); border-radius: 10px; padding: 1.2rem 1.5rem;
+            margin-bottom: 0.8rem; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--accent);
+        }
+        .soe-card h4 { font-size: 0.92rem; margin-bottom: 0.3rem; }
+        .soe-card .soe-detail { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+        .soe-card .soe-revenue { font-size: 1.3rem; font-weight: 700; color: var(--coal); margin: 0.3rem 0; }
+        .soe-card a { color: var(--accent); text-decoration: none; font-size: 0.75rem; }
+        .soe-card a:hover { text-decoration: underline; }
+
+        /* Country detail collapsible toggle styling */
+        .country-toggle {
+            width: 100%; background: var(--card-bg); border: 1px solid var(--border); border-left: 4px solid var(--coal);
+            border-radius: 8px; padding: 0.8rem 1.2rem; cursor: pointer; text-align: left;
+            font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: var(--text);
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.4rem; transition: background 0.15s;
+        }
+        .country-toggle:hover { background: #f8f9fa; }
+        .country-toggle .chevron {
+            display: inline-block; transition: transform 0.2s; font-size: 0.7rem; color: var(--text-secondary);
+        }
+        .country-toggle.open .chevron { transform: rotate(90deg); }
+        .country-toggle .toggle-summary {
+            font-size: 0.78rem; font-weight: 400; color: var(--text-secondary); margin-left: 0.8rem;
+        }
+        .country-detail-body {
+            max-height: 0; overflow: hidden; opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.2s ease;
+        }
+        .country-detail-body.open { max-height: 4000px; opacity: 1; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>Government Revenue from Coal</h1>
-    <div class="subtitle">Royalties, taxes, SOE dividends &amp; fiscal dependence on coal mining (2023/24 data)</div>
+    <h1>Coal Revenue &amp; Taxation</h1>
+    <div class="subtitle">Royalties, carbon pricing, SOE dividends, corporate income tax &amp; fiscal dependence on coal mining</div>
 </div>
+
+<script src="colors.js"></script>
+<script src="nav.js"></script>
 
 <div class="container">
 
-    <!-- Headline cards -->
-    <div class="headline-grid">
-        <div class="headline-card">
-            <div class="label">Verified Coal Revenue (8 countries)</div>
-            <div class="value" style="color:var(--coal)">~$25B</div>
-            <div class="detail">Royalties + taxes + SOE payments</div>
-        </div>
-        <div class="headline-card">
-            <div class="label">Largest: Indonesia</div>
-            <div class="value" style="color:var(--coal)">~$7.9B</div>
-            <div class="detail">PNBP coal royalties + production levy</div>
-        </div>
-        <div class="headline-card">
-            <div class="label">Largest Royalty: QLD</div>
-            <div class="value" style="color:var(--coal)">A$10.5B</div>
-            <div class="detail">FY23-24 &middot; 7-40% tiered rate</div>
-        </div>
-        <div class="headline-card" style="border-top-color:#e67e22;">
-            <div class="label">Net Cost: Poland</div>
-            <div class="value" style="color:#e67e22">-$1.7B</div>
-            <div class="detail">Subsidies exceed all coal revenue</div>
+    <!-- Page navigation -->
+    <div class="page-nav">
+        <span class="page-nav-label">Jump to:</span>
+        <a href="#overview">Overview</a>
+        <a href="#tax-types">Tax Types</a>
+        <a href="#revenue-charts">Revenue</a>
+        <a href="#tax-rates">Tax Rates</a>
+        <a href="#trends">Trends</a>
+        <a href="#india-detail">India Detail</a>
+        <a href="#country-detail">Country Detail</a>
+        <a href="#soe">SOE Revenue</a>
+        <a href="#data-gaps">Data Gaps</a>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 1. HEADLINE CARDS                                             -->
+    <!-- ============================================================ -->
+    <div id="overview">
+        <div class="headline-grid">
+            <div class="headline-card">
+                <div class="label">Verified Coal Revenue (8 countries)</div>
+                <div class="value" style="color:var(--coal)">~$25B</div>
+                <div class="detail">Royalties + taxes + SOE payments</div>
+            </div>
+            <div class="headline-card">
+                <div class="label">Largest: Indonesia</div>
+                <div class="value" style="color:var(--coal)">~$7.9B</div>
+                <div class="detail">PNBP coal royalties + production levy</div>
+            </div>
+            <div class="headline-card rate">
+                <div class="label">Highest Effective Rate: Germany</div>
+                <div class="value" style="color:#e67e22">~$39/t</div>
+                <div class="detail">Driven by EU ETS carbon pricing</div>
+            </div>
+            <div class="headline-card warn">
+                <div class="label">Net Cost: Poland</div>
+                <div class="value" style="color:#e67e22">-$1.7B</div>
+                <div class="detail">Subsidies exceed all coal revenue</div>
+            </div>
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- 2. DATA QUALITY CALLOUT                                       -->
+    <!-- ============================================================ -->
     <div class="info-callout">
-        <strong>Data quality note:</strong> Coal government revenue data is far less transparent than oil &amp; gas. China (the world's largest producer) publishes no coal-specific fiscal data. Russia has restricted data since 2022. Figures below are tagged by confidence: <span class="confidence-tag conf-high">HIGH</span> = official government source, <span class="confidence-tag conf-med">MEDIUM</span> = official aggregate requiring estimate to isolate coal, <span class="confidence-tag conf-low">LOW</span> = academic estimate or extrapolation. Only verified figures are charted.
+        <strong>Data quality note:</strong> Coal government revenue data is far less transparent than oil &amp; gas. China (the world's largest producer) publishes no coal-specific fiscal data. Russia has restricted data since 2022. Where official revenue figures are published, they are tagged <span class="reported-tag">REPORTED</span>. Where revenue is calculated from statutory rates and production volumes, it is tagged <span class="est-tag">CALC</span> and the formula is shown. Figures are also tagged by confidence: <span class="confidence-tag conf-high">HIGH</span> = official government source, <span class="confidence-tag conf-med">MEDIUM</span> = official aggregate requiring estimate to isolate coal, <span class="confidence-tag conf-low">LOW</span> = academic estimate or extrapolation.
     </div>
 
-    <!-- Chart: Coal revenue by country -->
-    <div class="chart-row">
-        <div class="section">
-            <h2>Coal Revenue to Government by Country</h2>
-            <p class="section-subtitle">Verified figures only (2023/24). Includes royalties, corporate tax, SOE payments where reported.</p>
-            <div class="chart-container-mid"><canvas id="chartCoalRevenue"></canvas></div>
-            <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Sources: <a href="https://budget.qld.gov.au/" target="_blank" style="color:var(--text-secondary);">QLD Treasury</a>, <a href="https://www.esdm.go.id/" target="_blank" style="color:var(--text-secondary);">Indonesia ESDM</a>, <a href="https://coal.gov.in/" target="_blank" style="color:var(--text-secondary);">Ministry of Coal India</a>, <a href="https://www.revenue.nsw.gov.au/" target="_blank" style="color:var(--text-secondary);">Revenue NSW</a>, <a href="https://www.dmre.gov.za/" target="_blank" style="color:var(--text-secondary);">SA DMRE</a>, <a href="https://eiti.org/countries/colombia" target="_blank" style="color:var(--text-secondary);">EITI Colombia</a>, <a href="https://revenuedata.onrr.gov/" target="_blank" style="color:var(--text-secondary);">US ONRR</a></p>
-        </div>
-        <div class="section">
-            <h2>Coal as % of Government Revenue</h2>
-            <p class="section-subtitle">How dependent each government is on coal mining revenue. Most countries have minimal fiscal dependency on coal.</p>
-            <div class="chart-container-mid"><canvas id="chartCoalFiscalDep"></canvas></div>
-        </div>
-    </div>
-
-    <!-- Revenue channel breakdown -->
-    <div class="section">
-        <h2>How Governments Capture Coal Revenue</h2>
-        <p class="section-subtitle">Revenue channels vary by country. Royalties dominate in Australia and Colombia; India collects through a complex mix of royalties, cess, GST, and SOE dividends; Indonesia uses a production sharing / PNBP system.</p>
-        <div class="chart-container-mid"><canvas id="chartChannels"></canvas></div>
-    </div>
-
-    <!-- QLD trend -->
-    <div class="chart-row">
-        <div class="section">
-            <h2>Queensland Coal Royalties Over Time</h2>
-            <p class="section-subtitle">Coal royalties are highly volatile, tracking global coal prices. The FY22-23 spike followed the 2022 energy crisis and introduction of higher royalty tiers.</p>
-            <div class="chart-container-mid"><canvas id="chartQLDTrend"></canvas></div>
-            <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Source: <a href="https://budget.qld.gov.au/" target="_blank" style="color:var(--text-secondary);">Queensland Treasury Budget Papers 2025-26</a></p>
-        </div>
-        <div class="section">
-            <h2>Coal India Payments to Government</h2>
-            <p class="section-subtitle">Coal India Ltd (CIL) is the world's largest coal company by volume. Total exchequer contribution includes royalties, GST, cess, dividends, CIT, DMF, and NMET.</p>
-            <div class="chart-container-mid"><canvas id="chartCILTrend"></canvas></div>
-            <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Source: <a href="https://coal.gov.in/sites/default/files/2025-02/chap8AnnualReport2025en2.pdf" target="_blank" style="color:var(--text-secondary);">Ministry of Coal Annual Report 2024-25</a></p>
+    <!-- ============================================================ -->
+    <!-- 3. TAX TYPES EXPLAINER (collapsible)                          -->
+    <!-- ============================================================ -->
+    <div class="section" id="tax-types">
+        <h2>Types of Coal Taxation</h2>
+        <button class="collapsible-toggle open" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+            <span class="chevron">&#9654;</span> Show tax type definitions
+        </button>
+        <div class="collapsible-body open">
+            <p class="section-subtitle">Countries tax coal through multiple overlapping instruments. This section captures the total fiscal burden &mdash; royalties, carbon pricing, resource levies, SOE dividends, and corporate income tax.</p>
+            <div class="tax-type-grid">
+                <div class="tax-type-card">
+                    <h4>Production Royalties</h4>
+                    <p>Ad valorem or per-tonne charges on coal extracted. The most common coal-specific fiscal instrument.</p>
+                    <div class="tt-examples">Australia, India, Indonesia, USA, Colombia, South Africa</div>
+                </div>
+                <div class="tax-type-card">
+                    <h4>Carbon Pricing</h4>
+                    <p>ETS or carbon tax applied to CO<sub>2</sub> from coal combustion. Creates implicit per-tonne cost on coal.</p>
+                    <div class="tt-examples">EU ETS, UK Carbon Price Support, South Africa carbon tax</div>
+                </div>
+                <div class="tax-type-card">
+                    <h4>Resource / Cess Taxes</h4>
+                    <p>Dedicated levies on coal production or consumption, often earmarked. Separate from royalties.</p>
+                    <div class="tt-examples">India GST compensation cess, China resource tax, DMF/NMET</div>
+                </div>
+                <div class="tax-type-card">
+                    <h4>SOE Dividends &amp; Income Tax</h4>
+                    <p>Government revenue from owning coal assets (dividends, profit transfers) and corporate income tax on coal companies.</p>
+                    <div class="tt-examples">Coal India, China Shenhua/China Energy, Eskom</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Country detail cards -->
-    <div class="section">
-        <h2>Country-Level Coal Revenue Detail</h2>
-        <p class="section-subtitle">Click source links for original data. Confidence tags indicate data reliability.</p>
-        <div class="country-card-grid" id="countryCards"></div>
+    <!-- ============================================================ -->
+    <!-- 4. REVENUE CHARTS                                             -->
+    <!-- ============================================================ -->
+    <div id="revenue-charts">
+        <div class="chart-row">
+            <div class="section">
+                <h2>Estimated Total Government Revenue from Coal by Country</h2>
+                <p class="section-subtitle">Sum of all coal-related royalties, taxes, carbon pricing revenue, and SOE dividends. Click a country below for detailed breakdown.</p>
+                <div class="info-callout warn">
+                    <strong>Caveat:</strong> Revenue fluctuates significantly with coal prices. Australian QLD royalties peaked at ~A$15.4B in FY2022-23 during the energy crisis before falling as prices normalised. Carbon pricing revenue depends on permit prices and coal generation volumes.
+                </div>
+                <div class="chart-container-tall">
+                    <canvas id="chartRevByCountry"></canvas>
+                </div>
+            </div>
+            <div class="section">
+                <h2>Coal as % of Government Revenue</h2>
+                <p class="section-subtitle">How dependent each government is on coal mining revenue. Most countries have minimal fiscal dependency on coal.</p>
+                <div class="chart-container-mid"><canvas id="chartCoalFiscalDep"></canvas></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Fiscal dependency bars -->
-    <div class="section">
-        <h2>Coal Revenue as Share of Government Revenue</h2>
-        <p class="section-subtitle">Unlike oil-dependent states (where fossil fuels can exceed 90% of government income), coal-dependent fiscal exposure is generally low. The exception is Queensland, where coal royalties fund ~12% of state revenue.</p>
-        <div id="depBars"></div>
+    <!-- ============================================================ -->
+    <!-- 5. EFFECTIVE TAX RATE + REVENUE CHANNELS                      -->
+    <!-- ============================================================ -->
+    <div id="tax-rates">
+        <div class="section">
+            <h2>Effective Coal Tax Rate Comparison</h2>
+            <p class="section-subtitle">Total effective tax burden per tonne of coal produced, combining all applicable production-stage instruments (royalties + carbon price + resource taxes). Does not include downstream GST/VAT or corporate income tax.</p>
+            <div class="info-callout warn">
+                <strong>Caveat:</strong> Effective rates vary by coal grade, mine location, and price cycle. Carbon prices create variable per-tonne costs depending on emission factors. Figures shown use mid-range 2023 prices and typical emission factors for thermal coal.
+            </div>
+            <div class="chart-container-mid">
+                <canvas id="chartTaxRate"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>How Governments Capture Coal Revenue</h2>
+            <p class="section-subtitle">Revenue channels vary by country. Royalties dominate in Australia and Colombia; India collects through a complex mix of royalties, cess, GST, and SOE dividends; Indonesia uses a production sharing / PNBP system.</p>
+            <div class="chart-container-mid"><canvas id="chartChannels"></canvas></div>
+        </div>
     </div>
 
-    <!-- Data gaps -->
+    <!-- ============================================================ -->
+    <!-- 6. QLD AND CIL TRENDS                                         -->
+    <!-- ============================================================ -->
+    <div id="trends">
+        <div class="chart-row">
+            <div class="section">
+                <h2>Queensland Coal Royalties Over Time</h2>
+                <p class="section-subtitle">Coal royalties are highly volatile, tracking global coal prices. The FY22-23 spike followed the 2022 energy crisis and introduction of higher royalty tiers.</p>
+                <div class="chart-container-mid"><canvas id="chartQLDTrend"></canvas></div>
+                <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Source: <a href="https://budget.qld.gov.au/" target="_blank" style="color:var(--text-secondary);">Queensland Treasury Budget Papers 2025-26</a></p>
+            </div>
+            <div class="section">
+                <h2>Coal India Payments to Government</h2>
+                <p class="section-subtitle">Coal India Ltd (CIL) is the world's largest coal company by volume. Total exchequer contribution includes royalties, GST, cess, dividends, CIT, DMF, and NMET.</p>
+                <div class="chart-container-mid"><canvas id="chartCILTrend"></canvas></div>
+                <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Source: <a href="https://coal.gov.in/sites/default/files/2025-02/chap8AnnualReport2025en2.pdf" target="_blank" style="color:var(--text-secondary);">Ministry of Coal Annual Report 2024-25</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 6b. INDIA SUB-NATIONAL DETAIL                                 -->
+    <!-- ============================================================ -->
+    <div class="section" id="india-detail">
+        <h2>India: Sub-National Coal Revenue &amp; Employment</h2>
+        <p class="section-subtitle">Coal India Limited operates through 7 subsidiary companies across different coalfields. Employment, production, and revenue vary dramatically by region.</p>
+        <button class="collapsible-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+            <span class="chevron">&#9654;</span> Show CIL subsidiary detail
+        </button>
+        <div class="collapsible-body">
+            <div class="chart-row">
+                <div>
+                    <h3>Production by CIL Subsidiary (FY23-24)</h3>
+                    <div style="height:350px;"><canvas id="chartCILSubs"></canvas></div>
+                </div>
+                <div>
+                    <h3>Employment by CIL Subsidiary (FY23-24)</h3>
+                    <div style="height:350px;"><canvas id="chartCILEmployment"></canvas></div>
+                </div>
+            </div>
+            <div class="info-callout" style="margin-top:1rem;">
+                <strong>Key insight:</strong> South Eastern Coalfields (SECL) in Chhattisgarh produces the most coal but employs fewer workers than Eastern Coalfields (ECL) in West Bengal, which has older underground mines with much lower productivity. State-level royalty revenue flows to producing states: Chhattisgarh, Jharkhand, Odisha, and Madhya Pradesh receive the bulk of coal royalty income.
+            </div>
+            <div style="margin-top:1rem;">
+                <h3>Coal Royalties by Producing State (estimated FY23-24)</h3>
+                <div style="height:300px;"><canvas id="chartStateRoyalties"></canvas></div>
+                <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Estimated from 14% ad valorem royalty on production volumes by state. Actual amounts vary with coal grade and pricing.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 7. COUNTRY DETAIL (collapsible blocks from coaltax)           -->
+    <!-- ============================================================ -->
+    <div class="section" id="country-detail">
+        <h2>Detailed Tax Regime by Country</h2>
+        <p class="section-subtitle">Every levy on coal production, with statutory rates, revenue estimates, and source links. Revenue marked <span class="est-tag">CALC</span> = Production &times; Price &times; Rate. Revenue marked <span class="reported-tag">REPORTED</span> = official published figure. Click a country to expand.</p>
+        <div id="countryBlocks"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 8. SOE REVENUE                                                -->
+    <!-- ============================================================ -->
+    <div class="section" id="soe">
+        <h2>State-Owned Enterprise (SOE) Revenue from Coal</h2>
+        <p class="section-subtitle">Many of the world's largest coal producers are state-owned. Dividends, profit transfers, and retained earnings represent a major channel of government revenue from coal beyond taxation.</p>
+        <div id="soeBlocks"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 9. TAX REVENUE vs PRODUCTION (bubble chart)                   -->
+    <!-- ============================================================ -->
     <div class="section">
+        <h2>Tax Revenue vs. Production Volume</h2>
+        <p class="section-subtitle">Bubble size represents effective tax rate ($/t). Countries below the trend line collect less tax per tonne of coal produced.</p>
+        <div class="chart-container-scatter">
+            <canvas id="chartScatter"></canvas>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 10. DATA GAPS                                                 -->
+    <!-- ============================================================ -->
+    <div class="section" id="data-gaps">
         <h2>Key Data Gaps</h2>
         <div class="info-callout warn">
             <strong>China:</strong> The world's largest coal producer (~4.7 Bt in 2023) publishes no coal-specific fiscal data. Resource tax revenue (all minerals combined) was CNY 307 billion (~$43B) in 2023, but the coal share is not disaggregated. Academic estimates suggest ~$42-48B in total coal-related taxes (including VAT, CIT, resource tax, and local surcharges), which would make China by far the largest collector of coal revenue globally &mdash; but this cannot be verified from official sources.
@@ -162,7 +369,9 @@
         </div>
     </div>
 
-    <!-- Data table -->
+    <!-- ============================================================ -->
+    <!-- 11. DATA TABLE                                                -->
+    <!-- ============================================================ -->
     <div class="section">
         <h2>Coal Revenue Data Table</h2>
         <div class="data-table-wrapper">
@@ -184,20 +393,36 @@
         </div>
     </div>
 
-    <!-- Methodology -->
+    <!-- ============================================================ -->
+    <!-- 12. METHODOLOGY (combined from both pages)                    -->
+    <!-- ============================================================ -->
     <div class="section">
         <h2>Methodology &amp; Sources</h2>
         <div class="methodology">
-            <p><strong>Scope:</strong> Government revenue from coal mining, including royalties, corporate income tax on coal companies, SOE dividends and transfers, production levies, export duties, and special taxes/cess. Downstream taxes (VAT on coal sales, carbon taxes on coal consumption) are excluded unless bundled in source data (as in India's GST + cess).</p>
+            <h3>Revenue Estimation</h3>
+            <ul>
+                <li><strong>Reported revenue:</strong> Where governments publish coal royalty/tax revenue figures (e.g., Australian state treasury data, US ONRR, India ministry reports), these are used directly and tagged <span class="reported-tag">REPORTED</span>.</li>
+                <li><strong>Calculated estimates:</strong> Where only statutory rates and production data are available, revenue is estimated as: <code>Production (Mt) &times; Average price ($/t) &times; Rate (%)</code>. These are tagged <span class="est-tag">CALC</span> with the formula shown.</li>
+                <li><strong>Carbon pricing:</strong> Coal's share of ETS/carbon tax revenue is estimated from coal's share of covered emissions &times; total scheme revenue. This is necessarily approximate.</li>
+                <li>All figures converted to USD at 2023 average exchange rates (1 AUD = 0.66 USD; 1 INR = 0.012 USD; 1 EUR = 1.08 USD; 1 ZAR = 0.055 USD).</li>
+            </ul>
+            <h3>Scope</h3>
+            <ul>
+                <li><strong>Included:</strong> Production royalties, carbon pricing (ETS/carbon tax), resource/cess taxes, severance taxes, export duties, SOE dividends, and corporate income tax from coal companies.</li>
+                <li><strong>Excluded:</strong> General import duties on coal, general VAT/GST (except India's coal-specific GST compensation cess), and indirect economic benefits. Downstream taxes (VAT on coal sales, carbon taxes on coal consumption) are excluded unless bundled in source data (as in India's GST + cess).</li>
+            </ul>
+            <h3>Country Notes</h3>
             <p><strong>Indonesia:</strong> PNBP (non-tax state revenue) from the mineral and coal sub-sector via ESDM. Coal's share (~70% of minerba PNBP) estimated from official statements. Corporate income tax from coal companies collected separately by DG Tax and not included.</p>
             <p><strong>Australia:</strong> State-level royalties from Queensland Treasury Budget Papers (FY23-24 actual: A$10.52B) and NSW Revenue (FY24-25 estimate: A$2.95B). Federal CIT from coal companies not separately reported by ATO. USD conversion at average AUD/USD rates.</p>
             <p><strong>India:</strong> Coal India Ltd total exchequer contribution (Rs 60,198 crore in FY23-24) from Ministry of Coal Annual Report. Includes royalties (14% ad valorem to states), GST (5% + Rs 400/t cess), CIT, dividends, DMF, and NMET. Excludes private coal companies and Singareni Collieries.</p>
             <p><strong>South Africa:</strong> Mineral royalties from DMRE Mineral Economics Bulletin. Coal was 33.7% of total mineral royalties in FY22-23. Corporate income tax from coal companies not separately reported by SARS.</p>
             <p><strong>Colombia:</strong> Mining royalties from ANM and EITI Colombia. Coal is ~85% of mining royalties. 10% royalty rate for open-pit, 5% underground (above 3Mt/yr production).</p>
-            <p><strong>USA:</strong> Federal coal royalties from ONRR (12.5% surface, 8% underground). Estimated from historical trend and production data. State severance taxes (Wyoming, West Virginia, etc.) not included.</p>
+            <p><strong>USA:</strong> Federal coal royalties from ONRR (12.5% surface, 8% underground). Estimated from historical trend and production data. State severance taxes (Wyoming, West Virginia, etc.) not included in the verified revenue total but shown in the detailed breakdown.</p>
             <p><strong>Poland:</strong> Net subsidy position documented by CAN Europe, Instrat, and Polish government budget papers. Coal mines operate at losses covered by government support.</p>
-            <div style="margin-top: 1rem;">
+            <h3>Key Sources</h3>
+            <div style="margin-top: 0.5rem;">
                 <a href="https://budget.qld.gov.au/" class="source-tag" target="_blank">Queensland Treasury 2025-26</a>
+                <a href="https://www.data.qld.gov.au/dataset/royalty-statistics" class="source-tag" target="_blank">QLD Royalty Statistics</a>
                 <a href="https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/royalties/coal" class="source-tag" target="_blank">Revenue NSW</a>
                 <a href="https://www.esdm.go.id/" class="source-tag" target="_blank">Indonesia ESDM</a>
                 <a href="https://eiti.org/countries/indonesia" class="source-tag" target="_blank">EITI Indonesia</a>
@@ -208,6 +433,12 @@
                 <a href="https://revenuedata.onrr.gov/" class="source-tag" target="_blank">US ONRR</a>
                 <a href="https://energy.instrat.pl/en/coal-brief-april-2025/" class="source-tag" target="_blank">Instrat Coal Brief</a>
                 <a href="https://caneurope.org/" class="source-tag" target="_blank">CAN Europe</a>
+                <a href="https://carbonpricingdashboard.worldbank.org/" class="source-tag" target="_blank">World Bank Carbon Pricing Dashboard</a>
+                <a href="https://www.eea.europa.eu/en" class="source-tag" target="_blank">European Environment Agency</a>
+                <a href="https://www.energyinst.org/statistical-review" class="source-tag" target="_blank">Energy Institute Statistical Review 2024</a>
+                <a href="https://www.coalindia.in/performance/financial" class="source-tag" target="_blank">Coal India Financials</a>
+                <a href="https://icapcarbonaction.com/" class="source-tag" target="_blank">ICAP ETS Data</a>
+                <a href="https://revenuedata.doi.gov/" class="source-tag" target="_blank">US ONRR Revenue Data</a>
             </div>
         </div>
     </div>
@@ -215,14 +446,14 @@
 </div>
 
 <div class="footer">
-    <p>Global Fossil Fuel Market Value Dashboard &middot; Section 7: Govt Revenue from Coal</p>
+    <p>Global Fossil Fuel Dashboard &middot; Coal Revenue &amp; Taxation</p>
     <p>Data: 2023/24 &middot; Built with <a href="https://claude.ai">Claude</a></p>
 </div>
 
-<script src="colors.js"></script>
 <script>
 // ============================================================
-//  DATA — all figures verified with sources noted
+//  DATA — REVENUE (from revenue.html)
+//  All figures verified with sources noted
 // ============================================================
 
 // Coal revenue by country (USD billions, most recent available year)
@@ -321,9 +552,509 @@ const coalFiscalDep = [
 
 
 // ============================================================
-//  CHARTS
+//  DATA — COALTAX (from coaltax.html)
+//  All statutory rates sourced from legislation/official publications
+//  Revenue tagged as 'reported' (official figure) or 'calc' (estimated)
 // ============================================================
 
+const COUNTRIES = [
+    {
+        country: 'India',
+        production_mt: 997,
+        prod_year: '2023-24',
+        prod_source: 'Ministry of Coal via PIB',
+        prod_url: 'https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2010559',
+        avg_price_usd: 40,
+        price_note: 'Avg domestic pithead price ~\u20b93,300/t (CIL notified). CIL total payments to govt: \u20b960,198 Cr ($7.2B) in FY24.',
+        levies: [
+            {
+                name: 'Royalty',
+                rate: '14% ad valorem on invoice price (excl. taxes)',
+                rateNum: 0.14,
+                basis: 'ad_valorem',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '997 Mt \u00d7 ~$40/t \u00d7 14%',
+                source: 'MMDR Act, Second Schedule (revised 2012)',
+                url: 'https://www.data.gov.in/resource/stateut-wise-details-royalty-dmf-and-nmet-paid-coal-companies-2018-19-2022-23'
+            },
+            {
+                name: 'DMF (District Mineral Foundation)',
+                rate: '30% of royalty (pre-2015 leases); 10% (post-2015)',
+                rateNum: 0.042,
+                basis: 'percent_of_royalty',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: 'Blended ~30% of royalty (most production under old leases)',
+                source: 'MMDR Amendment Act 2015, Section 9B',
+                url: 'https://mines.gov.in/webportal/content/mmdr-amendment-act-2015'
+            },
+            {
+                name: 'NMET (National Mineral Exploration Trust)',
+                rate: '2% of royalty',
+                rateNum: 0.0028,
+                basis: 'percent_of_royalty',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '2% of royalty amount',
+                source: 'MMDR Amendment Act 2015, Section 9C',
+                url: 'https://mines.gov.in/webportal/content/mmdr-amendment-act-2015'
+            },
+            {
+                name: 'GST Compensation Cess',
+                rate: '\u20b9400/tonne (~$4.80/t). Removed Sep 2025; replaced by GST 18%.',
+                rateNum: 4.80,
+                basis: 'specific',
+                revenue_bn: 4.79,
+                revenue_type: 'calc',
+                calc: '997 Mt \u00d7 $4.80/t. Note: abolished Sep 2025 per 56th GST Council.',
+                source: 'GST Council; S&P Global',
+                url: 'https://www.spglobal.com/commodity-insights/en/news-research/latest-news/coal/090425-india-raises-gst-on-coal-to-18-removes-compensation-cess'
+            },
+            {
+                name: 'GST on Coal',
+                rate: '5% (pre-Sep 2025); 18% (from Sep 2025)',
+                rateNum: 0.05,
+                basis: 'ad_valorem',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '997 Mt \u00d7 ~$40/t \u00d7 5%. Note: 5% regime up to Sep 2025.',
+                source: '56th GST Council Meeting',
+                url: 'https://www.pib.gov.in/PressReleasePage.aspx?PRID=2169438'
+            },
+        ]
+    },
+    {
+        country: 'Australia',
+        production_mt: 440,
+        prod_year: '2023-24',
+        prod_source: 'Energy Institute Statistical Review 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 130,
+        price_note: 'Blended avg ~A$200/t ($130 USD) across thermal and met coal',
+        levies: [
+            {
+                name: 'QLD Coal Royalties',
+                rate: 'Tiered: 7% (\u2264A$100/t), 12.5% ($100-150), 15% ($150-175), 20% ($175-225), 30% ($225-300), 40% (>$300)',
+                rateNum: null,
+                basis: 'tiered',
+                revenue_bn: 3.62,
+                revenue_type: 'reported',
+                calc: 'QLD Budget: A$5.49B (FY2024-25 est.) \u00d7 0.66 USD/AUD. Peak was A$15.36B (FY2022-23).',
+                source: 'QLD Revenue Office \u2014 Mineral Royalty Rates',
+                url: 'https://qro.qld.gov.au/royalty/calculate-mineral/rates/'
+            },
+            {
+                name: 'NSW Coal Royalties',
+                rate: 'From Jul 2024: 10.8% (open cut), 9.8% (underground >400m), 8.8% (underground <400m). Previously 8.2/7.2/6.2%.',
+                rateNum: null,
+                basis: 'ad_valorem',
+                revenue_bn: 2.11,
+                revenue_type: 'reported',
+                calc: 'NSW ~A$3.2B in royalties (FY2024-25), coal >92% \u00d7 0.66 USD/AUD',
+                source: 'Revenue NSW \u2014 Coal Royalty Changes 1 July 2024',
+                url: 'https://www.revenue.nsw.gov.au/news-media-releases/coal-royalty-changes-1-july-2024'
+            },
+            {
+                name: 'Other State Royalties (WA, SA, TAS)',
+                rate: 'Varies (generally 2.5-7.5%)',
+                rateNum: null,
+                basis: 'ad_valorem',
+                revenue_bn: 0.10,
+                revenue_type: 'calc',
+                calc: 'Minimal production outside QLD/NSW',
+                source: 'Various state mining acts',
+                url: null
+            },
+        ]
+    },
+    {
+        country: 'Indonesia',
+        production_mt: 775,
+        prod_year: '2023',
+        prod_source: 'Energy Institute Statistical Review 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 75,
+        price_note: 'Blended domestic/export avg ~$75/t. ESDM total mineral+coal PNBP: IDR 140.5T ($8.8B) in 2024.',
+        levies: [
+            {
+                name: 'IUP Royalties (PNBP)',
+                rate: '5-13.5% tiered by CV and HBA price. E.g., \u22655,200 kcal + HBA\u2265$90: 13.5%; \u22644,200 kcal + HBA<$70: 5%',
+                rateNum: 0.07,
+                basis: 'ad_valorem',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '~650 Mt IUP production \u00d7 $75/t \u00d7 ~7% blended avg',
+                source: 'PP 26/2022 (updated PP 19/2025)',
+                url: 'https://databoks.katadata.co.id/en/mining/statistics/b9be9fb3f92d960/tracing-the-development-of-coal-royalty-rates-in-indonesia'
+            },
+            {
+                name: 'IUPK Royalties (ex-PKP2B Gen 1)',
+                rate: '14-28% tiered by HBA. HBA<$70: 14%; $70-80: 17%; $80-90: 23%; $90-100: 25%; >$100: 27-28%',
+                rateNum: null,
+                basis: 'tiered',
+                revenue_bn: 0.80,
+                revenue_type: 'calc',
+                calc: '~80 Mt legacy contract production \u00d7 $75/t \u00d7 ~13.5% avg',
+                source: 'Mining.com on IUPK royalty rates',
+                url: 'https://www.mining.com/web/indonesia-raises-coal-royalty-rate-to-range-of-14-to-28/'
+            },
+            {
+                name: 'DMO (Domestic Market Obligation)',
+                rate: '25% of production at capped prices ($70/t power, $90/t industry)',
+                rateNum: null,
+                basis: 'obligation',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: 'Not direct govt revenue. Implicit subsidy to domestic consumers.',
+                source: 'Schinder Law \u2014 DMO Policy',
+                url: 'https://schinderlawfirm.com/blog/domestic-coal-market-obligation-and-temporary-export-ban/'
+            },
+        ]
+    },
+    {
+        country: 'China',
+        production_mt: 4710,
+        prod_year: '2023',
+        prod_source: 'NBS / Energy Institute 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 95,
+        price_note: 'Domestic avg ~\u00a5700/t (~$95). Provincial resource tax: Shanxi 8%, Inner Mongolia 9-10%, Shaanxi 6%, most others 2-4%.',
+        levies: [
+            {
+                name: 'Resource Tax',
+                rate: '2-10% ad valorem by province. Shanxi 8%, Inner Mongolia 9-10%, Shaanxi/Xinjiang 6%, most others 2-4%.',
+                rateNum: 0.04,
+                basis: 'ad_valorem',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '4,710 Mt \u00d7 $95/t \u00d7 ~4% production-weighted avg (top provinces have higher rates but represent ~60% of output)',
+                source: 'PRC Resource Tax Law (Sep 2020); PWC China Tax Summary',
+                url: 'https://taxsummaries.pwc.com/peoples-republic-of-china/corporate/other-taxes'
+            },
+            {
+                name: 'Environmental Protection Tax',
+                rate: 'Per unit of pollutant discharged (air, water, solid waste, noise). Provincial rates vary.',
+                rateNum: null,
+                basis: 'emissions_based',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: 'Not a per-tonne levy. Coal-specific burden not quantifiable at national level.',
+                source: 'PRC Environmental Protection Tax Law (Jan 2018)',
+                url: 'https://www.frontiersin.org/journals/environmental-science/articles/10.3389/fenvs.2024.1392244/full'
+            },
+        ]
+    },
+    {
+        country: 'United States',
+        production_mt: 480,
+        prod_year: '2023',
+        prod_source: 'EIA Annual Coal Report 2023',
+        prod_url: 'https://www.eia.gov/coal/annual/',
+        avg_price_usd: 45,
+        price_note: 'Avg mine-mouth price ~$45/t (EIA). Effective federal royalty rate historically ~4.9% (vs 12.5% statutory).',
+        levies: [
+            {
+                name: 'Federal Coal Royalty',
+                rate: '12.5% surface, 8% underground (on federal/Indian lands). Effective rate ~4.9% due to BLM reductions.',
+                rateNum: null,
+                basis: 'ad_valorem',
+                revenue_bn: 0.58,
+                revenue_type: 'reported',
+                calc: null,
+                source: 'ONRR Natural Resources Revenue Data',
+                url: 'https://revenuedata.doi.gov/query/revenue?period=fiscal_year&group_by=commodity&breakout_by=revenue_type'
+            },
+            {
+                name: 'AML Reclamation Fee',
+                rate: '$0.224/ton (surface); $0.096/ton (underground)',
+                rateNum: null,
+                basis: 'specific',
+                revenue_bn: 0.12,
+                revenue_type: 'reported',
+                calc: null,
+                source: 'OSMRE \u2014 Abandoned Mine Land Program',
+                url: 'https://www.osmre.gov/programs/aml'
+            },
+            {
+                name: 'State Severance Taxes',
+                rate: 'WY 6% surface/3.75% underground; WV 5%; KY 4.5% (min $0.50/t); VA 0.75-1%',
+                rateNum: null,
+                basis: 'varies',
+                revenue_bn: 0.80,
+                revenue_type: 'calc',
+                calc: 'Sum of state estimates. PA and IL have no coal severance tax.',
+                source: 'Virginia Dept of Taxation \u2014 Coal Severance Tax Comparison Matrix',
+                url: 'https://www.tax.virginia.gov/sites/default/files/inline-files/Coal%20Severance%20Tax%20States%20Matrix.pdf'
+            },
+        ]
+    },
+    {
+        country: 'South Africa',
+        production_mt: 230,
+        prod_year: '2023',
+        prod_source: 'Energy Institute Statistical Review 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 85,
+        price_note: 'Blended avg ~$85/t (Richards Bay export price was ~$100/t; domestic lower)',
+        levies: [
+            {
+                name: 'MPRRA Mining Royalties',
+                rate: 'Formula: Yu = 0.5% + (EBIT \u00f7 Gross sales \u00d7 12.5%). Cap: 7%. Coal (>15% ash) = unrefined.',
+                rateNum: null,
+                basis: 'formula',
+                revenue_bn: 0.59,
+                revenue_type: 'calc',
+                calc: '230 Mt \u00d7 $85/t \u00d7 ~3% effective avg = $0.59B',
+                source: 'SARS \u2014 Mineral & Petroleum Resource Royalty',
+                url: 'https://www.sars.gov.za/types-of-tax/mineral-and-petroleum-resource-royalty/'
+            },
+            {
+                name: 'Carbon Tax',
+                rate: 'R190/tCO2e (2024), rising to R236 (2025). 60-80% allowances \u2192 effective R38-76/tCO2e. Penalty: R640/tCO2e for exceeding carbon budgets.',
+                rateNum: null,
+                basis: 'emissions_based',
+                revenue_bn: 0.30,
+                revenue_type: 'calc',
+                calc: 'Low effective rate due to allowances; coal sector ~$0.3B',
+                source: 'SARS Carbon Tax; Anthesis analysis',
+                url: 'https://www.anthesisgroup.com/za/insights/updates-to-the-south-african-carbon-tax-2024/'
+            },
+        ]
+    },
+    {
+        country: 'Colombia',
+        production_mt: 60,
+        prod_year: '2023',
+        prod_source: 'ANM Colombia / Energy Institute 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 95,
+        price_note: 'Mostly export coal; avg FOB ~$95/t',
+        levies: [
+            {
+                name: 'Mining Royalties',
+                rate: '10% of FOB pit price (>3Mt/yr); 5% for smaller operations',
+                rateNum: 0.10,
+                basis: 'ad_valorem',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '~55 Mt (large producers) \u00d7 $95/t \u00d7 10% + ~5 Mt \u00d7 $95/t \u00d7 5%',
+                source: 'Mining Code (Law 685 of 2001); ANM',
+                url: 'https://www.anm.gov.co/'
+            },
+        ]
+    },
+    {
+        country: 'Russia',
+        production_mt: 440,
+        prod_year: '2023',
+        prod_source: 'Energy Institute Statistical Review 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 50,
+        price_note: 'Domestic avg ~$50/t. MET reformed 2022: coking coal now % of FOB price. 2023 surcharge \u20bd380/t added.',
+        levies: [
+            {
+                name: 'Mineral Extraction Tax (MET/NDPI)',
+                rate: 'Coking: 1.5% of FOB Australia price. Thermal: base \u20bd57/t + \u20bd380/t surcharge (2023). 2025: additional 10% above price thresholds.',
+                rateNum: null,
+                basis: 'varies',
+                revenue_bn: 0.70,
+                revenue_type: 'calc',
+                calc: '440 Mt \u00d7 blended ~$1.60/t (base + surcharge). Industry profits collapsed 96% in H1 2024.',
+                source: 'IEA \u2014 Russian Tax Code Ch.26; The Coal Hub',
+                url: 'https://thecoalhub.com/russian-coal-extraction-tax-set-to-be-raised-again.html'
+            },
+        ]
+    },
+    {
+        country: 'Germany',
+        production_mt: 130,
+        prod_year: '2023',
+        prod_source: 'AGEB / Energy Institute 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: null,
+        price_note: 'Mostly lignite for domestic power generation (not priced on open market)',
+        levies: [
+            {
+                name: 'EU ETS (coal share of revenue)',
+                rate: '~\u20ac90/tCO2 \u00d7 ~2.4 tCO2/t coal = ~\u20ac216/t implicit coal cost',
+                rateNum: null,
+                basis: 'emissions_based',
+                revenue_bn: 5.10,
+                revenue_type: 'calc',
+                calc: 'Germany total ETS revenue ~\u20ac18B (2023); coal ~26% of covered emissions \u2192 coal share ~\u20ac4.7B \u2248 $5.1B. Revenue goes to Climate & Transformation Fund.',
+                source: 'DEHSt (German Emissions Trading Authority)',
+                url: 'https://www.dehst.de/'
+            },
+        ]
+    },
+    {
+        country: 'Poland',
+        production_mt: 110,
+        prod_year: '2023',
+        prod_source: 'Statistics Poland / Energy Institute 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 80,
+        price_note: 'Domestic hard coal ~PLN350/t (~$80/t); lignite not priced separately',
+        levies: [
+            {
+                name: 'EU ETS (coal share)',
+                rate: 'Similar to Germany mechanism; ~\u20ac90/tCO2 \u00d7 emission factor',
+                rateNum: null,
+                basis: 'emissions_based',
+                revenue_bn: 3.20,
+                revenue_type: 'calc',
+                calc: 'Poland ETS revenue ~\u20ac5B (2023); coal ~60% of covered emissions \u2192 coal share ~\u20ac3B \u2248 $3.2B',
+                source: 'ICAP ETS data; Polish Ministry of Climate',
+                url: 'https://icapcarbonaction.com/'
+            },
+            {
+                name: 'Mining Extraction Fee',
+                rate: '~PLN 2/t',
+                rateNum: 0.50,
+                basis: 'specific',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '110 Mt \u00d7 ~$0.50/t',
+                source: 'Geological and Mining Law',
+                url: null
+            },
+        ]
+    },
+    {
+        country: 'Kazakhstan',
+        production_mt: 115,
+        prod_year: '2023',
+        prod_source: 'Energy Institute Statistical Review 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 30,
+        price_note: 'Mostly low-grade domestic coal; avg ~$30/t',
+        levies: [
+            {
+                name: 'Mineral Extraction Tax',
+                rate: '4.05% for coking coal/anthracite; 2.7% for steam coal/brown coal/oil shale',
+                rateNum: 0.03,
+                basis: 'ad_valorem',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '115 Mt \u00d7 $30/t \u00d7 ~3% weighted avg',
+                source: 'Kazakhstan State Revenue Committee; PWC Kazakhstan',
+                url: 'https://taxsummaries.pwc.com/kazakhstan/corporate/other-taxes'
+            },
+        ]
+    },
+    {
+        country: 'Mongolia',
+        production_mt: 45,
+        prod_year: '2023',
+        prod_source: 'Energy Institute Statistical Review 2024',
+        prod_url: 'https://www.energyinst.org/statistical-review',
+        avg_price_usd: 80,
+        price_note: 'Export avg ~$80/t (mainly coking coal to China)',
+        levies: [
+            {
+                name: 'Mining Royalty',
+                rate: '5% of sales value',
+                rateNum: 0.05,
+                basis: 'ad_valorem',
+                revenue_bn: null,
+                revenue_type: 'calc',
+                calc: '45 Mt \u00d7 $80/t \u00d7 5%',
+                source: 'Mongolia Minerals Law (2006, amended)',
+                url: null
+            },
+        ]
+    },
+];
+
+// SOE Data
+const SOE_DATA = [
+    {
+        name: 'Coal India Ltd (India)',
+        ownership: '63.13% Government of India (Ministry of Coal)',
+        description: 'World\'s largest coal producer (~700 Mt/yr). Listed on BSE/NSE.',
+        dividend_bn: 1.20,
+        dividend_note: 'FY2023-24: \u20b925.50/share \u00d7 616 Cr shares = ~\u20b915,700 Cr total dividends. Govt share (63.13%) \u2248 \u20b99,920 Cr (~$1.2B). CIL total payments to govt exchequer (all levies + dividends): \u20b960,198 Cr (~$7.2B).',
+        revenue_type: 'reported',
+        year: 'FY2023-24',
+        source: 'PIB Press Release \u2014 Ministry of Coal',
+        url: 'https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2010559'
+    },
+    {
+        name: 'China Shenhua Energy (subsidiary of China Energy)',
+        ownership: 'Parent China Energy Investment Corp is 100% SASAC (state). China Shenhua ~70% state-held.',
+        description: 'Largest listed coal company globally. 2024 proposed dividend RMB 2.26/share (75.9% payout ratio).',
+        dividend_bn: 6.20,
+        dividend_note: 'China Shenhua total 2024 dividend ~RMB 44.9B (~$6.2B). State share (~70%) \u2248 $4.3B. Parent China Energy (unlisted) also remits profits to SASAC \u2014 total not published.',
+        revenue_type: 'reported',
+        year: '2024',
+        source: 'TipRanks \u2014 China Shenhua 2024 Annual Results',
+        url: 'https://www.tipranks.com/news/company-announcements/china-shenhua-energy-reports-2024-annual-results-and-dividend-proposal'
+    },
+    {
+        name: 'Eskom (South Africa)',
+        ownership: '100% Government of South Africa',
+        description: 'Operates ~38 GW coal-fired capacity. Technically insolvent; ~R419B debt.',
+        dividend_bn: 0,
+        dividend_note: 'Eskom has not paid dividends; received R69B bailout. Net cost to government, not revenue. Coal SOE revenue is negative here.',
+        revenue_type: 'reported',
+        year: '2023',
+        source: 'Eskom Company Information',
+        url: 'https://www.eskom.co.za/about-eskom/company-information/'
+    },
+    {
+        name: 'Polish Mining Groups (PGG, JSW)',
+        ownership: 'PGG 100% state; JSW majority state-owned (controls 38% of domestic hard coal)',
+        description: 'Both are net recipients of state support. JSW posted record PLN 7.3B loss in 2024.',
+        dividend_bn: 0,
+        dividend_note: 'Polish coal mining receives ~PLN 7B ($1.7B) in annual subsidies. EU approved \u20ac1.3B aid for PGG closure by 2049. Net cost to government.',
+        revenue_type: 'reported',
+        year: '2024',
+        source: 'Notes from Poland \u2014 JSW record loss; Instrat coal mines data',
+        url: 'https://notesfrompoland.com/2025/04/11/polish-coal-mining-giant-jsw-posts-record-7-3bn-zloty-loss-in-2024/'
+    }
+];
+
+
+// ============================================================
+//  CALCULATE REVENUES (from coaltax)
+// ============================================================
+function calcRevenue(country) {
+    let total = 0;
+    const price = country.avg_price_usd || 0;
+    const prod = country.production_mt;
+    country.levies.forEach(levy => {
+        if (levy.revenue_bn != null) {
+            total += levy.revenue_bn;
+        } else if (levy.basis === 'ad_valorem' && levy.rateNum && price) {
+            levy.revenue_bn = Math.round(prod * price * levy.rateNum / 100) / 10;
+            total += levy.revenue_bn;
+        } else if (levy.basis === 'specific' && levy.rateNum) {
+            levy.revenue_bn = Math.round(prod * levy.rateNum / 100) / 10;
+            total += levy.revenue_bn;
+        } else if (levy.basis === 'percent_of_royalty' && levy.rateNum && price) {
+            levy.revenue_bn = Math.round(prod * price * levy.rateNum / 100) / 10;
+            total += levy.revenue_bn;
+        }
+    });
+    country.totalRevenue = Math.round(total * 100) / 100;
+    return country.totalRevenue;
+}
+
+function calcEffRate(country) {
+    if (!country.totalRevenue) calcRevenue(country);
+    return country.production_mt > 0 ? Math.round(country.totalRevenue * 1000 / country.production_mt * 100) / 100 : 0;
+}
+
+COUNTRIES.forEach(c => {
+    calcRevenue(c);
+    c.effRate = calcEffRate(c);
+});
+
+
+// ============================================================
+//  SHARED TOOLTIP OPTIONS
+// ============================================================
 const tooltipOpts = {
     backgroundColor: 'rgba(44,62,80,0.95)',
     titleFont: { family: 'Inter', size: 12 },
@@ -331,22 +1062,25 @@ const tooltipOpts = {
     padding: 10, cornerRadius: 6,
 };
 
-// 1. Coal revenue by country (horizontal bar)
+
+// ============================================================
+//  CHART: Revenue by Country (horizontal bar, from coaltax — colored by country)
+// ============================================================
 (function() {
-    var positive = coalRevByCountry.filter(function(d) { return d.revenue > 0; })
-        .sort(function(a, b) { return b.revenue - a.revenue; });
-    new Chart(document.getElementById('chartCoalRevenue'), {
+    const sorted = [...COUNTRIES].sort((a, b) => b.totalRevenue - a.totalRevenue);
+    const labels = sorted.map(d => d.country);
+    const values = sorted.map(d => d.totalRevenue);
+    const colors = sorted.map(d => getCountryColor(d.country));
+
+    new Chart(document.getElementById('chartRevByCountry'), {
         type: 'bar',
         data: {
-            labels: positive.map(function(d) { return d.country; }),
+            labels,
             datasets: [{
-                data: positive.map(function(d) { return d.revenue; }),
-                backgroundColor: positive.map(function(d) {
-                    return d.confidence === 'HIGH' ? 'rgba(45,45,45,0.85)' :
-                           d.confidence === 'MEDIUM' ? 'rgba(45,45,45,0.6)' :
-                           'rgba(45,45,45,0.35)';
-                }),
-                borderRadius: 3,
+                data: values,
+                backgroundColor: colors,
+                borderRadius: 4,
+                barThickness: 26,
             }]
         },
         options: {
@@ -358,25 +1092,29 @@ const tooltipOpts = {
                 tooltip: {
                     ...tooltipOpts,
                     callbacks: {
-                        afterBody: function(ctx) {
-                            var d = positive[ctx[0].dataIndex];
-                            return [d.type, d.year, 'Confidence: ' + d.confidence];
-                        }
+                        label: ctx => '$' + ctx.parsed.x.toFixed(1) + 'B (' + sorted[ctx.dataIndex].levies.length + ' levy types)'
                     }
-                },
+                }
             },
             scales: {
                 x: {
-                    title: { display: true, text: 'Coal Revenue to Government ($B)', font: { family: 'Inter', size: 11 } },
-                    ticks: { callback: function(v) { return '$' + v + 'B'; }, font: { family: 'Inter', size: 10 } },
+                    title: { display: true, text: 'Estimated Annual Revenue ($ billion)', font: { family: 'Inter', size: 12 } },
+                    grid: { color: '#eee' },
+                    ticks: { callback: v => '$' + v + 'B' }
                 },
-                y: { ticks: { font: { family: 'Inter', size: 10 } } }
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 11 } }
+                }
             }
         }
     });
 })();
 
-// 2. Coal as % of govt revenue
+
+// ============================================================
+//  CHART: Coal as % of Govt Revenue (fiscal dependency, from revenue.html)
+// ============================================================
 (function() {
     new Chart(document.getElementById('chartCoalFiscalDep'), {
         type: 'bar',
@@ -419,7 +1157,59 @@ const tooltipOpts = {
     });
 })();
 
-// 3. Revenue channels (stacked horizontal bar)
+
+// ============================================================
+//  CHART: Effective Tax Rate ($/tonne, from coaltax)
+// ============================================================
+(function() {
+    const sorted = [...COUNTRIES].filter(c => c.effRate > 0).sort((a, b) => b.effRate - a.effRate);
+    const labels = sorted.map(d => d.country);
+    const values = sorted.map(d => d.effRate);
+    const colors = sorted.map(d => getCountryColor(d.country));
+
+    new Chart(document.getElementById('chartTaxRate'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderRadius: 4,
+                barThickness: 22,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    ...tooltipOpts,
+                    callbacks: {
+                        label: ctx => '$' + ctx.parsed.x.toFixed(2) + '/tonne'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Effective Tax Rate ($/tonne of coal produced)', font: { family: 'Inter', size: 12 } },
+                    grid: { color: '#eee' },
+                    ticks: { callback: v => '$' + v }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 11 } }
+                }
+            }
+        }
+    });
+})();
+
+
+// ============================================================
+//  CHART: Revenue Channels (stacked horizontal bar, from revenue.html)
+// ============================================================
 (function() {
     new Chart(document.getElementById('chartChannels'), {
         type: 'bar',
@@ -460,7 +1250,10 @@ const tooltipOpts = {
     });
 })();
 
-// 4. QLD trend
+
+// ============================================================
+//  CHART: QLD Trend (from revenue.html)
+// ============================================================
 (function() {
     new Chart(document.getElementById('chartQLDTrend'), {
         type: 'bar',
@@ -501,14 +1294,17 @@ const tooltipOpts = {
     });
 })();
 
-// 5. CIL trend
+
+// ============================================================
+//  CHART: CIL Trend (from revenue.html)
+// ============================================================
 (function() {
     new Chart(document.getElementById('chartCILTrend'), {
         type: 'bar',
         data: {
             labels: cilTrend.years,
             datasets: [{
-                label: 'CIL Exchequer Contribution (Rs \'000 Cr)',
+                label: "CIL Exchequer Contribution (Rs '000 Cr)",
                 data: cilTrend.total,
                 backgroundColor: 'rgba(45,45,45,0.8)',
                 borderRadius: 4,
@@ -531,7 +1327,7 @@ const tooltipOpts = {
             scales: {
                 x: { ticks: { font: { family: 'Inter', size: 10 } } },
                 y: {
-                    title: { display: true, text: 'Rs \'000 crore', font: { family: 'Inter', size: 11 } },
+                    title: { display: true, text: "Rs '000 crore", font: { family: 'Inter', size: 11 } },
                     ticks: { font: { family: 'Inter', size: 10 } },
                 }
             }
@@ -541,49 +1337,196 @@ const tooltipOpts = {
 
 
 // ============================================================
-//  COUNTRY DETAIL CARDS
+//  COUNTRY DETAIL BLOCKS (collapsible, from coaltax)
 // ============================================================
-
 (function() {
-    var grid = document.getElementById('countryCards');
-    coalRevByCountry.forEach(function(d) {
-        var confClass = d.confidence === 'HIGH' ? 'conf-high' : d.confidence === 'MEDIUM' ? 'conf-med' : 'conf-low';
-        var valStr = d.revenue > 0 ? '$' + d.revenue + 'B' : '-$' + Math.abs(d.revenue) + 'B (net cost)';
-        var card = document.createElement('div');
-        card.className = 'country-card';
+    const container = document.getElementById('countryBlocks');
+
+    COUNTRIES.forEach(c => {
+        // Build the levy table rows
+        let levyRows = c.levies.map(l => {
+            const revStr = l.revenue_bn != null ? '$' + l.revenue_bn.toFixed(2) + 'B' : '\u2014';
+            const tag = l.revenue_type === 'reported'
+                ? '<span class="reported-tag">REPORTED</span>'
+                : '<span class="est-tag">CALC</span>';
+            const sourceLink = l.url
+                ? '<a href="' + l.url + '" target="_blank">' + l.source + '</a>'
+                : l.source;
+            const calcRow = l.calc ? '<div class="calc-note">' + l.calc + '</div>' : '';
+            return '<tr>' +
+                '<td>' + l.name + '</td>' +
+                '<td>' + l.rate + '</td>' +
+                '<td class="num">' + revStr + ' ' + tag + '</td>' +
+                '<td>' + sourceLink + calcRow + '</td>' +
+                '</tr>';
+        }).join('');
+
+        // Total row
+        levyRows += '<tr class="levy-total">' +
+            '<td colspan="2">Total estimated revenue</td>' +
+            '<td class="num">$' + c.totalRevenue.toFixed(2) + 'B</td>' +
+            '<td></td>' +
+            '</tr>';
+
+        // Summary for toggle button
+        const rateStr = c.effRate > 0 ? '$' + c.effRate.toFixed(2) + '/t' : 'N/A';
+        const toggleSummary = '$' + c.totalRevenue.toFixed(1) + 'B total \u00b7 ' + rateStr + ' eff. rate \u00b7 ' + fmt(c.production_mt) + ' Mt';
+
+        // Toggle button (default: collapsed)
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'country-toggle';
+        toggleBtn.style.borderLeftColor = getCountryColor(c.country);
+        toggleBtn.innerHTML = '<span><span class="chevron">&#9654;</span> ' + c.country +
+            '<span class="toggle-summary">' + toggleSummary + '</span></span>';
+        toggleBtn.addEventListener('click', function() {
+            this.classList.toggle('open');
+            this.nextElementSibling.classList.toggle('open');
+        });
+
+        // Detail body (default: collapsed — no 'open' class)
+        const detailBody = document.createElement('div');
+        detailBody.className = 'country-detail-body';
+
+        const block = document.createElement('div');
+        block.className = 'country-tax-block';
+        block.style.borderLeftColor = getCountryColor(c.country);
+        block.innerHTML =
+            '<div class="prod-info">' +
+                'Production: ' + fmt(c.production_mt) + ' Mt (' + c.prod_year + ') \u00b7 ' +
+                (c.price_note || '') + ' \u00b7 ' +
+                '<a href="' + c.prod_url + '" target="_blank" style="color:var(--accent);font-size:0.75rem;">' + c.prod_source + '</a>' +
+            '</div>' +
+            '<table class="levy-table">' +
+                '<thead><tr>' +
+                    '<th>Levy / Tax</th>' +
+                    '<th>Rate</th>' +
+                    '<th class="num">Est. Revenue</th>' +
+                    '<th>Source</th>' +
+                '</tr></thead>' +
+                '<tbody>' + levyRows + '</tbody>' +
+            '</table>';
+
+        detailBody.appendChild(block);
+        container.appendChild(toggleBtn);
+        container.appendChild(detailBody);
+    });
+})();
+
+
+// ============================================================
+//  SOE BLOCKS (from coaltax)
+// ============================================================
+(function() {
+    const container = document.getElementById('soeBlocks');
+
+    SOE_DATA.forEach(soe => {
+        const card = document.createElement('div');
+        card.className = 'soe-card';
+
+        const revDisplay = soe.dividend_bn != null
+            ? (soe.dividend_bn === 0 ? '$0 (net cost to government)' : '~$' + soe.dividend_bn.toFixed(1) + 'B govt share')
+            : 'Not publicly disclosed';
+
+        const tag = soe.revenue_type === 'reported'
+            ? '<span class="reported-tag">REPORTED</span>'
+            : '<span class="est-tag">CALC</span>';
+
+        const sourceLink = soe.url
+            ? '<a href="' + soe.url + '" target="_blank">' + soe.source + '</a>'
+            : soe.source;
+
         card.innerHTML =
-            '<div class="cc-name">' + d.country + ' <span class="confidence-tag ' + confClass + '">' + d.confidence + '</span></div>' +
-            '<div class="cc-value">' + valStr + '</div>' +
-            '<div class="cc-detail">' + d.detail + '</div>' +
-            '<div class="cc-source">Source: <a href="' + d.url + '" target="_blank">' + d.source + '</a> &middot; ' + d.year + ' &middot; ' + d.type + '</div>';
-        grid.appendChild(card);
+            '<h4>' + soe.name + ' ' + tag + '</h4>' +
+            '<div class="soe-detail">' + soe.ownership + ' \u00b7 ' + soe.description + '</div>' +
+            '<div class="soe-revenue">' + revDisplay + '</div>' +
+            '<div class="soe-detail">' + soe.dividend_note + '</div>' +
+            '<div style="margin-top:0.4rem">' + sourceLink + ' (' + soe.year + ')</div>';
+        container.appendChild(card);
     });
 })();
 
 
 // ============================================================
-//  FISCAL DEPENDENCY BARS
+//  CHART: Revenue vs Production — Bubble (from coaltax)
 // ============================================================
-
 (function() {
-    var container = document.getElementById('depBars');
-    coalFiscalDep.forEach(function(d) {
-        var row = document.createElement('div');
-        row.className = 'dep-bar-container';
-        var barWidth = Math.max(d.pct, 0.5);
-        row.innerHTML =
-            '<div class="dep-label"><span>' + d.country + '</span><span style="font-weight:600;">' + d.pct + '%</span></div>' +
-            '<div class="dep-bar-bg"><div class="dep-bar-fill" style="width:' + barWidth + '%;background:var(--coal);">' +
-            (d.pct >= 3 ? d.pct + '%' : '') + '</div></div>';
-        container.appendChild(row);
+    const data = COUNTRIES.filter(c => c.totalRevenue > 0).map(d => ({
+        x: d.production_mt,
+        y: d.totalRevenue,
+        r: Math.max(4, Math.sqrt(d.effRate) * 4),
+        label: d.country,
+        rate: d.effRate
+    }));
+
+    new Chart(document.getElementById('chartScatter'), {
+        type: 'bubble',
+        data: {
+            datasets: [{
+                data: data,
+                backgroundColor: data.map(d => {
+                    const c = getCountryColor(d.label);
+                    return c + 'cc';
+                }),
+                borderColor: data.map(d => getCountryColor(d.label)),
+                borderWidth: 1.5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    ...tooltipOpts,
+                    callbacks: {
+                        label: ctx => {
+                            const d = ctx.raw;
+                            return [
+                                d.label,
+                                'Production: ' + fmt(d.x) + ' Mt',
+                                'Revenue: $' + d.y.toFixed(1) + 'B',
+                                'Eff. rate: $' + d.rate.toFixed(2) + '/t'
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Coal Production (Mt/year)', font: { family: 'Inter', size: 12 } },
+                    grid: { color: '#eee' },
+                    ticks: { callback: v => fmt(v) + ' Mt' }
+                },
+                y: {
+                    title: { display: true, text: 'Est. Tax / Royalty Revenue ($B)', font: { family: 'Inter', size: 12 } },
+                    grid: { color: '#eee' },
+                    ticks: { callback: v => '$' + v + 'B' }
+                }
+            }
+        },
+        plugins: [{
+            id: 'bubbleLabels',
+            afterDatasetsDraw(chart) {
+                const ctx = chart.ctx;
+                ctx.font = '10px Inter, sans-serif';
+                ctx.fillStyle = '#2c3e50';
+                ctx.textAlign = 'center';
+                const meta = chart.getDatasetMeta(0);
+                meta.data.forEach((point, i) => {
+                    const d = data[i];
+                    if (d.y >= 1.0 || d.x >= 400) {
+                        ctx.fillText(d.label, point.x, point.y - d.r - 4);
+                    }
+                });
+            }
+        }]
     });
 })();
 
 
 // ============================================================
-//  DATA TABLE
+//  DATA TABLE (from revenue.html)
 // ============================================================
-
 (function() {
     var tbody = document.querySelector('#coalTable tbody');
     coalRevByCountry.forEach(function(d, i) {
@@ -603,9 +1546,144 @@ const tooltipOpts = {
         tbody.appendChild(tr);
     });
 })();
-</script>
 
-<script src="nav.js"></script>
+// ============================================================
+// CIL Subsidiary data (FY23-24, Ministry of Coal Annual Report)
+// ============================================================
+const cilSubsidiaries = [
+    { name: 'SECL', region: 'Chhattisgarh/MP', production_mt: 182, employees: 48000 },
+    { name: 'MCL', region: 'Odisha', production_mt: 178, employees: 21000 },
+    { name: 'NCL', region: 'Madhya Pradesh', production_mt: 130, employees: 15000 },
+    { name: 'CCL', region: 'Jharkhand', production_mt: 88, employees: 35000 },
+    { name: 'ECL', region: 'West Bengal', production_mt: 42, employees: 52000 },
+    { name: 'BCCL', region: 'Jharkhand (Dhanbad)', production_mt: 35, employees: 38000 },
+    { name: 'WCL', region: 'Maharashtra', production_mt: 55, employees: 32000 },
+];
+
+// Indian state coal royalties (estimated $M, 14% of production value)
+const indiaStateRoyalties = [
+    { state: 'Chhattisgarh', royalty_m: 850, production_mt: 210 },
+    { state: 'Odisha', royalty_m: 720, production_mt: 195 },
+    { state: 'Jharkhand', royalty_m: 580, production_mt: 150 },
+    { state: 'Madhya Pradesh', royalty_m: 450, production_mt: 140 },
+    { state: 'Maharashtra', royalty_m: 180, production_mt: 55 },
+    { state: 'West Bengal', royalty_m: 160, production_mt: 45 },
+    { state: 'Telangana', royalty_m: 240, production_mt: 72 },
+    { state: 'Uttar Pradesh', royalty_m: 85, production_mt: 25 },
+];
+
+// CIL Production chart
+(function() {
+    const sorted = [...cilSubsidiaries].sort((a, b) => b.production_mt - a.production_mt);
+    new Chart(document.getElementById('chartCILSubs'), {
+        type: 'bar',
+        data: {
+            labels: sorted.map(d => d.name),
+            datasets: [{
+                label: 'Production (Mt)',
+                data: sorted.map(d => d.production_mt),
+                backgroundColor: '#f4a261',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(ctx) {
+                            var d = sorted[ctx[0].dataIndex];
+                            return ['Region: ' + d.region, 'Employees: ' + fmt(d.employees)];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Production (Mt, FY23-24)' }, grid: { color: '#f0f0f0' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+})();
+
+// CIL Employment chart
+(function() {
+    const sorted = [...cilSubsidiaries].sort((a, b) => b.employees - a.employees);
+    new Chart(document.getElementById('chartCILEmployment'), {
+        type: 'bar',
+        data: {
+            labels: sorted.map(d => d.name),
+            datasets: [{
+                label: 'Employees',
+                data: sorted.map(d => d.employees),
+                backgroundColor: '#e76f51',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(ctx) {
+                            var d = sorted[ctx[0].dataIndex];
+                            var productivity = Math.round(d.production_mt * 1000000 / d.employees);
+                            return ['Region: ' + d.region, 'Productivity: ' + fmt(productivity) + ' t/worker'];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Employees (FY23-24)' }, grid: { color: '#f0f0f0' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+})();
+
+// State royalties chart
+(function() {
+    const sorted = [...indiaStateRoyalties].sort((a, b) => b.royalty_m - a.royalty_m);
+    new Chart(document.getElementById('chartStateRoyalties'), {
+        type: 'bar',
+        data: {
+            labels: sorted.map(d => d.state),
+            datasets: [{
+                label: 'Estimated Coal Royalties ($M)',
+                data: sorted.map(d => d.royalty_m),
+                backgroundColor: '#264653',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            var d = sorted[ctx.dataIndex];
+                            return '$' + d.royalty_m + 'M (from ' + d.production_mt + ' Mt production)';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Estimated Coal Royalties ($M, FY23-24)' }, grid: { color: '#f0f0f0' }, ticks: { callback: function(v) { return '$' + v + 'M'; } } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+})();
+</script>
 
 </body>
 </html>

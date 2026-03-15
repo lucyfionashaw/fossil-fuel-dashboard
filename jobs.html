@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jobs by Commodity — Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
@@ -126,6 +127,21 @@
         </div>
     </div>
 
+    <!-- US state-level coal employment -->
+    <div class="section">
+        <h2>US Coal Employment by State</h2>
+        <p class="section-subtitle">Coal mining employment is concentrated in a handful of states. Wyoming produces the most coal but employs far fewer miners than West Virginia due to surface mining mechanisation.</p>
+        <button class="collapsible-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+            <span class="chevron">&#9654;</span> Show US state-level detail
+        </button>
+        <div class="collapsible-body">
+            <div class="chart-container-tall"><canvas id="chartUSStates"></canvas></div>
+            <div class="info-callout" style="margin-top:1rem;">
+                <strong>Political context:</strong> Coal-dependent communities — particularly in Appalachia (WV, KY, PA, VA) and the Powder River Basin (WY) — have experienced significant economic decline as coal employment has fallen ~60% since the 1980s. These regions have shifted politically, and coal's decline is a politically charged issue regardless of the economic reality.
+            </div>
+        </div>
+    </div>
+
     <!-- Supply chain stages -->
     <div class="section">
         <h2>Employment by Supply Chain Stage</h2>
@@ -141,6 +157,25 @@
         <h2>Labor Productivity: Tonnes Produced per Worker</h2>
         <p class="section-subtitle">Productivity varies enormously by mining method and mechanization. Australian open-cut operations produce 10-15x more tonnes per worker than Indian underground mines.</p>
         <div class="chart-container-tall"><canvas id="chartProductivity"></canvas></div>
+    </div>
+
+    <!-- Just Transition -->
+    <div class="section">
+        <h2>The Just Transition Question</h2>
+        <p class="section-subtitle">How many people would lose their jobs in a coal phaseout, where are they, and what would it cost?</p>
+        <div class="chart-row">
+            <div>
+                <h3>Coal Jobs at Risk by Country</h3>
+                <div style="height:400px;"><canvas id="chartJobsAtRisk"></canvas></div>
+            </div>
+            <div>
+                <h3>Estimated Annual Transition Cost</h3>
+                <div style="height:400px;"><canvas id="chartTransitionCost"></canvas></div>
+            </div>
+        </div>
+        <div class="info-callout" style="margin-top:1rem;">
+            <strong>Context:</strong> Total estimated cost to support all ~7.7M coal mining workers through transition (~$50,000/worker/year in retraining + income support) would be ~$385B/year — compared to $1.3T/year in direct fossil fuel subsidies. The annual cost of job transition support is roughly 30% of what governments already spend propping up the fossil fuel industry. See the <a href="subsidies.html#case-studies" style="color:var(--accent);">Subsidies case studies</a> for real-world examples.
+        </div>
     </div>
 
     <!-- Country detail table -->
@@ -590,6 +625,132 @@ new Chart(document.getElementById('chartProductivity'), {
         }
     }
 });
+
+
+// --- US state-level coal employment chart ---
+// US state-level coal employment (BLS/EIA, 2023)
+const usStateCoalJobs = [
+    { state: 'West Virginia', jobs: 11200, production_mt: 75, notes: 'Appalachian underground + surface' },
+    { state: 'Wyoming', jobs: 5100, production_mt: 230, notes: 'Powder River Basin surface mining' },
+    { state: 'Pennsylvania', jobs: 4800, production_mt: 40, notes: 'Anthracite + bituminous' },
+    { state: 'Kentucky', jobs: 4200, production_mt: 30, notes: 'Eastern + Western KY' },
+    { state: 'Illinois', jobs: 3500, production_mt: 38, notes: 'Illinois Basin longwall' },
+    { state: 'Virginia', jobs: 2800, production_mt: 12, notes: 'Southwest VA, declining' },
+    { state: 'Alabama', jobs: 2200, production_mt: 12, notes: 'Met coal for steel' },
+    { state: 'Indiana', jobs: 1800, production_mt: 25, notes: 'Illinois Basin surface' },
+    { state: 'Ohio', jobs: 1400, production_mt: 8, notes: 'Declining Appalachian' },
+    { state: 'Montana', jobs: 1100, production_mt: 25, notes: 'Western surface mines' },
+    { state: 'Colorado', jobs: 900, production_mt: 14, notes: 'Declining, some met coal' },
+    { state: 'North Dakota', jobs: 800, production_mt: 20, notes: 'Lignite for power' },
+];
+
+(function() {
+    const sorted = usStateCoalJobs.sort((a, b) => b.jobs - a.jobs);
+    new Chart(document.getElementById('chartUSStates'), {
+        type: 'bar',
+        data: {
+            labels: sorted.map(d => d.state),
+            datasets: [{
+                label: 'Coal Mining Jobs',
+                data: sorted.map(d => d.jobs),
+                backgroundColor: '#457b9d',
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(ctx) {
+                            var d = sorted[ctx[0].dataIndex];
+                            return ['Production: ' + d.production_mt + ' Mt', d.notes];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Coal Mining Employment (2023)' },
+                    grid: { color: '#f0f0f0' },
+                },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+})();
+
+
+// ============================================================
+// JUST TRANSITION CHARTS
+// ============================================================
+
+// Jobs at risk data (coal mining only)
+const jobsAtRisk = [
+    { country: 'China', jobs_k: 3900, transition_bn: 195 },
+    { country: 'India', jobs_k: 2500, transition_bn: 50 },
+    { country: 'Indonesia', jobs_k: 250, transition_bn: 5 },
+    { country: 'Russia', jobs_k: 150, transition_bn: 7.5 },
+    { country: 'USA', jobs_k: 42, transition_bn: 2.1 },
+    { country: 'Australia', jobs_k: 38, transition_bn: 1.9 },
+    { country: 'Poland', jobs_k: 80, transition_bn: 4 },
+    { country: 'South Africa', jobs_k: 90, transition_bn: 2.7 },
+    { country: 'Colombia', jobs_k: 50, transition_bn: 1.5 },
+    { country: 'Germany', jobs_k: 18, transition_bn: 0.9 },
+];
+
+(function() {
+    const sorted = [...jobsAtRisk].sort((a, b) => b.jobs_k - a.jobs_k);
+    new Chart(document.getElementById('chartJobsAtRisk'), {
+        type: 'bar',
+        data: {
+            labels: sorted.map(d => d.country),
+            datasets: [{
+                data: sorted.map(d => d.jobs_k),
+                backgroundColor: sorted.map(d => getCountryColor(d.country)),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false },
+                tooltip: { callbacks: { label: ctx => fmt(sorted[ctx.dataIndex].jobs_k) + 'K coal mining jobs' } }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Coal Mining Jobs (thousands)' }, grid: { color: '#f0f0f0' }, ticks: { callback: v => fmt(v) + 'K' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+})();
+
+(function() {
+    const sorted = [...jobsAtRisk].sort((a, b) => b.transition_bn - a.transition_bn);
+    new Chart(document.getElementById('chartTransitionCost'), {
+        type: 'bar',
+        data: {
+            labels: sorted.map(d => d.country),
+            datasets: [{
+                data: sorted.map(d => d.transition_bn),
+                backgroundColor: sorted.map(d => getCountryColor(d.country)),
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false },
+                tooltip: { callbacks: { label: ctx => '$' + sorted[ctx.dataIndex].transition_bn + 'B/year estimated transition support' } }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Estimated Annual Transition Cost ($B)' }, grid: { color: '#f0f0f0' }, ticks: { callback: v => '$' + v + 'B' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+})();
 
 
 // ============================================================

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy Context — Fossil Fuel Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="chart-defaults.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
@@ -58,6 +59,16 @@
 
 <div class="container">
 
+    <div class="page-nav">
+        <span class="page-nav-label">Jump to:</span>
+        <a href="#energy-mix">Energy Mix</a>
+        <a href="#emissions">Emissions</a>
+        <a href="#impact">Coal's Impact</a>
+        <a href="#trends">Trends</a>
+        <a href="#coal-countries">Coal Countries</a>
+        <a href="#technical">Technical Metrics</a>
+    </div>
+
     <!-- Headline cards -->
     <div class="headline-grid">
         <div class="headline-card coal">
@@ -87,7 +98,7 @@
     </div>
 
     <!-- Section 1: Primary Energy Mix -->
-    <div class="chart-row">
+    <div class="chart-row" id="energy-mix">
         <div class="section">
             <h2>Global Primary Energy Mix (2024)</h2>
             <p class="section-subtitle">Total: ~620 EJ. Fossil fuels still provide ~81% of the world's primary energy.</p>
@@ -109,7 +120,7 @@
     </div>
 
     <!-- Section 2: CO2 Emissions -->
-    <div class="chart-row">
+    <div class="chart-row" id="emissions">
         <div class="section">
             <h2>CO2 Emissions by Fuel Type (2024)</h2>
             <p class="section-subtitle">Total energy-related CO2: 37.6 Gt. Coal is the single largest source despite being the smallest fossil fuel by energy share.</p>
@@ -130,7 +141,7 @@
     </div>
 
     <!-- Disproportion callout -->
-    <div class="section">
+    <div class="section" id="impact">
         <h2>Coal's Disproportionate Impact</h2>
         <p class="section-subtitle">Comparing coal's share of energy supply vs its share of emissions and other impacts.</p>
         <div class="stat-grid">
@@ -163,7 +174,7 @@
     </div>
 
     <!-- Section 3: Trends over time -->
-    <div class="section">
+    <div class="section" id="trends">
         <h2>Global Primary Energy by Source (2015&ndash;2024)</h2>
         <p class="section-subtitle">Despite rapid renewables growth, fossil fuel consumption has not declined in absolute terms. Coal hit a record ~160 EJ in 2024.</p>
         <div class="chart-container-tall"><canvas id="chartEnergyTrend"></canvas></div>
@@ -205,7 +216,7 @@
     </div>
 
     <!-- Section 5: Top coal-dependent countries -->
-    <div class="section">
+    <div class="section" id="coal-countries">
         <h2>Top 20 Countries by Coal Share of Electricity (2024)</h2>
         <p class="section-subtitle">Many of the world's most populous developing nations remain heavily dependent on coal for electricity.</p>
         <div class="chart-container-tall"><canvas id="chartCoalDependence"></canvas></div>
@@ -227,7 +238,7 @@
     </div>
 
     <!-- Section 7: CO2 Intensity per kWh -->
-    <div class="chart-row">
+    <div class="chart-row" id="technical">
         <div class="section">
             <h2>CO2 Intensity per kWh of Electricity by Fuel</h2>
             <p class="section-subtitle">Accounting for thermal efficiency: coal plants (~33% efficient) emit ~1,000 gCO2/kWh despite coal itself producing ~95 kgCO2/GJ. Gas CCGT at ~55% efficiency emits only ~370 gCO2/kWh.</p>
@@ -602,19 +613,19 @@ new Chart(document.getElementById('chartCO2Intensity'), {
 
 
 // ============================================================
-// CHART 5: Primary Energy Trend (stacked area)
+// CHART 5: Primary Energy Trend (line)
 // ============================================================
 new Chart(document.getElementById('chartEnergyTrend'), {
     type: 'line',
     data: {
         labels: years,
         datasets: [
-            { label: 'Oil', data: energyTrendData.oil, backgroundColor: 'rgba(192,57,43,0.3)', borderColor: COLORS.oil, fill: true, tension: 0.3, pointRadius: 2 },
-            { label: 'Coal', data: energyTrendData.coal, backgroundColor: 'rgba(61,61,61,0.3)', borderColor: COLORS.coal, fill: true, tension: 0.3, pointRadius: 2 },
-            { label: 'Natural Gas', data: energyTrendData.gas, backgroundColor: 'rgba(41,128,185,0.3)', borderColor: COLORS.gas, fill: true, tension: 0.3, pointRadius: 2 },
-            { label: 'Renewables', data: energyTrendData.renewables, backgroundColor: 'rgba(241,196,15,0.3)', borderColor: COLORS.solar, fill: true, tension: 0.3, pointRadius: 2 },
-            { label: 'Hydro', data: energyTrendData.hydro, backgroundColor: 'rgba(46,204,113,0.3)', borderColor: COLORS.hydro, fill: true, tension: 0.3, pointRadius: 2 },
-            { label: 'Nuclear', data: energyTrendData.nuclear, backgroundColor: 'rgba(142,68,173,0.3)', borderColor: COLORS.nuclear, fill: true, tension: 0.3, pointRadius: 2 },
+            { label: 'Oil', data: energyTrendData.oil, borderColor: COLORS.oil, tension: 0.3, pointRadius: 2 },
+            { label: 'Coal', data: energyTrendData.coal, borderColor: COLORS.coal, tension: 0.3, pointRadius: 2 },
+            { label: 'Natural Gas', data: energyTrendData.gas, borderColor: COLORS.gas, tension: 0.3, pointRadius: 2 },
+            { label: 'Renewables', data: energyTrendData.renewables, borderColor: COLORS.solar, tension: 0.3, pointRadius: 2 },
+            { label: 'Hydro', data: energyTrendData.hydro, borderColor: COLORS.hydro, tension: 0.3, pointRadius: 2 },
+            { label: 'Nuclear', data: energyTrendData.nuclear, borderColor: COLORS.nuclear, tension: 0.3, pointRadius: 2 },
         ]
     },
     options: {
