@@ -1,16 +1,16 @@
 // =====================================================================
 // DATA.JS — All dashboard data embedded for static GitHub Pages hosting
 // Global Fossil Fuel Market Value Dashboard (Task 1)
-// Data year: 2024 (coal, gas) / 2023 (oil)
+// Data year: 2024 base, price refresh 2026-04 (China/India/Indonesia)
 // =====================================================================
 
 const COAL_DATA = [
-    { rank: 1, country: "China", type: "Thermal", production: 3710, price: 107, benchmark: "Qinhuangdao 5500 kcal", value: 396970, notes: "QHD avg ~RMB 750-863/t" },
-    { rank: 1, country: "China", type: "Metallurgical", production: 465, price: 242, benchmark: "PLV HCC FOB Aus proxy", value: 112530, notes: "Coking coal" },
+    { rank: 1, country: "China", type: "Thermal", production: 3780, price: 102, benchmark: "Qinhuangdao 5500 kcal", value: 385560, notes: "2026 contract 675 yuan/t; QHD spot ~700-850 yuan ($98-119)" },
+    { rank: 1, country: "China", type: "Metallurgical", production: 470, price: 242, benchmark: "PLV HCC FOB Aus proxy", value: 113740, notes: "Coking coal" },
     { rank: 1, country: "China", type: "Other/Lignite", production: 491, price: 50, benchmark: "Estimated", value: 24550, notes: "Anthracite, PCI, other" },
-    { rank: 2, country: "India", type: "Thermal", production: 1020, price: 30, benchmark: "CIL blended all-in (incl. levies)", value: 30600, notes: "CIL FSA+levies ~Rs2270/t ($27); e-auction ~$42; blended ~$30/t" },
+    { rank: 2, country: "India", type: "Thermal", production: 1043, price: 30, benchmark: "CIL blended all-in (incl. levies)", value: 31290, notes: "CY2025 provisional 1042.9 Mt; FY25-26 on pace for 1.1 Bt" },
     { rank: 2, country: "India", type: "Metallurgical", production: 28, price: 280, benchmark: "PLV HCC import + duties", value: 7840, notes: "Import parity + customs/GST" },
-    { rank: 3, country: "Indonesia", type: "Thermal", production: 833, price: 122, benchmark: "HBA 6322 kcal GAR", value: 101626, notes: "Record 831-836 Mt" },
+    { rank: 3, country: "Indonesia", type: "Thermal", production: 836, price: 100, benchmark: "HBA 6322 kcal GAR (2026 YTD avg)", value: 83600, notes: "HBA now bi-weekly; H1 Apr 2026 $99.87, H2 Apr $103.43; down from 2024 avg $122" },
     { rank: 4, country: "USA", type: "Thermal", production: 400, price: 42, benchmark: "EIA avg thermal mine", value: 16800, notes: "$37.85/short ton" },
     { rank: 4, country: "USA", type: "Metallurgical", production: 65, price: 198, benchmark: "EIA avg met mine", value: 12870, notes: "$180/short ton" },
     { rank: 5, country: "Australia", type: "Thermal", production: 250, price: 134, benchmark: "Newcastle FOB 6000 kcal", value: 33500, notes: "~55% thermal" },

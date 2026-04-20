@@ -317,9 +317,9 @@
                 <strong>Key insight:</strong> South Eastern Coalfields (SECL) in Chhattisgarh produces the most coal but employs fewer workers than Eastern Coalfields (ECL) in West Bengal, which has older underground mines with much lower productivity. State-level royalty revenue flows to producing states: Chhattisgarh, Jharkhand, Odisha, and Madhya Pradesh receive the bulk of coal royalty income.
             </div>
             <div style="margin-top:1rem;">
-                <h3>Coal Royalties by Producing State (estimated FY23-24)</h3>
-                <div style="height:300px;"><canvas id="chartStateRoyalties"></canvas></div>
-                <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Estimated from 14% ad valorem royalty on production volumes by state. Actual amounts vary with coal grade and pricing.</p>
+                <h3>CIL Payments to Coal-Bearing States (FY24-25)</h3>
+                <div style="height:320px;"><canvas id="chartStateRoyalties"></canvas></div>
+                <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;">Dark bars = reported figures (top 4 states, FY24-25); lighter bars = estimated. Includes royalties + DMF + NMET + GST compensation cess paid by CIL to each state. Source: <a href="https://www.business-standard.com/economy/news/coal-india-fy25-revenue-production-states-contribution-125040900990_1.html" target="_blank" style="color:var(--text-secondary);">Business Standard (9 Apr 2025)</a>.</p>
             </div>
         </div>
     </div>
@@ -414,7 +414,7 @@
             <h3>Country Notes</h3>
             <p><strong>Indonesia:</strong> PNBP (non-tax state revenue) from the mineral and coal sub-sector via ESDM. Coal's share (~70% of minerba PNBP) estimated from official statements. Corporate income tax from coal companies collected separately by DG Tax and not included.</p>
             <p><strong>Australia:</strong> State-level royalties from Queensland Treasury Budget Papers (FY23-24 actual: A$10.52B) and NSW Revenue (FY24-25 estimate: A$2.95B). Federal CIT from coal companies not separately reported by ATO. USD conversion at average AUD/USD rates.</p>
-            <p><strong>India:</strong> Coal India Ltd total exchequer contribution (Rs 60,198 crore in FY23-24) from Ministry of Coal Annual Report. Includes royalties (14% ad valorem to states), GST (5% + Rs 400/t cess), CIT, dividends, DMF, and NMET. Excludes private coal companies and Singareni Collieries.</p>
+            <p><strong>India:</strong> Coal India Ltd total exchequer contribution: Rs 60,960 Cr in FY24-25 (up 1.2% from Rs 60,198 Cr in FY23-24), per CIL disclosures (9 Apr 2025) and Ministry of Coal Annual Report. Includes royalties (14% ad valorem to states), GST (5% + Rs 400/t cess), CIT, dividends, DMF, and NMET. Excludes private coal companies and Singareni Collieries.</p>
             <p><strong>South Africa:</strong> Mineral royalties from DMRE Mineral Economics Bulletin. Coal was 33.7% of total mineral royalties in FY22-23. Corporate income tax from coal companies not separately reported by SARS.</p>
             <p><strong>Colombia:</strong> Mining royalties from ANM and EITI Colombia. Coal is ~85% of mining royalties. 10% royalty rate for open-pit, 5% underground (above 3Mt/yr production).</p>
             <p><strong>USA:</strong> Federal coal royalties from ONRR (12.5% surface, 8% underground). Estimated from historical trend and production data. State severance taxes (Wyoming, West Virginia, etc.) not included in the verified revenue total but shown in the detailed breakdown.</p>
@@ -469,7 +469,7 @@ const coalRevByCountry = [
         country: 'India (CIL)', revenue: 7.2, year: 'FY23-24',
         type: 'Royalties + GST + cess + CIT + dividends',
         pctGovt: 2.2, confidence: 'HIGH',
-        detail: 'Rs 60,198 crore total exchequer contribution by Coal India group. Includes royalties (14% to states), GST (5%), cess (Rs 400/t), CIT, DMF, NMET, dividends.',
+        detail: 'Rs 60,960 Cr total exchequer contribution by Coal India group in FY24-25 (up 1.2% from Rs 60,198 Cr FY23-24). Includes royalties (14% to states), GST (5%), cess (Rs 400/t), CIT, DMF, NMET, dividends.',
         source: 'Ministry of Coal', url: 'https://coal.gov.in/sites/default/files/2025-02/chap8AnnualReport2025en2.pdf'
     },
     {
@@ -523,9 +523,10 @@ const qldTrend = {
 };
 
 // Coal India exchequer contribution (Rs '000 crore, i.e. billions)
+// FY24-25 reported 9 Apr 2025: ₹60,959.52 Cr (+1.2% YoY)
 const cilTrend = {
-    years: ['FY19-20', 'FY20-21', 'FY21-22', 'FY22-23', 'FY23-24'],
-    total: [28.5, 26.4, 37.5, 53.3, 60.2],
+    years: ['FY19-20', 'FY20-21', 'FY21-22', 'FY22-23', 'FY23-24', 'FY24-25'],
+    total: [28.5, 26.4, 37.5, 53.3, 60.2, 61.0],
 };
 
 // Revenue channel breakdown by country ($B)
@@ -565,7 +566,7 @@ const COUNTRIES = [
         prod_source: 'Ministry of Coal via PIB',
         prod_url: 'https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2010559',
         avg_price_usd: 40,
-        price_note: 'Avg domestic pithead price ~\u20b93,300/t (CIL notified). CIL total payments to govt: \u20b960,198 Cr ($7.2B) in FY24.',
+        price_note: 'Avg domestic pithead price ~\u20b93,300/t (CIL notified). CIL total payments to govt: \u20b960,960 Cr (~$7.1B) in FY24-25, up 1.2% from \u20b960,198 Cr in FY23-24.',
         levies: [
             {
                 name: 'Royalty',
@@ -974,7 +975,7 @@ const SOE_DATA = [
         ownership: '63.13% Government of India (Ministry of Coal)',
         description: 'World\'s largest coal producer (~700 Mt/yr). Listed on BSE/NSE.',
         dividend_bn: 1.20,
-        dividend_note: 'FY2023-24: \u20b925.50/share \u00d7 616 Cr shares = ~\u20b915,700 Cr total dividends. Govt share (63.13%) \u2248 \u20b99,920 Cr (~$1.2B). CIL total payments to govt exchequer (all levies + dividends): \u20b960,198 Cr (~$7.2B).',
+        dividend_note: 'FY2023-24: \u20b925.50/share \u00d7 616 Cr shares = ~\u20b915,700 Cr total dividends. Govt share (63.13%) \u2248 \u20b99,920 Cr (~$1.2B). CIL total payments to govt exchequer (all levies + dividends): \u20b960,960 Cr in FY24-25 (up from \u20b960,198 Cr in FY23-24).',
         revenue_type: 'reported',
         year: 'FY2023-24',
         source: 'PIB Press Release \u2014 Ministry of Coal',
@@ -1560,16 +1561,18 @@ const cilSubsidiaries = [
     { name: 'WCL', region: 'Maharashtra', production_mt: 55, employees: 32000 },
 ];
 
-// Indian state coal royalties (estimated $M, 14% of production value)
+// CIL payments to coal-bearing states (FY24-25, ₹ crore).
+// Top 4 are REPORTED (Business Standard / CIL disclosures 9 Apr 2025): Jharkhand 14,047; Odisha 12,979; MP 11,352; Chhattisgarh 11,304.
+// Remaining states ESTIMATED by scaling from production mix (ECL/WCL/NCL output).
 const indiaStateRoyalties = [
-    { state: 'Chhattisgarh', royalty_m: 850, production_mt: 210 },
-    { state: 'Odisha', royalty_m: 720, production_mt: 195 },
-    { state: 'Jharkhand', royalty_m: 580, production_mt: 150 },
-    { state: 'Madhya Pradesh', royalty_m: 450, production_mt: 140 },
-    { state: 'Maharashtra', royalty_m: 180, production_mt: 55 },
-    { state: 'West Bengal', royalty_m: 160, production_mt: 45 },
-    { state: 'Telangana', royalty_m: 240, production_mt: 72 },
-    { state: 'Uttar Pradesh', royalty_m: 85, production_mt: 25 },
+    { state: 'Jharkhand', royalty_cr: 14047, production_mt: 155, reported: true },
+    { state: 'Odisha', royalty_cr: 12979, production_mt: 195, reported: true },
+    { state: 'Madhya Pradesh', royalty_cr: 11352, production_mt: 130, reported: true },
+    { state: 'Chhattisgarh', royalty_cr: 11304, production_mt: 210, reported: true },
+    { state: 'Telangana', royalty_cr: 2100, production_mt: 72, reported: false },
+    { state: 'Maharashtra', royalty_cr: 1650, production_mt: 55, reported: false },
+    { state: 'West Bengal', royalty_cr: 1400, production_mt: 45, reported: false },
+    { state: 'Uttar Pradesh', royalty_cr: 650, production_mt: 25, reported: false },
 ];
 
 // CIL Production chart
@@ -1649,15 +1652,15 @@ const indiaStateRoyalties = [
 
 // State royalties chart
 (function() {
-    const sorted = [...indiaStateRoyalties].sort((a, b) => b.royalty_m - a.royalty_m);
+    const sorted = [...indiaStateRoyalties].sort((a, b) => b.royalty_cr - a.royalty_cr);
     new Chart(document.getElementById('chartStateRoyalties'), {
         type: 'bar',
         data: {
             labels: sorted.map(d => d.state),
             datasets: [{
-                label: 'Estimated Coal Royalties ($M)',
-                data: sorted.map(d => d.royalty_m),
-                backgroundColor: '#264653',
+                label: 'CIL Payments to State (₹ crore)',
+                data: sorted.map(d => d.royalty_cr),
+                backgroundColor: sorted.map(d => d.reported ? '#264653' : '#8ab0b8'),
                 borderRadius: 4,
             }]
         },
@@ -1671,7 +1674,8 @@ const indiaStateRoyalties = [
                     callbacks: {
                         label: function(ctx) {
                             var d = sorted[ctx.dataIndex];
-                            return '$' + d.royalty_m + 'M (from ' + d.production_mt + ' Mt production)';
+                            var tag = d.reported ? 'REPORTED' : 'estimated';
+                            return '₹' + fmt(d.royalty_cr) + ' cr (' + tag + ', ' + d.production_mt + ' Mt production)';
                         }
                     }
                 }
