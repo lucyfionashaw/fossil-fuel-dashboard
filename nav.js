@@ -15,6 +15,7 @@
         // Act 3: So Why Does It Persist?
         { href: 'revenue.html', label: 'Revenue & Tax' },
         { href: 'jobs.html', label: 'Jobs' },
+        { href: 'countymap.html', label: 'US County Map' },
         { href: 'trade.html', label: 'Trade & Security' },
         { href: 'donations.html', label: 'Political Donations' },
         // Act 4: The Transition

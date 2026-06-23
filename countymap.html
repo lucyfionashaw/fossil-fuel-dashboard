@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Energy Jobs by County — Fossil Fuel Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        .map-controls {
+            display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .control-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        .control-group label {
+            font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+            color: var(--text-secondary); font-weight: 600;
+        }
+        .map-select {
+            font-family: inherit; font-size: 0.9rem; padding: 0.5rem 0.7rem;
+            border: 1px solid var(--border); border-radius: 8px; background: white;
+            color: var(--text); min-width: 240px; cursor: pointer;
+        }
+        .map-select:focus { outline: none; border-color: var(--accent); }
+        .map-select option { font-weight: 400; }
+        .map-select option.sector,
+        .map-select optgroup { font-weight: 700; }
+        .map-btn {
+            font-family: inherit; font-size: 0.8rem; font-weight: 500;
+            padding: 0.55rem 0.9rem; border: 1px solid var(--border); border-radius: 8px;
+            background: white; color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+        }
+        .map-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .map-stats { margin-left: auto; text-align: right; }
+        .map-stats .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1; }
+        .map-stats .stat-label { font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+
+        .map-wrap { position: relative; width: 100%; }
+        #map-svg { width: 100%; height: auto; display: block; background: #fafbfc; border-radius: 8px; }
+        .county { stroke: #ffffff; stroke-width: 0.15px; cursor: pointer; transition: opacity 0.1s; }
+        .county.hover { stroke: #2c3e50; stroke-width: 0.8px; }
+        .state-fill { stroke: #ffffff; stroke-width: 0.4px; cursor: pointer; }
+        .state-fill.hover { stroke: #2c3e50; stroke-width: 1.1px; }
+        .state-border { fill: none; stroke: #ffffff; stroke-width: 0.7px; pointer-events: none; }
+
+        .map-tooltip {
+            position: fixed; pointer-events: none; z-index: 100; opacity: 0;
+            background: rgba(44,62,80,0.96); color: white; padding: 0.5rem 0.7rem;
+            border-radius: 6px; font-size: 0.8rem; line-height: 1.4; max-width: 240px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25); transition: opacity 0.08s;
+        }
+        .map-tooltip .tt-name { font-weight: 600; margin-bottom: 0.15rem; }
+        .map-tooltip .tt-val { color: #5ee0c0; font-weight: 600; }
+        .map-tooltip .tt-cat { color: #bdc3c7; font-size: 0.72rem; }
+
+        .legend-row { display: flex; align-items: flex-start; gap: 2rem; flex-wrap: wrap; margin-top: 0.9rem; }
+        .legend-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.4rem; }
+        .legend { display: flex; flex-direction: column; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; height: 18px; }
+        .legend-swatch { width: 26px; height: 16px; flex: none; border: 1px solid rgba(0,0,0,0.06); }
+        .legend-swatch.legend-zero { background: #f4f6f7; border: 1px solid var(--border); }
+        .legend-label { font-size: 0.72rem; color: var(--text); }
+        .legend-note { font-size: 0.72rem; color: var(--text-secondary); max-width: 420px; line-height: 1.5; }
+
+        .hint { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.5rem; }
+        .hint strong { color: var(--text); }
+        @media (max-width: 600px) {
+            .map-stats { margin-left: 0; text-align: left; width: 100%; }
+            .map-select { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>US Energy Jobs by County</h1>
+    <div class="subtitle">Employment Across Generation, Fuels, Grid, Efficiency &amp; Vehicles &middot; USEER 2025</div>
+</div>
+
+<div class="container">
+
+    <div class="section">
+        <div class="map-controls">
+            <div class="control-group">
+                <label>Geography</label>
+                <div class="toggle-bar" id="geo-toggle">
+                    <button class="toggle-btn active" data-mode="state">State</button>
+                    <button class="toggle-btn" data-mode="county">County</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <label for="cat-select">Job category</label>
+                <select id="cat-select" class="map-select"></select>
+            </div>
+            <div class="control-group">
+                <label>Metric</label>
+                <div class="toggle-bar" id="metric-toggle">
+                    <button class="toggle-btn active" data-metric="jobs">Jobs</button>
+                    <button class="toggle-btn" data-metric="share">Share of energy jobs</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <label for="state-select">Zoom to state</label>
+                <select id="state-select" class="map-select" style="min-width:180px;"></select>
+            </div>
+            <button id="reset-btn" class="map-btn">Reset view</button>
+            <div class="map-stats">
+                <div class="stat-value" id="stat-value">—</div>
+                <div class="stat-label" id="stat-label">jobs nationwide</div>
+            </div>
+        </div>
+
+        <div class="map-wrap">
+            <svg id="map-svg" viewBox="0 0 975 610" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+
+        <div class="legend-row">
+            <div>
+                <div class="legend-title" id="legend-title">Jobs per county</div>
+                <div class="legend" id="legend"></div>
+            </div>
+            <span class="legend-note" id="legend-note"></span>
+        </div>
+
+        <p class="hint"><strong>State view</strong> shows authoritative USEER state totals — best for spotting patterns. <strong>County view</strong> drills down (suppressed values imputed). <strong>Click a state</strong> to zoom / drill in &middot; <strong>scroll</strong> to zoom, <strong>drag</strong> to pan. Color scale rescales to each category &amp; geography.</p>
+    </div>
+
+    <div class="section methodology">
+        <h2>About this map</h2>
+        <p><strong>Source:</strong> U.S. Energy and Employment Report (USEER) 2025, county-level employment estimates. Per your request, sectors are bucketed as follows:</p>
+        <ul style="margin:0.5rem 0 0 1.2rem; line-height:1.7;">
+            <li><strong>Electric Power Generation</strong> — split into components (Solar, Wind, Hydroelectric, Low-Impact Hydro, Natural Gas, Coal, Oil &amp; Other FF, Other).</li>
+            <li><strong>Fuels</strong> — split into components (Coal, Petroleum &amp; Other FF, Natural Gas, Woody Biomass, Corn Ethanol, Other).</li>
+            <li><strong>Transmission, Distribution &amp; Storage</strong> — combined into a single bucket.</li>
+            <li><strong>Energy Efficiency</strong> — combined into a single bucket.</li>
+            <li><strong>Motor Vehicles</strong> — single category.</li>
+        </ul>
+        <p style="margin-top:0.75rem;"><strong>State view</strong> uses authoritative state totals from the USEER 2025 State Reports (Validation sheet for sector totals; sub-sector cut for component categories). This is the cleanest view for spotting geographic patterns.</p>
+
+        <h3 style="margin-top:1rem;">How suppressed county values are imputed</h3>
+        <p>USEER suppresses small county counts, reporting them only as &ldquo;&lt;10&rdquo;. To reconcile the county build-up to the known state totals (~8.5M jobs nationally, vs ~8.28M if suppressed cells are treated as zero/placeholder), we impute each suppressed cell as follows, <em>per state &times; category</em>:</p>
+        <ol style="margin:0.5rem 0 0 1.2rem; line-height:1.7;">
+            <li>Take the state total <em>T</em> for that category and subtract the sum <em>R</em> of all <strong>reported</strong> (non-suppressed) counties.</li>
+            <li>Distribute the shortfall <em>(T &minus; R)</em> <strong>evenly across the suppressed counties</strong> in that state — i.e. each gets the average of the missing jobs.</li>
+        </ol>
+        <p style="margin-top:0.5rem;">Imputed county values are flagged as &ldquo;est.&rdquo; in tooltips. <strong>Caveat:</strong> where a state has only one or two suppressed counties but a sizeable gap, the per-county estimate can exceed 10 — this absorbs not just hidden employment but also rounding/methodology differences between the county and state datasets, so treat large imputed county values as approximate. Component categories are anchored to the matching state sub-sector (e.g. county Hydroelectric &rarr; state &ldquo;Traditional Hydro&rdquo;; county &ldquo;Other&rdquo; generation absorbs the state&rsquo;s Nuclear, which has no county split). The state file reports a single &ldquo;Traditional Hydro&rdquo; figure, which we split into Hydroelectric and Low-Impact Hydro using each state&rsquo;s county-level proportions, so the two sum to the authoritative EPG total rather than adding on top of it. The national total reconciles exactly to the USEER authoritative figure of <strong>8,466,698</strong> jobs.</p>
+
+        <h3 style="margin-top:1rem;">&ldquo;Jobs&rdquo; vs &ldquo;Share of energy jobs&rdquo;</h3>
+        <p>The <strong>Jobs</strong> metric maps the raw job count. The <strong>Share of energy jobs</strong> metric divides the selected category by the geography&rsquo;s <em>total energy</em> employment (e.g. &ldquo;what % of this county&rsquo;s energy jobs are coal&rdquo;). Note the denominator is total <em>energy</em> employment, <strong>not</strong> all-industry employment — USEER is an energy dataset and does not include county-wide payrolls, so this is not the energy share of the whole local economy. For the &ldquo;All sectors&rdquo; category, share instead shows each area&rsquo;s contribution to the <em>national</em> energy-jobs total. The share view is the best way to compare states/counties on a like-for-like basis without large places dominating.</p>
+
+        <h3 style="margin-top:1rem;">Are counties comparable in size?</h3>
+        <p><strong>No — and this matters for reading the map.</strong> US counties vary enormously in both land area and population. Western counties (e.g. in California, Nevada, Arizona) are geographically huge, while eastern states like West Virginia, Kentucky and Virginia are carved into many small counties. So a coal county in WV is a tiny shape and a coal county in the West is a large one, even for the same number of jobs — this is the classic choropleth &ldquo;area bias&rdquo;, where big sparsely-populated counties draw the eye regardless of headcount. Two defences are built in: the <strong>State view</strong> removes within-state granularity entirely, and the <strong>Share of energy jobs</strong> metric normalises away from absolute size. When hunting for coal hotspots, compare these views rather than trusting the size of a colored blob alone.</p>
+    </div>
+
+</div>
+
+<script src="colors.js"></script>
+<script src="county-data.js"></script>
+<script>
+(function() {
+    // ---- Category definitions (order MUST match COUNTY_CAT_ORDER) ----
+    const C = {
+        coal: '#2d2d2d', oil: '#c0392b', gas: '#7f8c8d', solar: '#f1c40f',
+        wind: '#3498db', hydro: '#2980b9', biomass: '#27ae60', teal: '#16a085',
+        purple: '#7209b7', orange: '#d35400', slate: '#34495e'
+    };
+    const EPG_LEAVES=['epg_Solar','epg_Wind','epg_Hydroelectric','epg_Low-Impact Hydroelectric',
+                      'epg_Natural Gas','epg_Coal','epg_Oil & Other FF','epg_Other'];
+    const FUELS_LEAVES=['fuels_Coal','fuels_Petroleum & Other FF','fuels_Natural Gas',
+                        'fuels_Woody Biomass','fuels_Corn Ethanol','fuels_Other'];
+    const CATS = [
+        { key:'total',                       label:'All sectors (total)',          group:null, sector:true,                      color:C.teal },
+        { key:'epg_total',                   label:'All Electric Power Generation', group:'Electric Power Generation', leaves:EPG_LEAVES, color:'#1f6f8b' },
+        { key:'epg_Solar',                   label:'Solar',                        group:'Electric Power Generation',            color:C.solar },
+        { key:'epg_Wind',                    label:'Wind',                         group:'Electric Power Generation',            color:C.wind },
+        { key:'epg_Hydroelectric',           label:'Hydroelectric',                group:'Electric Power Generation',            color:C.hydro },
+        { key:'epg_Low-Impact Hydroelectric',label:'Low-Impact Hydroelectric',     group:'Electric Power Generation',            color:'#5dade2' },
+        { key:'epg_Natural Gas',             label:'Natural Gas',                  group:'Electric Power Generation',            color:C.gas },
+        { key:'epg_Coal',                    label:'Coal',                         group:'Electric Power Generation',            color:C.coal },
+        { key:'epg_Oil & Other FF',          label:'Oil & Other Fossil Fuels',     group:'Electric Power Generation',            color:C.oil },
+        { key:'epg_Other',                   label:'Other',                        group:'Electric Power Generation',            color:'#95a5a6' },
+        { key:'fuels_total',                 label:'All Fuels',                    group:'Fuels (extraction & processing)', leaves:FUELS_LEAVES, color:'#9c4a1a' },
+        { key:'fuels_Coal',                  label:'Coal',                         group:'Fuels (extraction & processing)',      color:C.coal },
+        { key:'fuels_Petroleum & Other FF',  label:'Petroleum & Other Fossil Fuels', group:'Fuels (extraction & processing)',    color:C.oil },
+        { key:'fuels_Natural Gas',           label:'Natural Gas',                  group:'Fuels (extraction & processing)',      color:C.gas },
+        { key:'fuels_Woody Biomass',         label:'Woody Biomass',                group:'Fuels (extraction & processing)',      color:C.biomass },
+        { key:'fuels_Corn Ethanol',          label:'Corn Ethanol',                 group:'Fuels (extraction & processing)',      color:'#f39c12' },
+        { key:'fuels_Other',                 label:'Other',                        group:'Fuels (extraction & processing)',      color:'#95a5a6' },
+        { key:'tds',                         label:'Transmission, Distribution & Storage', group:null, sector:true,             color:C.purple },
+        { key:'ee',                          label:'Energy Efficiency (all)',      group:null, sector:true,                      color:C.orange },
+        { key:'mv',                          label:'Motor Vehicles',               group:null, sector:true,                      color:C.slate },
+    ];
+    const idxOf = {};
+    COUNTY_CAT_ORDER.forEach((k,i) => idxOf[k] = i);
+    // leaf index in the 'f' flag string = category index - 1 (total has no flag)
+
+    const STATE_FIPS = {
+        '01':'AL','02':'AK','04':'AZ','05':'AR','06':'CA','08':'CO','09':'CT','10':'DE','11':'DC','12':'FL',
+        '13':'GA','15':'HI','16':'ID','17':'IL','18':'IN','19':'IA','20':'KS','21':'KY','22':'LA','23':'ME',
+        '24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','29':'MO','30':'MT','31':'NE','32':'NV','33':'NH',
+        '34':'NJ','35':'NM','36':'NY','37':'NC','38':'ND','39':'OH','40':'OK','41':'OR','42':'PA','44':'RI',
+        '45':'SC','46':'SD','47':'TN','48':'TX','49':'UT','50':'VT','51':'VA','53':'WA','54':'WV','55':'WI','56':'WY'
+    };
+    const STATE_NAME = {
+        'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut',
+        'DE':'Delaware','DC':'District of Columbia','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois',
+        'IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland',
+        'MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana',
+        'NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York',
+        'NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania',
+        'RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah',
+        'VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming'
+    };
+
+    const fmt = d3.format(',');
+    const fmt1 = (n) => (Math.round(n*10)/10).toLocaleString();
+    const svg = d3.select('#map-svg');
+    const width = 975, height = 610;
+    const g = svg.append('g');
+    const projection = d3.geoAlbersUsa();
+    const path = d3.geoPath(projection);
+    const tooltip = d3.select('body').append('div').attr('class','map-tooltip');
+
+    let currentCat = CATS[0];
+    let mode = 'state';                 // 'state' | 'county'
+    let metric = 'jobs';                // 'jobs' | 'share'
+    let countiesFeat=null, statesFeat=null, statesMesh=null;
+    let zoomedState = null;
+
+    // ---------- value lookups ----------
+    const ci = () => idxOf[currentCat.key];           // category column index
+    const catLeaves = () => currentCat.leaves ? currentCat.leaves.map(k=>idxOf[k]) : null;
+
+    // jobs in current category (handles computed EPG/Fuels totals via leaf sums)
+    function jobsCounty(fips){ const d=COUNTY_JOBS[fips]; if(!d) return null;
+        const L=catLeaves(); if(!L) return d.v[ci()]; let s=0; L.forEach(i=>s+=d.v[i]); return s; }
+    function jobsState(ab){ const d=STATE_JOBS[ab]; if(!d) return null;
+        const L=catLeaves(); if(!L) return d.v[ci()]; let s=0; L.forEach(i=>s+=d.v[i]); return s; }
+    const rawJobs = (id) => (mode==='county') ? jobsCounty(id) : jobsState(id);
+    const rawTotal = (id) => { const d=(mode==='county')?COUNTY_JOBS[id]:STATE_JOBS[id]; return d?d.v[0]:null; };
+
+    function countyImputed(fips){
+        const d=COUNTY_JOBS[fips]; if(!d) return false;
+        const L=catLeaves(); if(L) return L.some(i=> d.f[i-1]==='1');
+        const k=ci(); if(k===0) return false;          // total: not flagged
+        return d.f[k-1]==='1';
+    }
+
+    // cached national totals (energy jobs) for share-of-national
+    let natTotalCache={};
+    function natTotal(){
+        if(natTotalCache[mode]!=null) return natTotalCache[mode];
+        let s=0; const src=(mode==='county')?COUNTY_JOBS:STATE_JOBS;
+        for(const k in src){ const v=src[k].v[0]; if(v>0) s+=v; }
+        return natTotalCache[mode]=s;
+    }
+
+    // metric value used for coloring (null => blank / no-data)
+    function metricVal(id){
+        const j=rawJobs(id);
+        if(j===null||j<BLANK_BELOW) return null;        // job-count floor applies to BOTH metrics
+        if(metric==='jobs') return j;
+        // share: 'total' category => share of national energy jobs; else share of this geography's energy jobs
+        if(currentCat.key==='total') return j/natTotal()*100;
+        const denom = rawTotal(id);
+        if(!denom||denom<=0) return null;
+        return Math.min(100, j/denom*100);              // cap at 100% (rounding can nudge over)
+    }
+    function colorVal(id){ return metricVal(id); }
+
+    // ---------- color scale (EVENLY-SPACED value bins + blank floor) ----------
+    // bins = N equal-width upper cutoffs (step, 2·step, … N·step). band i = (bins[i-1], bins[i]].
+    // Counties below BLANK_BELOW jobs are rendered blank (tiny imputed noise — USEER suppresses <10).
+    const BLANK_BELOW = 10;      // <- bump to 20 to hide even more low-end noise
+    const N_BINS = 6;
+    let colorScale=null, bins=[], rampColors=[];
+    function niceStep(x){
+        if(x<=0) return 1;
+        const mag=Math.pow(10,Math.floor(Math.log10(x)));
+        const f=x/mag;
+        const nf = f<=1?1 : f<=2?2 : f<=2.5?2.5 : f<=5?5 : 10;
+        return nf*mag;                                   // round step UP to a "nice" number
+    }
+    function binIndex(v){ for(let i=0;i<bins.length;i++) if(v<=bins[i]) return i; return bins.length-1; }
+    function buildScale(){
+        const ids = (mode==='county') ? Object.keys(COUNTY_JOBS) : Object.keys(STATE_JOBS);
+        let max=0; ids.forEach(id=>{ const v=colorVal(id); if(v!==null && v>max) max=v; });
+        const step = max>0 ? niceStep(max/N_BINS) : 1;
+        bins=[]; for(let i=1;i<=N_BINS;i++) bins.push(step*i);   // evenly spaced in value
+        while(bins.length>1 && bins[bins.length-2]>=max) bins.pop();   // drop bands entirely above the max
+        const n=bins.length, base=currentCat.color;
+        rampColors = d3.range(n).map(i=> d3.interpolateLab('#ffffff',base)(n===1?0.85:0.18+0.82*(i/(n-1))));
+        colorScale=(v)=> (v===null||v<=0) ? '#f4f6f7' : rampColors[binIndex(v)];
+        renderLegend();
+    }
+    function renderLegend(){
+        // largest band at top; each band labelled by its MAXIMUM cutoff; blank floor at the bottom.
+        let rows='';
+        for(let i=bins.length-1;i>=0;i--){
+            rows += '<div class="legend-item"><span class="legend-swatch" style="background:'+rampColors[i]+'"></span>'
+                  + '<span class="legend-label">&le; '+fmtCut(bins[i])+'</span></div>';
+        }
+        rows += '<div class="legend-item"><span class="legend-swatch legend-zero"></span>'
+              + '<span class="legend-label">&lt; '+BLANK_BELOW+' jobs / 0 / no data</span></div>';
+        document.getElementById('legend').innerHTML = rows;
+        document.getElementById('legend-title').textContent =
+            (metric==='share' ? 'Share of energy jobs' : 'Jobs') + (mode==='county'?' per county':' per state');
+        const floorTxt = ' Counties below '+BLANK_BELOW+' energy jobs are left blank to suppress tiny imputed noise.';
+        document.getElementById('legend-note').innerHTML = ((mode==='county')
+            ? 'County view: suppressed &ldquo;&lt;10&rdquo; cells imputed to reconcile state totals (shown as &ldquo;est.&rdquo;). Bands are evenly spaced in value.'
+            : 'State view: authoritative USEER 2025 state totals. Bands are evenly spaced in value.') + floorTxt;
+    }
+    function fmtCut(n){ return metric==='share' ? abbrPct(n) : abbr(n); }
+    function abbr(n){
+        if(n>=1e6)  return (Math.round(n/1e5)/10)+'m';
+        if(n>=1000) return (n/1000)+'k';
+        if(n>=1)    return Math.round(n*100)/100;
+        if(n>0)     return Math.round(n*1000)/1000;
+        return 0;
+    }
+    function abbrPct(n){ return (n>=10?Math.round(n):Math.round(n*10)/10)+'%'; }
+
+    // ---------- national stat ----------
+    function updateStat(){
+        const ids = (mode==='county') ? Object.keys(COUNTY_JOBS) : Object.keys(STATE_JOBS);
+        let sum=0; ids.forEach(id=>{ const j=rawJobs(id); if(j>0) sum+=j; });
+        if(metric==='jobs'){
+            document.getElementById('stat-value').textContent = fmt(Math.round(sum));
+            document.getElementById('stat-label').textContent = currentCat.label + ' jobs nationwide';
+        } else {
+            const pct = sum/natTotal()*100;
+            document.getElementById('stat-value').textContent = (Math.round(pct*10)/10)+'%';
+            document.getElementById('stat-label').textContent = currentCat.label + ' — share of US energy jobs';
+        }
+    }
+
+    // ---------- recolor ----------
+    function recolor(){
+        buildScale();
+        if(mode==='county'){
+            g.selectAll('path.county').attr('fill', d=>colorScale(colorVal(d.id)));
+        } else {
+            g.selectAll('path.state-fill').attr('fill', d=>colorScale(colorVal(stateAbbr(d))));
+        }
+        updateStat();
+    }
+    function stateAbbr(feature){ return STATE_FIPS[String(feature.id).padStart(2,'0')]; }
+
+    // ---------- mode switch ----------
+    function setMode(m){
+        if(m===mode) return;
+        mode=m;
+        document.querySelectorAll('#geo-toggle .toggle-btn').forEach(b=>
+            b.classList.toggle('active', b.dataset.mode===m));
+        g.selectAll('path.county').style('display', m==='county'?null:'none');
+        g.selectAll('path.state-fill').style('display', m==='state'?null:'none');
+        recolor();
+    }
+
+    // ---------- zoom ----------
+    const zoom=d3.zoom().scaleExtent([1,12])
+        .on('zoom',(e)=>{ g.attr('transform',e.transform); g.attr('stroke-width',1/e.transform.k); });
+    svg.call(zoom);
+
+    function zoomToState(fipsPrefix){
+        const f=statesFeat.features.find(x=>String(x.id).padStart(2,'0')===fipsPrefix);
+        if(!f) return;
+        const [[x0,y0],[x1,y1]]=path.bounds(f);
+        const k=Math.min(8, 0.92/Math.max((x1-x0)/width,(y1-y0)/height));
+        const tx=(width-k*(x0+x1))/2, ty=(height-k*(y0+y1))/2;
+        svg.transition().duration(700).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(k));
+        zoomedState=fipsPrefix;
+    }
+    function resetView(){
+        svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity);
+        zoomedState=null;
+        document.getElementById('state-select').value='';
+    }
+
+    // ---------- tooltip ----------
+    function valStr(id, imputed){
+        const j=rawJobs(id);
+        if(j===null||j===undefined) return 'no data';
+        if(metric==='share'){
+            const sv=metricVal(id);
+            if(sv===null) return 'no data';
+            const tail=(currentCat.key==='total')?' of US energy jobs':' of energy jobs';
+            return (imputed?'&asymp; ':'')+abbrPct(sv)+tail+(imputed?' <span style="color:#f1c40f">est.</span>':'');
+        }
+        if(imputed) return '&asymp; '+fmt1(j)+' <span style="color:#f1c40f">est.</span>';
+        return fmt(Math.round(j))+' job'+(Math.round(j)===1?'':'s');
+    }
+    function tipCounty(d){
+        const rec=COUNTY_JOBS[d.id];
+        const name=rec ? rec.n+', '+rec.s : 'Unknown';
+        return '<div class="tt-name">'+name+'</div><div><span class="tt-val">'+valStr(d.id, countyImputed(d.id))+'</span></div><div class="tt-cat">'+currentCat.label+'</div>';
+    }
+    function tipState(d){
+        const ab=stateAbbr(d); const rec=STATE_JOBS[ab];
+        const name=rec?rec.n:(STATE_NAME[ab]||'Unknown');
+        return '<div class="tt-name">'+name+'</div><div><span class="tt-val">'+valStr(ab, false)+'</span></div><div class="tt-cat">'+currentCat.label+' &middot; click to drill into counties</div>';
+    }
+    function moveTip(e){ tooltip.style('left',(e.clientX+14)+'px').style('top',(e.clientY+14)+'px'); }
+    function hideTip(){ tooltip.style('opacity',0); }
+
+    // ---------- dropdowns ----------
+    function buildCatDropdown(){
+        const sel=document.getElementById('cat-select');
+        let html='', last='__', open=false;
+        CATS.forEach((c,i)=>{
+            const grp=c.group||'';
+            if(grp!==last){ if(open) html+='</optgroup>'; if(grp){html+='<optgroup label="'+grp+'">';open=true;} else open=false; last=grp; }
+            const cls=c.sector?' class="sector"':'';
+            html+='<option value="'+i+'"'+cls+'>'+c.label+'</option>';
+        });
+        if(open) html+='</optgroup>';
+        sel.innerHTML=html;
+        sel.addEventListener('change',()=>{ currentCat=CATS[+sel.value]; recolor(); });
+    }
+    function buildStateDropdown(){
+        const sel=document.getElementById('state-select');
+        const present={};
+        for(const f in COUNTY_JOBS) present[f.slice(0,2)]=true;
+        const opts=Object.keys(STATE_FIPS).filter(f=>present[f])
+            .sort((a,b)=>STATE_NAME[STATE_FIPS[a]].localeCompare(STATE_NAME[STATE_FIPS[b]]))
+            .map(f=>'<option value="'+f+'">'+STATE_NAME[STATE_FIPS[f]]+'</option>').join('');
+        sel.innerHTML='<option value="">— whole US —</option>'+opts;
+        sel.addEventListener('change',()=>{ sel.value?zoomToState(sel.value):resetView(); });
+    }
+
+    // ---------- load topology ----------
+    d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json').then(us=>{
+        countiesFeat=topojson.feature(us, us.objects.counties);
+        statesFeat=topojson.feature(us, us.objects.states);
+        statesMesh=topojson.mesh(us, us.objects.states,(a,b)=>a!==b);
+        projection.fitSize([width,height], statesFeat);
+
+        // county layer
+        g.selectAll('path.county').data(countiesFeat.features).join('path')
+            .attr('class','county').attr('d',path).style('display','none')
+            .on('mousemove',function(e,d){ d3.select(this).classed('hover',true); tooltip.html(tipCounty(d)).style('opacity',1); moveTip(e); })
+            .on('mouseout',function(){ d3.select(this).classed('hover',false); hideTip(); })
+            .on('click',(e,d)=>{ const f=String(d.id).slice(0,2).padStart(2,'0');
+                if(zoomedState===f){ resetView(); } else { zoomToState(f); document.getElementById('state-select').value=f; } });
+
+        // state choropleth layer (clickable: drill into county view + zoom)
+        g.selectAll('path.state-fill').data(statesFeat.features).join('path')
+            .attr('class','state-fill').attr('d',path)
+            .on('mousemove',function(e,d){ d3.select(this).classed('hover',true); tooltip.html(tipState(d)).style('opacity',1); moveTip(e); })
+            .on('mouseout',function(){ d3.select(this).classed('hover',false); hideTip(); })
+            .on('click',(e,d)=>{ const f=String(d.id).padStart(2,'0');
+                setMode('county'); document.querySelectorAll('#geo-toggle .toggle-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode==='county'));
+                zoomToState(f); document.getElementById('state-select').value=f; });
+
+        // borders on top, no pointer events
+        g.append('path').datum(statesMesh).attr('class','state-border').attr('d',path);
+
+        buildCatDropdown();
+        buildStateDropdown();
+        // initial layer visibility (state mode)
+        g.selectAll('path.county').style('display','none');
+        g.selectAll('path.state-fill').style('display',null);
+        recolor();
+    }).catch(err=>{
+        document.querySelector('.map-wrap').innerHTML =
+            '<p style="padding:2rem;color:#c0392b;">Could not load the county map geometry (needs internet access to jsDelivr CDN). '+err+'</p>';
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', resetView);
+    document.querySelectorAll('#geo-toggle .toggle-btn').forEach(b=>
+        b.addEventListener('click',()=>setMode(b.dataset.mode)));
+    document.querySelectorAll('#metric-toggle .toggle-btn').forEach(b=>
+        b.addEventListener('click',()=>{
+            if(b.dataset.metric===metric) return;
+            metric=b.dataset.metric;
+            document.querySelectorAll('#metric-toggle .toggle-btn').forEach(x=>
+                x.classList.toggle('active', x.dataset.metric===metric));
+            recolor();
+        }));
+})();
+</script>
+
+<script src="nav.js"></script>
+
+</body>
+</html>
