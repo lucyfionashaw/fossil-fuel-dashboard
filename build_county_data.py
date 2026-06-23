@@ -43,6 +43,8 @@ for _, row in cdf.iterrows():
     fips = row[1]
     if pd.isna(fips): continue
     fips = str(int(fips)).zfill(5)
+    # skip USEER state-level "unallocated" rows (FIPS xxx999, no county name) — not real counties
+    if fips[2:] == '999' or pd.isna(row[2]): continue
     rec = {'n': str(row[2]).strip(), 's': str(row[0]).strip(), 'val': {}, 'supp': {}}
     for k, c in EPG.items():
         v, sup = parse(row[c]); rec['val'][k]=v; rec['supp'][k]=sup
