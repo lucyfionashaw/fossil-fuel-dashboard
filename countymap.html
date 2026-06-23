@@ -66,6 +66,14 @@
         .legend-label { font-size: 0.72rem; color: var(--text); }
         .legend-note { font-size: 0.72rem; color: var(--text-secondary); max-width: 420px; line-height: 1.5; }
 
+        .conc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+        .conc-col { border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; background: #fcfcfd; }
+        .conc-head { font-weight: 700; font-size: 1.02rem; color: var(--text); margin-bottom: 0.6rem; }
+        .conc-head span { display: block; font-weight: 500; font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.15rem; }
+        .conc-list { margin: 0; padding-left: 1.1rem; line-height: 1.6; font-size: 0.9rem; }
+        .conc-list li { margin-bottom: 0.5rem; }
+        .conc-list b { color: var(--text); }
+        @media (max-width: 640px) { .conc-grid { grid-template-columns: 1fr; } }
         .hint { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.5rem; }
         .hint strong { color: var(--text); }
         @media (max-width: 600px) {
@@ -100,7 +108,8 @@
                 <label>Metric</label>
                 <div class="toggle-bar" id="metric-toggle">
                     <button class="toggle-btn active" data-metric="jobs">Jobs</button>
-                    <button class="toggle-btn" data-metric="share">Share of energy jobs</button>
+                    <button class="toggle-btn" data-metric="share">% of energy jobs</button>
+                    <button class="toggle-btn" data-metric="shareall">% of all jobs</button>
                 </div>
             </div>
             <div class="control-group">
@@ -127,6 +136,32 @@
         </div>
 
         <p class="hint"><strong>State view</strong> shows authoritative USEER state totals — best for spotting patterns. <strong>County view</strong> drills down (suppressed values imputed). <strong>Click a state</strong> to zoom / drill in &middot; <strong>scroll</strong> to zoom, <strong>drag</strong> to pan. Color scale rescales to each category &amp; geography.</p>
+    </div>
+
+    <div class="section">
+        <h2>How concentrated are coal jobs?</h2>
+        <p style="color:var(--text-secondary); margin-bottom:1.25rem;">Coal employment splits into two very different geographies. <strong>Mining</strong> is tied to geology — packed into a few Appalachian and Powder River Basin counties. <strong>Power generation</strong> follows the grid and population, so it is far more dispersed. Switch the map to <strong>&ldquo;% of all jobs&rdquo;</strong> to see local dependence directly.</p>
+        <div class="conc-grid">
+            <div class="conc-col">
+                <div class="conc-head">⛏️ Coal mining <span>Fuels &middot; 64,412 jobs</span></div>
+                <ul class="conc-list">
+                    <li><b>Half</b> of all US coal-mining jobs sit in just <b>24 counties</b>; 80% in 65.</li>
+                    <li><b>Campbell County, WY</b> (Powder River Basin) alone holds <b>1 in 12</b> (8.1%); the top 10 counties hold <b>32%</b>.</li>
+                    <li><b>West Virginia, Kentucky &amp; Pennsylvania</b> together = <b>half</b> the national total; WV alone is <b>29%</b>.</li>
+                    <li>In <b>Martin County, KY</b>, coal mining is <b>82% of all private-sector jobs</b>; <b>10 counties</b> are above 25%.</li>
+                </ul>
+            </div>
+            <div class="conc-col">
+                <div class="conc-head">⚡ Coal power <span>Generation &middot; 60,439 jobs</span></div>
+                <ul class="conc-list">
+                    <li>It takes <b>51 counties</b> to reach half of all coal-power jobs; 148 for 80%.</li>
+                    <li>No single county tops <b>2.9%</b> (Hamilton County, OH); the top 10 hold just <b>20%</b>.</li>
+                    <li>Most dispersed at state level too — top state <b>Ohio is only 13%</b>; the top 3 states reach just 25%.</li>
+                    <li>Locally lighter: <b>Apache County, AZ</b> is the most exposed at <b>26% of all jobs</b>; only <b>1 county</b> exceeds 25%.</li>
+                </ul>
+            </div>
+        </div>
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:1rem;">Clustering stats use counties with a disclosed (&ge;10) coal workforce, which capture 98% (mining) / 95% (power) of national jobs. &ldquo;% of all jobs&rdquo; uses total private-sector employment from the <strong>Census County Business Patterns 2022</strong> (excludes government, self-employed &amp; farm labour), matched for 3,181 of 3,193 counties.</p>
     </div>
 
     <div class="section methodology">
@@ -160,6 +195,7 @@
 
 <script src="colors.js"></script>
 <script src="county-data.js"></script>
+<script src="county-emp.js"></script>
 <script>
 (function() {
     // ---- Category definitions (order MUST match COUNTY_CAT_ORDER) ----
@@ -259,12 +295,32 @@
         return natTotalCache[mode]=s;
     }
 
+    // total (all-industry) employment denominator — Census CBP 2022, private sector.
+    // county: per-FIPS; state: sum of its counties' CBP employment.
+    const hasEmp = (typeof COUNTY_EMP!=='undefined');
+    let STATE_EMP=null;
+    function stateEmp(){
+        if(STATE_EMP) return STATE_EMP;
+        STATE_EMP={};
+        if(hasEmp) for(const f in COUNTY_EMP){ const ab=STATE_FIPS[f.slice(0,2)]; if(ab) STATE_EMP[ab]=(STATE_EMP[ab]||0)+COUNTY_EMP[f]; }
+        return STATE_EMP;
+    }
+    function empDenom(id){
+        if(!hasEmp) return null;
+        const e = (mode==='county') ? COUNTY_EMP[id] : stateEmp()[id];
+        return (e&&e>0) ? e : null;
+    }
+
     // metric value used for coloring (null => blank / no-data)
     function metricVal(id){
         const j=rawJobs(id);
-        if(j===null||j<BLANK_BELOW) return null;        // job-count floor applies to BOTH metrics
+        if(j===null||j<BLANK_BELOW) return null;        // job-count floor applies to ALL metrics
         if(metric==='jobs') return j;
-        // share: 'total' category => share of national energy jobs; else share of this geography's energy jobs
+        if(metric==='shareall'){                        // share of ALL jobs (Census CBP private emp)
+            const e=empDenom(id); if(!e) return null;
+            return Math.min(100, j/e*100);
+        }
+        // 'share' (energy): 'total' category => share of national energy jobs; else share of geography's energy jobs
         if(currentCat.key==='total') return j/natTotal()*100;
         const denom = rawTotal(id);
         if(!denom||denom<=0) return null;
@@ -307,14 +363,15 @@
         rows += '<div class="legend-item"><span class="legend-swatch legend-zero"></span>'
               + '<span class="legend-label">&lt; '+BLANK_BELOW+' jobs / 0 / no data</span></div>';
         document.getElementById('legend').innerHTML = rows;
-        document.getElementById('legend-title').textContent =
-            (metric==='share' ? 'Share of energy jobs' : 'Jobs') + (mode==='county'?' per county':' per state');
+        const mTitle = metric==='jobs' ? 'Jobs' : metric==='share' ? '% of energy jobs' : '% of all jobs';
+        document.getElementById('legend-title').textContent = mTitle + (mode==='county'?' per county':' per state');
         const floorTxt = ' Counties below '+BLANK_BELOW+' energy jobs are left blank to suppress tiny imputed noise.';
+        const denomTxt = metric==='shareall' ? ' Denominator = all private-sector jobs (Census CBP 2022).' : '';
         document.getElementById('legend-note').innerHTML = ((mode==='county')
             ? 'County view: suppressed &ldquo;&lt;10&rdquo; cells imputed to reconcile state totals (shown as &ldquo;est.&rdquo;). Bands are evenly spaced in value.'
-            : 'State view: authoritative USEER 2025 state totals. Bands are evenly spaced in value.') + floorTxt;
+            : 'State view: authoritative USEER 2025 state totals. Bands are evenly spaced in value.') + floorTxt + denomTxt;
     }
-    function fmtCut(n){ return metric==='share' ? abbrPct(n) : abbr(n); }
+    function fmtCut(n){ return metric==='jobs' ? abbr(n) : abbrPct(n); }
     function abbr(n){
         if(n>=1e6)  return (Math.round(n/1e5)/10)+'m';
         if(n>=1000) return (n/1000)+'k';
@@ -331,6 +388,11 @@
         if(metric==='jobs'){
             document.getElementById('stat-value').textContent = fmt(Math.round(sum));
             document.getElementById('stat-label').textContent = currentCat.label + ' jobs nationwide';
+        } else if(metric==='shareall'){
+            let tot=0; for(const f in COUNTY_EMP) tot+=COUNTY_EMP[f];
+            const pct = tot>0 ? sum/tot*100 : 0;
+            document.getElementById('stat-value').textContent = (Math.round(pct*100)/100)+'%';
+            document.getElementById('stat-label').textContent = currentCat.label + ' — share of all US jobs';
         } else {
             const pct = sum/natTotal()*100;
             document.getElementById('stat-value').textContent = (Math.round(pct*10)/10)+'%';
@@ -385,6 +447,13 @@
     function valStr(id, imputed){
         const j=rawJobs(id);
         if(j===null||j===undefined) return 'no data';
+        if(metric==='shareall'){
+            const e=empDenom(id); if(!e) return 'no all-jobs data';
+            const sv=metricVal(id); if(sv===null) return 'no data';
+            return (imputed?'&asymp; ':'')+abbrPct(sv)+' of all jobs'
+                 + '<div class="tt-cat">'+fmt(Math.round(j))+' of '+fmt(e)+' total jobs</div>'
+                 + (imputed?' <span style="color:#f1c40f">est.</span>':'');
+        }
         if(metric==='share'){
             const sv=metricVal(id);
             if(sv===null) return 'no data';
