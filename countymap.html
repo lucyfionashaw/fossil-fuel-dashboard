@@ -74,6 +74,14 @@
         .conc-list li { margin-bottom: 0.5rem; }
         .conc-list b { color: var(--text); }
         @media (max-width: 640px) { .conc-grid { grid-template-columns: 1fr; } }
+        .conc-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .conc-table th, .conc-table td { padding: 0.5rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border); }
+        .conc-table th:first-child, .conc-table td:first-child { text-align: left; }
+        .conc-table thead th { font-size: 0.74rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; vertical-align: bottom; border-bottom: 2px solid var(--border); }
+        .conc-table thead th span { font-weight: 400; text-transform: none; letter-spacing: 0; }
+        .conc-table tr.grp td { background: #f4f6f7; font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); text-align: left; }
+        .conc-table tr.hl td { background: #fdf6ec; }
+        .conc-table tr.hl td:first-child { font-weight: 700; color: var(--text); }
         .hint { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.5rem; }
         .hint strong { color: var(--text); }
         @media (max-width: 600px) {
@@ -108,7 +116,6 @@
                 <label>Metric</label>
                 <div class="toggle-bar" id="metric-toggle">
                     <button class="toggle-btn active" data-metric="jobs">Jobs</button>
-                    <button class="toggle-btn" data-metric="share">% of energy jobs</button>
                     <button class="toggle-btn" data-metric="shareall">% of all jobs</button>
                 </div>
             </div>
@@ -162,6 +169,39 @@
             </div>
         </div>
         <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:1rem;">Clustering stats use counties with a disclosed (&ge;10) coal workforce, which capture 98% (mining) / 95% (power) of national jobs. &ldquo;% of all jobs&rdquo; uses total private-sector employment from the <strong>Census County Business Patterns 2022</strong> (excludes government, self-employed &amp; farm labour), matched for 3,181 of 3,193 counties.</p>
+    </div>
+
+    <div class="section">
+        <h2>Concentration across every energy sector</h2>
+        <p style="color:var(--text-secondary); margin-bottom:1rem;">Same analysis for all 14 categories. <strong>Coal's political weight comes from concentration, not size</strong> — it's small in total jobs but uniquely packed into a handful of communities. Oil &amp; gas extraction are bigger and Texas-centric; renewables are dispersed; the grid, efficiency and vehicle categories are everywhere.</p>
+        <div style="overflow-x:auto;">
+        <table class="conc-table">
+            <thead><tr>
+                <th>Category</th><th>Jobs</th><th>Counties<br><span>(footprint)</span></th>
+                <th>Top state</th><th>Counties =<br>half of jobs</th><th>Counties ≥25%<br>of local jobs</th>
+            </tr></thead>
+            <tbody>
+                <tr class="grp"><td colspan="6">Fossil fuels</td></tr>
+                <tr class="hl"><td>Coal — mining</td><td>64,412</td><td>254 (8%)</td><td>WV 29%</td><td><b>23</b></td><td>10</td></tr>
+                <tr class="hl"><td>Coal — power</td><td>60,439</td><td>397 (12%)</td><td>OH 13%</td><td>46</td><td>1</td></tr>
+                <tr><td>Oil — extraction</td><td>564,851</td><td>1,579 (50%)</td><td>TX 34%</td><td>43</td><td>27</td></tr>
+                <tr><td>Oil — power</td><td>12,472</td><td>193 (6%)</td><td>HI 14%</td><td>19</td><td>0</td></tr>
+                <tr><td>Gas — extraction</td><td>252,631</td><td>852 (27%)</td><td>TX 38%</td><td>25</td><td>12</td></tr>
+                <tr><td>Gas — power</td><td>127,840</td><td>695 (22%)</td><td>CA 16%</td><td>44</td><td>0</td></tr>
+                <tr class="grp"><td colspan="6">Renewables &amp; biofuels</td></tr>
+                <tr><td>Solar</td><td>370,559</td><td>1,264 (40%)</td><td>CA 31%</td><td>39</td><td>8</td></tr>
+                <tr><td>Wind</td><td>132,983</td><td>971 (30%)</td><td>TX 21%</td><td>55</td><td>4</td></tr>
+                <tr><td>Hydro</td><td>46,917</td><td>560 (18%)</td><td>CA 20%</td><td>37</td><td>0</td></tr>
+                <tr><td>Woody biomass</td><td>33,773</td><td>696 (22%)</td><td>OR 11%</td><td>97</td><td>2</td></tr>
+                <tr><td>Corn ethanol</td><td>36,074</td><td>433 (14%)</td><td>IA 12%</td><td>57</td><td>0</td></tr>
+                <tr class="grp"><td colspan="6">Grid, efficiency &amp; vehicles</td></tr>
+                <tr><td>Transmission / Distribution / Storage</td><td>1,463,659</td><td>2,718 (85%)</td><td>TX 15%</td><td>148</td><td>20</td></tr>
+                <tr><td>Energy efficiency</td><td>2,381,746</td><td>2,362 (74%)</td><td>CA 13%</td><td>87</td><td>1</td></tr>
+                <tr><td>Motor vehicles</td><td>2,633,124</td><td>2,887 (90%)</td><td>MI 9%</td><td>134</td><td>18</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.9rem;"><strong>Read it as:</strong> coal mining needs only <strong>23 counties</strong> to reach half its national jobs — fewer than any other sector — while motor vehicles needs 134 and the grid 148. &ldquo;Counties ≥25% of local jobs&rdquo; counts where the sector is at least a quarter of all private-sector employment (Census CBP 2022). Oil extraction's high count reflects sparsely-populated Permian/Bakken/North-Slope counties.</p>
     </div>
 
     <div class="section methodology">
